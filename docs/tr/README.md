@@ -1,9 +1,9 @@
 # AI Agent'ları Derinlemesine Anlamak: Tasarım İlkeleri ve Mühendislik Pratiği
 
-[![PDF](https://img.shields.io/badge/PDF-indir-success.svg)](#-e-kitap) [![Çevrimiçi oku](https://img.shields.io/badge/🌐_Çevrimiçi_oku-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/çeviri-14%20dil-informational.svg)](#-e-kitap)
+[![PDF](https://img.shields.io/badge/PDF-indir-success.svg)](#-e-kitap) [![Çevrimiçi oku](https://img.shields.io/badge/🌐_Çevrimiçi_oku-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/çeviri-15%20dil-informational.svg)](#-e-kitap)
 [![Trending GitHub Project of the Day](https://img.shields.io/badge/GitHub%20Trending-Project%20of%20the%20Day-orange?logo=github)](https://github.com/trending)
 
-**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · Türkçe ← şu an · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)**
+**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · Türkçe ← şu an · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)**
 
 > 📥 **[PDF / EPUB indir](#-e-kitap)** (önerilir) — PDF / EPUB sürümleri en iyi okuma deneyimini sunar; kitabı [çevrimiçi](https://bojieli.github.io/ai-agent-book/) da okuyabilirsiniz.
 
@@ -13,7 +13,7 @@
 >
 > Eski bir PDF okuyorsanız [en son PDF'yi indirmenizi](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-tr.pdf) öneririz. Yeni sürüm ayrıca çok sayıda içerik düzeltmesi ve düzenlemesi içerir; lütfen en güncel sürümü kullanın.
 
-| 📚 **10 bölüm** metin, temelden üretime | 📂 **93** eşlik eden proje (70+ bağımsız çalıştırılabilir) | 🌐 **14 dil**: CN / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE |
+| 📚 **10 bölüm** metin, temelden üretime | 📂 **93** eşlik eden proje (70+ bağımsız çalıştırılabilir) | 🌐 **15 dil**: CN / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE / PT-BR |
 | :---: | :---: | :---: |
 
 ## 📖 E-Kitap
@@ -61,7 +61,7 @@ Kitap, **Agent = LLM + Bağlam + Araçlar** temel formülü etrafında şekillen
 | 3 | 📚 **Kullanıcı Belleği ve Bilgi Tabanları** | Oturumlar arası kullanıcı belleği + harici bilgi: kullanıcı belleği, RAG, yapılandırılmış indeksler, bilgi grafikleri | [Oku](../../book-tr/chapter3.tr.md) | [12](../../chapter3/README.tr.md) |
 | 4 | 🛠️ **Araçlar** | Araçlar Agent'ın elleridir: MCP protokolü, algı/yürütme/işbirliği araçları, olay güdümlü asenkron Agent'lar, proaktif araç keşfi | [Oku](../../book-tr/chapter4.tr.md) | [8](../../chapter4/README.tr.md) |
 | 5 | 💻 **Coding Agent ve Kod Üretimi** | Kod, "yeni araçlar yaratabilen bir araçtır"; üretim seviyesinde Coding Agent'ın tam görünümü | [Oku](../../book-tr/chapter5.tr.md) | [13](../../chapter5/README.tr.md) |
-| 6 | 🎙️ **Etkileşim: Gözlem ve Eylem Uzaylarının Genişletilmesi** | Agent'ın gözlem ve eylem uzaylarını kiplik ve zaman boyunca genişletmek: eşzamansız ve olay odaklı sistemler, ses, Computer Use ve robotik | [Oku](../../book-tr/chapter6.tr.md) | [13](../../chapter6/README.tr.md) |
+| 6 | 🎙️ **Etkileşim: Gözlem ve Eylem Uzaylarının Genişletilmesi** | Agent'ın gözlem ve eylem uzaylarını kiplik ve zaman boyunca genişletmek: eşzamansız ve olay odaklı sistemler, ses, Computer Use ve robotik | [Oku](../../book-tr/chapter6.tr.md) | [14](../../chapter6/README.tr.md) |
 | 7 | 🎯 **Agent'ın Değerlendirmesi** | Performansı karşılaştırılabilir sinyallere dönüştürmek: ortamlar, metrikler, istatistiksel anlamlılık ve değerlendirme odaklı seçim | [Oku](../../book-tr/chapter7.tr.md) | [13](../../chapter7/README.tr.md) |
 | 8 | 🧠 **Model Post-Training** | Üç aşama—ön eğitim, SFT ve RL: ne zaman SFT veya RL seçileceği, araç çağrılarının içselleştirilmesi ve örnek verimliliği | [Oku](../../book-tr/chapter8.tr.md) | [19](../../chapter8/README.tr.md) |
 | 9 | 🔄 **Agent'ın Sürekli Evrimi** | Yürütme izlerinden öğrenme sinyalleri elde etmek ve bilgiyi, talimatları, programları ve parametreleri güncellemek | [Oku](../../book-tr/chapter9.tr.md) | [9](../../chapter9/README.tr.md) |

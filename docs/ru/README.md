@@ -1,9 +1,9 @@
 # Глубокое понимание AI Agent: принципы проектирования и инженерная практика
 
-[![PDF](https://img.shields.io/badge/PDF-%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C-success.svg)](#-электронная-книга) [![Читать онлайн](https://img.shields.io/badge/🌐_Читать_онлайн-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/переводов-14%20языков-informational.svg)](#-электронная-книга)
+[![PDF](https://img.shields.io/badge/PDF-%D1%81%D0%BA%D0%B0%D1%87%D0%B0%D1%82%D1%8C-success.svg)](#-электронная-книга) [![Читать онлайн](https://img.shields.io/badge/🌐_Читать_онлайн-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/переводов-15%20языков-informational.svg)](#-электронная-книга)
 [![Trending GitHub Project of the Day](https://img.shields.io/badge/GitHub%20Trending-Project%20of%20the%20Day-orange?logo=github)](https://github.com/trending)
 
-**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · Русский ← текущий · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)**
+**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · Русский ← текущий · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)**
 
 > 📥 **[Скачать PDF / EPUB](#-электронная-книга)** (рекомендуется) — рекомендуем читать книгу в PDF / EPUB, там лучшая вёрстка; также доступно [чтение онлайн](https://bojieli.github.io/ai-agent-book/) (переключатель языков, сворачиваемое оглавление, полнотекстовый поиск; сайт автоматически перестраивается при каждом пуше в main).
 
@@ -13,7 +13,7 @@
 >
 > Если вы читаете старую версию PDF, рекомендуем [скачать последнюю версию PDF](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-ru.pdf). В новом издании также много исправлений и содержательных изменений; пожалуйста, используйте актуальную версию.
 
-| 📚 **10 глав** текста, от основ к продакшену | 📂 **93** сопутствующих проектов (70+ автономных) | 🌐 **14 языков**: CN / EN / ES / ID / AR / zh-TW / **RU** / TA / VI / JA / TR / KO / HU / HE |
+| 📚 **10 глав** текста, от основ к продакшену | 📂 **93** сопутствующих проектов (70+ автономных) | 🌐 **15 языков**: CN / EN / ES / ID / AR / zh-TW / **RU** / TA / VI / JA / TR / KO / HU / HE / PT-BR |
 | :---: | :---: | :---: |
 
 ## 📖 Электронная книга
@@ -62,7 +62,7 @@
 | 3 | 📚 **Память пользователя и базы знаний** | Кросс-сессионная память + внешние знания: пользовательская память, RAG, структурированные индексы, графы знаний | [Читать](../../book-ru/chapter3.md) | [12](../../chapter3/README.ru.md) |
 | 4 | 🛠️ **Инструменты** | Инструменты — руки агента: протокол MCP, инструменты восприятия/исполнения/сотрудничества, событийные асинхронные агенты, активное обнаружение инструментов | [Читать](../../book-ru/chapter4.md) | [8](../../chapter4/README.ru.md) |
 | 5 | 💻 **Кодинг-агент и генерация кода** | Код — «инструмент, создающий новые инструменты»; промышленный кодинг-агент целиком | [Читать](../../book-ru/chapter5.md) | [13](../../chapter5/README.ru.md) |
-| 6 | 🎙️ **Взаимодействие: расширение пространства наблюдений и пространства действий** | Расширяем пространства наблюдений и действий по модальности и времени: асинхронные и событийные системы, голос, Computer Use и робототехника | [Читать](../../book-ru/chapter6.md) | [13](../../chapter6/README.ru.md) |
+| 6 | 🎙️ **Взаимодействие: расширение пространства наблюдений и пространства действий** | Расширяем пространства наблюдений и действий по модальности и времени: асинхронные и событийные системы, голос, Computer Use и робототехника | [Читать](../../book-ru/chapter6.md) | [14](../../chapter6/README.ru.md) |
 | 7 | 🎯 **Оценка агентов** | Превращаем качество в сравнимые сигналы: среды, метрики, статистическая значимость и выбор на основе оценки | [Читать](../../book-ru/chapter7.md) | [13](../../chapter7/README.ru.md) |
 | 8 | 🧠 **Постобучение модели** | Три стадии—предобучение, SFT и RL: когда выбирать SFT или RL, внедрение вызова инструментов и эффективность выборки | [Читать](../../book-ru/chapter8.md) | [19](../../chapter8/README.ru.md) |
 | 9 | 🔄 **Непрерывная эволюция агентов** | Получаем сигналы обучения из траекторий выполнения и обновляем знания, инструкции, программы и параметры | [Читать](../../book-ru/chapter9.md) | [9](../../chapter9/README.ru.md) |
@@ -108,14 +108,14 @@ uv run python chapter1/context/main.py
 | **Zhipu GLM** | <https://open.bigmodel.cn/> | GLM-4.6 и др., сильный китайский, выгодная цена | Материковый Китай |
 | **Siliconflow** | <https://siliconflow.cn/> | Разные открытые модели (DeepSeek, Qwen и др.), быстрый доступ из материкового Китая | Материковый Китай |
 | **DeepSeek** | <https://platform.deepseek.com/> | Официальный API DeepSeek | Весь мир + материковый Китай |
-| **Krill AI** | [www.krill-ai.net](https://www.krill-ai.net/register?invite=Q8D3L35725) | Единый доступ к основным мировым и китайским моделям (OpenAI, Claude, Gemini, Grok, Kimi, GLM, DeepSeek, Qwen, Minimax) | Весь мир + материковый Китай |
+| **Krill AI** | [www.krill-code.com](https://www.krill-code.com/register?invite=Q8D3L35725) | Единый доступ к основным мировым и китайским моделям (OpenAI, Claude, Gemini, Grok, Kimi, GLM, DeepSeek, Qwen, Minimax) | Весь мир + материковый Китай |
 | **OpenRouter** | <https://openrouter.ai/> | Единый доступ к основным мировым и китайским моделям (GPT, Claude, Gemini, Kimi, GLM, DeepSeek, Qwen и др.) | Весь мир |
 
 ## 💎 Спонсоры
 
 Благодарим **Krill AI** за спонсорство проекта! Krill предоставляет официальный, стабильный и сверхбыстрый API-шлюз для GPT / Claude / Gemini и множества китайских моделей, с корпоративной настройкой, счетами для возмещения расходов, выделенной технической поддержкой 7×16 ч, а также эксклюзивным подключением по WebSocket для молниеносного времени до первого токена.
 
-Krill предлагает читателям книги специальную скидку: зарегистрируйтесь по [этой ссылке](https://www.krill-ai.net/register?invite=Q8D3L35725) и укажите промокод «ai-agent-book» при пополнении счёта, чтобы получить скидку 23% на первую покупку пакета Codex!
+Krill предлагает читателям книги специальную скидку: зарегистрируйтесь по [этой ссылке](https://www.krill-code.com/register?invite=Q8D3L35725) и укажите промокод «ai-agent-book» при пополнении счёта, чтобы получить скидку 23% на первую покупку пакета Codex!
 
 > 🧪 Статус выполнения экспериментов, доказательства и невыполненные критерии приёмки отслеживаются отдельно в [`EXPERIMENT_STATUS.md`](../EXPERIMENT_STATUS.md); клонирование или установка исходного кода сами по себе не подтверждают завершение эксперимента.
 

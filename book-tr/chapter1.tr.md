@@ -10,7 +10,7 @@ Bu bölüm pratikten başlayıp bir AI Agent'ın temel bileşenlerine doğru ile
 
 ## Modern Agent = LLM + Context + Tools
 
-Modern bir Agent sisteminin özü, tek ve öz bir formülde toplanır: **Agent = LLM (Büyük Dil Modeli) + Context + Tools**. Bu formül basit ve pratiktir—yeter ki her terim geniş anlamıyla okunsun:
+Modern bir Agent'ın en küçük mühendislik gerçeklemesi tek bir derli toplu formülle ifade edilebilir: **Agent = LLM (büyük dil modeli, Large Language Model) + bağlam + araçlar**. Buradaki artı işaretleri mühendislik bileşenlerinin birleşimini gösterir, pekiştirmeli öğrenmedeki biçimsel tanımı değil; daha da önemlisi bu formül yalnızca Agent'ın sınırı içindeki gerçeklemeyi betimler ve **Agent'ın etkileşimde bulunduğu Environment'ı (ortamı) içermez**. İçindeki her sözcüğü geniş anlamda, ama sınırı belli biçimde anlamak gerekir:
 
 - **LLM, Agent'ın beynidir**: Sadece bir model parametreleri kümesi değil, Agent'ın niyeti anladığı, düşündüğü, plan yaptığı ve karar verdiği bütün karar alma çekirdeğidir. Tıpkı insan beyninin salt nöronlar topluluğundan ibaret olmayıp deneyimle şekillenen düşünme biçimlerini de taşıması gibi, bir LLM'in yeteneği de iki kaynaktan gelir: **pre-training** (ön eğitim) yoluyla biriktirilen dünya bilgisi ve dil yeteneği, ve **post-training** (sonradan eğitim) ile kalıcı hale gelen karar alma stratejileri (denetimli ince ayar ve pekiştirmeli öğrenme gibi teknikleri Bölüm 8'nin konusudur).
 - **Context, Agent'ın gözleridir**: Sadece modele verilen metin değil, Agent'ın her karar noktasında görebildiği her şeydir—ortam, kullanıcı belleği, alan bilgisi, kendi durumu ve görev ilerlemesi. Tıpkı bir kişinin karar verirken durumu değerlendirmesi, ilgili deneyimi hatırlaması ve referanslara başvurması gerektiği gibi, Agent'ın context penceresi de o anda görebildiği her şeydir.
@@ -139,14 +139,14 @@ Hedef, tıbbi görüntü anlama, doğal dil üslubu veya örtük bir karar polit
 Context, bir Agent'ın her karar noktasında görebildiği her şeydir. Tıpkı karar veren bir kişinin masasına yayılmış malzemelere—görev talimatlarına, referans kılavuzlarına, önceki yazışmalara, en güncel verilere—ihtiyaç duyması gibi, bir Agent'ın context penceresi de onun görüş alanıdır. API açısından bakıldığında (Bölüm 2'de ayrıntılı), her bir LLM çağrısının context'i beş bölümden oluşur:
 
 - **System Prompt (Sistem Talimatı)**: Kullanıcının sırayla yazdığı promptlardan farklı olarak, system prompt geliştirici tarafından yazılır ve konuşma boyunca sabit kalır. Agent'ın "iş tanımı"dır—kimliğini, yetkilerini ve davranış kurallarını tanımlar. System prompt'un özenli prompt engineering'i, Agent'ın çalışma biçimini şekillendirme yöntemimizdir. System prompt ayrıca oturumlar arasında kalıcı olan **kullanıcı belleğini** de (tercihler, geçmiş davranışlar ve arka plan ayarları gibi kişiselleştirilmiş bilgi; bkz. Bölüm 3) ve dinamik olarak enjekte edilen ortam durumunu da taşır.
-- **Tool Definitions (Araç Tanımları)**: Agent'ın kullanabileceği araçların adlarını, işlevsel açıklamalarını ve parametre formatlarını bildirir. Araç tanımları olmadan Agent hiçbir aracı tanıyamaz veya çağıramaz—bir ablation study (Deney 1-1) bunu doğrulayacaktır. Araç tanımları, system prompt ile birlikte, konuşma boyunca değişmeden kalan **static prefix'i (statik ön ek)** oluşturur. (Bu temel kalıptır; 2026'dan itibaren üretim çerçeveleri, ön eki bozmadan tam araç şemalarını context'in sonunda ihtiyaç halinde de yükleyebiliyor—bkz. Bölüm 2'nin araç tanımları kısmı ve Bölüm 4.)
+- **Tool Definitions (Araç Tanımları)**: Agent'ın kullanabileceği araçların adlarını, işlevsel açıklamalarını ve parametre formatlarını bildirir. Araç tanımları olmadan Agent hiçbir aracı tanıyamaz veya çağıramaz—ama bu yüzden susmaz da; bir ablation study (Deney 1-1) onun bunun yerine ne yaptığını gösterecek. Araç tanımları, system prompt ile birlikte, konuşma boyunca değişmeden kalan **static prefix'i (statik ön ek)** oluşturur. (Bu temel kalıptır; 2026'dan itibaren üretim çerçeveleri, ön eki bozmadan tam araç şemalarını context'in sonunda ihtiyaç halinde de yükleyebiliyor—bkz. Bölüm 2'nin araç tanımları kısmı ve Bölüm 4.)
 - **User Messages (Kullanıcı Mesajları)**: Kullanıcıdan gelen girdi. Kullanıcı mesajları, RAG (Retrieval-Augmented Generation / Bilgi Getirmeyle Güçlendirilmiş Üretim, ayrıntılar için bkz. Bölüm 3) yoluyla dinamik olarak getirilen **dışsal bilgiyi** de içerebilir—eğitim verisi kesim tarihinin ötesindeki bilgileri veya özel alan bilgisini kapsar.
 - **Assistant Messages (Asistan Mesajları)**: Modelin daha önce ürettiği yanıtlar; en fazla üç bölümden oluşabilir—`reasoning` (tutarlılığı ve karar yorumlanabilirliğini koruyan içsel düşünce zinciri), `content` (kullanıcıya verilen yanıt) ve `tool_calls` (Agent'ın eyleme geçme biçimi). Belirli bir yanıtta bu üç bölüm aynı anda görünmeyebilir: örneğin Agent bir araç çağırmaya karar verdiğinde genellikle yalnızca `reasoning` + `tool_calls` bulunur; nihai bir yanıt verirken genellikle yalnızca `reasoning` + `content` bulunur.
 - **Tool Results (Araç Sonuçları)**: Agent çerçevesi bir aracı çalıştırdıktan sonra dönen sonuç. Bu sonuçlar, Agent'ın bir sonraki düşünme adımının doğrudan dayanağıdır—ve hatalarını tekrarlamak yerine sonuçlardan öğrenmesini sağlayan şeydir.
 
 İlk iki öğe (system prompt + araç tanımları) static prefix'i oluşturur; son üçü (kullanıcı mesajları + asistan mesajları + araç sonuçları) her etkileşimle büyüyen dinamik mesaj geçmişini oluşturur. Bu beş bölüm birlikte, her bir LLM çıkarımının context'ini oluşturur.
 
-Her bileşen gerçekten vazgeçilmez mi? Bunu öğrenmenin en doğrudan yolu bir **ablation study**dir—nedenleri birer birer eleyen tanı yöntemi: A bileşenini kaldırıp sistemin hâlâ çalışıp çalışmadığına bakın, sonra B bileşenini, ve her bileşenin katkısı netleşene kadar böyle devam edin. Deney 1-1, tam olarak bu yöntemi yukarıdaki beş bileşene uygular. Sonuçlar: araç tanımlarını kaldırınca Agent tamamen eylemsiz kalıyor; araç sonuçlarını kaldırınca bir önceki adımın geri bildirimini göremiyor, bu yüzden aynı aracı tekrar tekrar çağırıp sonsuz bir döngüde sıkışıp kalıyor; asistan mesajlarından reasoning'i çıkarınca ardışık kararlar birbiriyle çelişmeye başlıyor; mesaj geçmişini düşürünce Agent fiilen hafızasını yitiriyor—görevin tamamını baştan başlatıyor, zaten yapılmış adımları tekrarlıyor.
+Her bileşenin gerçekten vazgeçilmez olup olmadığını doğrulamanın en doğrudan yolu bir **ablasyon çalışmasıdır** (Ablation Study): hekimin tanı koyarken nedenleri teker teker elemesi gibi — önce A bileşenini çıkarıp sistemin hâlâ düzgün çalışıp çalışmadığına bakılır, sonra B bileşeni çıkarılır ve böyle sürer; böylece her bileşenin katkısı değerlendirilir. Deney 1-1 tam da bu düşünce çizgisiyle yukarıdaki beş bileşeni sistematik olarak sınamıştır.
 
 > **Deney 1-1 ★★: Context'in Kritik Rolü**
 >
@@ -154,9 +154,9 @@ Her bileşen gerçekten vazgeçilmez mi? Bunu öğrenmenin en doğrudan yolu bir
 >
 > ![Şekil 1-3: Deney 1-1—Context ablation study tasarımı](images/fig1-3.svg)
 >
-> Deney sonuçları, her context bileşeninin yerine konulamaz rolünü ortaya koydu. **Tool Definitions** (static prefix'in bir parçası), Agent'ın eylem yeteneğinin temelidir; bunlar olmadan Agent hiçbir aracı tanıyamaz veya çağıramaz. **Tool Results**, kapalı döngü kontrolünün anahtarıdır; yokluğu Agent'ın "kör" hareket etmesine ve sonsuz bir döngüye düşmesine neden olur. **Reasoning süreci** (asistan mesajlarının reasoning kısmı), Agent'ın önceki kararlarının gerekçelerini korur, düşünce sürecini daha tutarlı kılar ve çelişkili kararları önler. **Mesaj geçmişi** (önceki turlardan gelen kullanıcı mesajları, asistan mesajları ve araç sonuçları), gereksiz işlemleri önler, görev yürütme tutarlılığını korur ve aynı hataların tekrarlanmasını engeller.
+> Deney sonuçları, her context bileşeninin rolünü ve bu bileşenlerin eşit derecede önemli olmadığını ortaya koydu. **Tool Definitions** (static prefix'in bir parçası), Agent'ın eylem yeteneğinin temelidir; bunlar olmadan Agent hiçbir aracı çağıramaz. Ne var ki eylem yeteneğini yitirmek susmak anlamına gelmez: model yine de düzgün biçimlenmiş, kendinden emin bir yanıt döndürür; ancak içindeki sayılar gözlemlerden değil parametrik bellekten gelir ve gerçekten araç çıktısından türetilmiş bir yanıtla tıpatıp aynı görünür. Açıkça reddetmesi mi yoksa yerinde uydurması mı, esas olarak modelin kendi halüsinasyon oranına ve dürüstlüğüne bağlıdır; prompt'a "kurları kendin tahmin etme" gibi bir kısıt koymak uydurma olasılığını düşürür ama ortadan kaldırmaz. **Tool Results**, kapalı döngü kontrolünün anahtarıdır; bunlar olmadan Agent "kör" hareket eder ve yineleme bütçesini tüketene dek yeniden dener. **Reasoning süreci** (asistan mesajlarının reasoning kısmı) bir adımın *neden* atıldığını kaydeder; araç sonuçları ise *ne olduğunu* kaydeder. Birincisi ikincisinden yeniden kurulabiliyorsa, onu geçmişten çıkarmanın bedeli neredeyse yoktur. **Mesaj geçmişi** (önceki turlardan gelen kullanıcı mesajları, asistan mesajları ve araç sonuçları), gereksiz işlemleri önler ve aynı hataların tekrarlanmasını engeller.
 >
-> Deneyin temel çıkarımı: **context, Agent'ın ne görebileceğini belirler ve Agent yalnızca gördüğüne dayanarak karar verebilir**. Gözü bağlı bir kişinin sağlıklı yargılarda bulunamaması gibi, herhangi bir context bileşeni eksik olan bir Agent de ciddi bir karar alma yeteneği kaybı yaşar—araç tanımları olmadan hangi araçların var olduğunu bilemez; önceki yürütme sonuçları olmadan neyin zaten yapıldığını bilemez.
+> Deneyin temel çıkarımı: **context, Agent'ın ne görebileceğini belirler ve Agent yalnızca gördüğüne dayanarak karar verebilir**. Ancak bileşenler eşdeğer değildir; ölçüt, bir bileşenin taşıdığı bilginin başka bir yerden yeniden kurulup kurulamayacağıdır—"her bileşen vazgeçilmezdir" gibi iddialar varsayılmak yerine ölçülmelidir ve modeller o kadar hızlı değişiyor ki aynı ablation daha yeni bir modelde pekâlâ farklı bir sonuca varabilir. Mühendislik pratiğinde daha da önemli bir nokta var: **"yanıt üretmek", "görevi tamamlamak" değildir**. Bir context bileşeni eksik olduğunda tipik başarısızlık, hatayla çıkmak değil, kusursuz görünen bir yanıttır.
 
 ### ReAct Döngüsü
 
@@ -168,9 +168,7 @@ Somut bir örnek üzerinden—birden fazla para biriminde geliri toplama—bir A
 
 ![Şekil 1-4: Agent trajectory'si—çok para birimli toplama görevi için ReAct döngüsü](images/fig1-4.svg)
 
-Aşağıdaki Python tarzı taslak açıklayıcı pseudocode'dur, çalıştırılabilir SDK kodu değildir; `python` işareti yalnızca sözdizimi vurgulama için kullanılır.
-
-**ReAct kontrol döngüsü:**
+Önce en küçük çalışma iskeletine bakalım. Gösterdiği şey **mekanizmanın nasıl işlediğidir**: Model yalnızca bir sonraki adıma karar verir, Harness bağlamı bir araya getirir, araçları doğrular ve çalıştırır, Environment ise gerçek durum değişikliklerini ve gözlemleri üretir. Kitabın devamında da Python tarzı sözde kod kullanılır; sözde kod doğrudan çalıştırılamaz ve belirli bir SDK'ya karşılık gelmez. Somut, çalıştırılabilir kod kitabın eşlik eden kod deposundadır.
 
 ```python
 trajectory = [user_request]
@@ -233,9 +231,6 @@ Deneyimizde bu döngü tüm açıklığıyla ortaya çıktı. İlk turda Agent g
 
 Bu en temel tasarımda, LLM'in gördüğü context'e sürekli yeni bilgiler eklenir. Her LLM çağrısı eksiksiz trajectory'yi görür, böylece model görevin hangi aşamasında olduğunu, daha önce nelerin denendiğini ve sonucunun ne olduğunu bilir. İnsanların bir problemi çözerken sürekli gözden geçirip özetlemesi gibi, Agent da trajectory'si sayesinde göreve dair küresel bir bakış açısı taşır. Ve trajectory yapılandırılmış olduğundan—kullanıcı mesajları, asistan mesajları (reasoning + tool calls) ve araç sonuçları temiz biçimde ayrıldığından—sistem son derece yorumlanabilir ve hata ayıklanabilir durumdadır.
 
-Trajectory, bir yürütme kaydından fazlasıdır; Agent'ın yeteneğinin bir aynasıdır. Trajectory'leri büyük ölçekte analiz etmek, davranış kalıplarını, daha iyi karar yollarını ve daha iyi araç tasarımlarını ortaya çıkarır. Trajectory verisi hatta bir bilgi tabanına damıtılabilir, ya da pekiştirmeli öğrenme yoluyla daha güçlü Agent modelleri eğitmek için kullanılabilir—deneyimden öğrenme döngüsünü kapatır.
-
-
 Artık Agent'ın çalışma döngüsünü anladığımıza göre, farklı modellerin bu döngüyü nasıl yürüttüğünü görmek için iki deney yapalım.
 
 > **Deney 1-2 ★: Kimi K3'ün Yerleşik Agent Yeteneği**
@@ -247,7 +242,7 @@ Artık Agent'ın çalışma döngüsünü anladığımıza göre, farklı modell
 > [^ch1-2]: Okuyucu asdlem'e, RL'nin içselleştirdiği şeyin araç yürütme mekanizması değil tool calling karar politikası olduğu ayrımını GitHub Issue #30 üzerinden belirtip netleştirdiği için teşekkürler. Bkz. https://github.com/bojieli/ai-agent-book/issues/30
 >
 > Kimi K3'ün Agent görevlerindeki öne çıkan avantajı **uzun zincirli araç çağrılarının kararlılığıdır**—çoğu modelin birkaç düzine çağrıda bozulmaya başladığı noktanın çok ötesinde, 200-300 ardışık araç çağrısını baştan sona tutarlı bir reasoning ile sürdürebilir. K3, uzun ufuklu programlama ve Agent iş yükleri için optimize edilmiştir ve iki varyantta yayınlanmıştır: K3 Max (diyalog ve Agent görevleri için) ve K3 Swarm Max (büyük ölçekli paralel işleme için). Açık kaynaklı bir model olarak, yazılım mühendisliği ve Agent benchmark'larında en üst düzey kapalı kaynak sistemlerle eşleşir—pekiştirmeli öğrenmenin bir modele yerleşik Agent yeteneği kazandırabileceğinin kanıtıdır.
-
+>
 > **Deney 1-3 ★: GPT-5.6'nın Yerleşik Deep Research Yeteneği**
 >
 > İkinci deney, gelişmiş bir modelin, API düzeyinde yerleşik araçların desteğiyle Deep Research için "ara—oku—analiz et" orkestrasyon döngüsünü sunucu tarafında nasıl kapattığını göstermek için **OpenAI GPT-5.6**'yı kullanır. GPT-5.6'nın kullanışlı bir özelliği **Freeform Tool Calling'dir (Serbest Format Araç Çağırma)**. Geleneksel olarak, bir araç çağıran model her parametreyi katı bir JSON'a (yapılandırılmış bir veri formatı) paketlemek zorundadır—katı biçimlendirme kurallarına sahip bir form doldurmak gibi. Freeform tool calling (API'de `type: "custom"` türünde bir araç olarak tanımlanır), modelin JSON kaçış karakterlerini tamamen atlayarak araca doğrudan ham metin (bir Python kod parçası, bir SQL sorgusu) göndermesine izin verir. Şunu vurgulamakta fayda var: bu, model mimarisinde bir yenilik değil, API'nin parametre formatının bir evrimidir—istemcinin tool calling döngüsü (`tool_calls`'ı algıla → çalıştır → sonucu döndür) aynı kalır; sadece argümanlar bir JSON dizesinden ham metne dönüşür.
@@ -263,7 +258,6 @@ Artık Agent'ın çalışma döngüsünü anladığımıza göre, farklı modell
 > Şekil 1-5, "Model as Agent" paradigması altındaki yerleşik tool calling'in tam mimarisini, Kimi K3 / GPT-5.6'nın gerçek dünya görevlerindeki ReAct yürütme süreciyle birlikte gösterir.
 >
 > ![Şekil 1-5: "Model as Agent" Mimarisi—Yerleşik Tool Calling](images/fig1-5.svg)
-
 
 ## Harness Engineering: Modelin Ötesinde Rekabet Gücü
 
@@ -371,12 +365,17 @@ Model, Agent'ın zeka altyapısıdır ve doğru olanı seçmek çoğu zaman herh
 
 **Çıktı Hızına ve Çok Modlu Yeteneklere Dikkat Edin.** Maliyetin ötesinde, gözden kaçması kolay iki boyut vardır. Biri **çıktı token hızıdır**: Agent'lar tipik olarak çok sayıda çıkarım turu çalıştırır ve her tur bir sonraki başlamadan önce bitmelidir, bu yüzden çıktı hızı uçtan uca gecikmeyi doğrudan belirler—her turda 2 saniye daha yavaş çalışan 20 turluk bir Agent görevi, ekstra 40 saniyelik bir bekleme anlamına gelir. Diğeri ise **çok modlu (multimodal) destektir**: Agent'ınızın görüntüleri, sesi veya videoyu anlaması gerekiyorsa, multimodal yetenek zorunlu bir gereksinimdir ve modeller bu konuda büyük farklılıklar gösterir.
 
-
 ### Orkestrasyon Kalıpları: Workflow ve Autonomous
 
 Orkestrasyon kalıpları, Harness'in "context ve tools" katmanını nasıl organize ettiğidir—LLM çağrıları arasında context'in nasıl aktığını, araçların nasıl zamanlandığını ve Agent'ın yürütme yolunun önceden mi sabitlendiğini yoksa anlık mı üretildiğini belirlerler. Agent orkestrasyonu basitten karmaşığa doğru evrildi ve her kalıbın kendi senaryoları ve ödünleşimleri vardır. Anthropic'in LLM Agent'ları inşa eden düzinelerce ekiple çalışma deneyiminde, en başarılı uygulamalar nadiren karmaşık çerçeveler kullanır; basit, birleştirilebilir kalıplar kullanırlar.
 
-Bir LLM uygulaması inşa ederken basitten karmaşığa doğru gidin. Tek bir LLM çağrısıyla başlayın—daha iyi prompt'lar ve bağlam içi örnekler sorunu çözüyorsa bir Agent sistemi inşa etmeyin. Birden fazla adım gerektiğinde ve görev sabit alt görevlere temiz bir şekilde ayrışıyorsa bir workflow kullanın. Yalnızca dinamik kararlara ve esnek bir yürütme yoluna ihtiyaç duyduğunuzda bir autonomous Agent'a başvurun. Ve şunu unutmayın: Agent sistemleri tipik olarak daha iyi görev performansı karşılığında gecikme ve maliyetten ödün verir—bu takasın buna değip değmediğini dikkatle tartın.
+Bir LLM uygulaması inşa ederken basitten karmaşığa ilerleme ilkesini izleyin. Önce tek bir LLM çağrısını değerlendirin. Daha iyi prompt'lar ve bağlam içi örnekler sorunu çözüyorsa bir Agent sistemi devreye sokmayın. Çok adımlı işleme gerektiğinde, sabit alt görevlere açıkça ayrılabilen senaryolarda bir workflow kullanmayı düşünün. Yalnızca dinamik kararlara ve esnek yürütme yollarına ihtiyaç duyduğunuzda autonomous Agent'a başvurun. Agent sistemlerinin tipik olarak daha iyi görev performansı karşılığında gecikme ve maliyetten ödün verdiğini unutmayın; bu takasın buna değip değmediğini dikkatle tartın.
+
+Yaygın bir karşı örnek, en baştan son derece karmaşık bir workflow veya multi-Agent sistemi kurmaktır. Örneğin, “bir milyon sohbet mesajından kişisel anılar çıkaran” bir Agent tasarlaması istendiğinde bazı AI modelleri hızla görünüşte titiz bir boru hattı çizer: önce konuşmaları parçalara ayırır, ardından çıkarma, kanıt doğrulama, kimlik çözümleme, anıları düzenleme ve birleştirme incelemesi için Agent'ları sırayla yerleştirir; son olarak bir olgular grafiği, kapsam defteri ve değişmez sürümler oluşturur. Her bileşen tek başına makul görünür, ancak bir araya geldiklerinde son derece verimsiz ve güvenilmez bir sistem ortaya çıkar. Karmaşık bir workflow'un yürütme topolojisi sabit olduğundan, her yeni istisna kolayca yeni bir düğüm eklenmesine yol açar: mimari giderek karmaşıklaşırken genelliği giderek azalır. Modelin context'e dayanarak verebileceği anlamsal kararlar bunun yerine workflow'a sabit kodlanmış olur.
+
+Dolayısıyla **Harness'in önemli olması, daha karmaşık bir Harness'in daha iyi olduğu anlamına gelmez**. Manus web sitesi bu ödünleşimi “Less structure, more intelligence.” ifadesiyle özetler.[^ch1-manus-less-structure] Önce yeterince yetenekli bir Agent'a açık bir hedef, gerekli context'i ve birleştirilebilir araçları verin; nasıl bir insan gibi doğrulama, karşılaştırma ve çatışma çözümü yapacağını doğal dille anlatın. Program yalnızca izinler, kaynak materyallerin üzerine yazmama ve atomik yayımlama gibi her zaman geçerli olması gereken sınırları sabit kodlamalıdır. İlgili adımı özel bir doğrulayıcıya, bağımsız bir Agent'a veya deterministik bir sürece ancak iş kısıtlarının kendisi bunu gerektirdiğinde ya da değerlendirmeler istikrarlı bir hata biçimini tekrar tekrar ortaya çıkardığında yükseltin. İyi yapı, Agent'ın tüm düşünmesini onun yerine önceden canlandırmaz; sınırları korur ve bu sınırların içindeki karar alanını modele geri verir.
+
+[^ch1-manus-less-structure]: Manus, “Less structure, more intelligence.” https://manus.im/
 
 #### Workflow Kalıbı: Deterministik Orkestrasyon
 
@@ -394,6 +393,23 @@ Her düğüm içinde bir LLM kullanılabilir (örn. kullanıcının seyahat ihti
 Workflow kalıbının iki temel avantajı vardır. Birincisi, **sıkı süreç kontrolü**: geliştirici, kritik adımların asla atlanmayacağını veya sırasız çalışmayacağını garanti edebilir—"ödemeden önce rezervasyon yok" gibi iş kuralları LLM'in takdirine bırakılmaz, kod tarafından zorunlu kılınır. İkincisi, **güvenlik**: yürütme yolu deterministik olduğundan, bir prompt injection veya model hatası olsa olsa geçerli düğümün içindeki işlemeyi bozabilir; Agent'ı ulaşmaması gereken bir dala sıçratamaz. Saldırı yüzeyi tek bir düğümle sınırlıdır.
 
 Bir workflow'un başlıca sınırlaması **esneklik eksikliğidir**. Akışın hiç öngörmediği bir şey olduğunda—kullanıcı ödeme sırasında rezervasyonu değiştirmeye karar verir, ya da bir uçuş aniden iptal edilir ve alternatif önerilmesi gerekir—sabit yol uyum sağlayamaz; yapabileceği tek şey önceden belirlenmiş bir istisna dalını izlemek ya da kontrolü bir insana geri vermektir.
+
+En basit workflow örneğini ele alalım: **metinden görüntüye üretim (text-to-image)**. Kullanıcının ihtiyacı genellikle günlük dilde tek bir cümledir, örneğin "AGI gerçekleştikten sonra programcıların çalışma sahnesini çiz"; oysa Stable Diffusion gibi metinden görüntüye modeller yalnızca belirli bir tarzdaki prompt'ları kabul eder—virgülle ayrılmış İngilizce etiketler, kalite sözcükleri, negatif prompt'lar. Bu yüzden workflow, kullanıcı ile görüntü üretim modeli arasına iki sabit düğüm yerleştirir:
+
+1. **Prompt yeniden yazımı**—kullanıcının doğal dil isteğini metinden görüntüye modelin alışık olduğu prompt formatına dönüştürmek için bir LLM kullanılır. Yukarıdaki örnekte "AGI gerçekleştikten sonra programcıların çalışma sahnesi" çok geniş bir istektir, bu yüzden LLM'in önce ciddi biçimde düşünmesi gerekir (örneğin, "AGI gerçekleştikten sonra programcıların kod yazmasına gerek kalmayacak, bu yüzden sahilde güneşlenen ve beyin-bilgisayar arayüzüyle AI çalışanları yöneten bir programcı çizilmeli"), ardından somut bir sahne tanımı verir.
+2. **Görüntü üretimi**—yeniden yazılan prompt ile metinden görüntüye model çağrılır ve görüntü elde edilir.
+
+Yürütme yolu kodla sabitlenmiştir. Bu workflow'daki LLM düğümünün yaptığı şey **çeviridir**—insan dilini aracın anlayabileceği girdi formatına dönüştürür; var olma nedeni, metinden görüntüye modelin "insan dilini anlamaması"dır. Bir aracın (veya modelin) yetenek açığını bu şekilde yamayan Harness koduna **uyarlama katmanı** (adaptation layer) demek yerinde olur.
+
+Ama görüntü üretim aracını **yerli görüntü üretimi** (native image generation) yeteneğine sahip çok modlu bir modelle değiştirirseniz—örneğin Nano Banana 2, GPT-Image 2—prompt yeniden yazımına artık gerek kalmaz. Kullanıcı nasıl ifade ederse etsin, model kendisi anlar ve doğrudan görüntü üretir.
+
+> **Deney 1-4 ★: Metinden Görüntüye Workflow ile Yerli Görüntü Üretiminin Karşılaştırılması**
+>
+> Aynı günlük dil isteğini iki rotadan geçirin. **Workflow rotası**: LLM önce isteği Stable Diffusion tarzı bir prompt'a yeniden yazar, ardından metinden görüntüye modeli çağırarak görüntü üretir; **yerli rota**: cümleyi olduğu gibi yerli görüntü üretimini destekleyen çok modlu bir modele (örn. GPT-Image 2) gönderin, tek çağrıyla doğrudan görüntü alın.
+>
+> Karşılaştırın: prompt yeniden yazım düğümü orijinal isteği nasıl bir şeye dönüştürdü ve iki rotanın ürettiği görüntülerden hangisi orijinal isteğe daha yakın. İki tür isteği karşılaştırmaya değer: biri somut betimlemeli (örneğin poster metni belirtilmiş); diğeri geniş kapsamlı (örneğin yukarıdaki AGI çalışma sahnesi)—bu tür isteklerde workflow rotasının hâlâ kendi avantajları olabilir.
+
+Bu deney şunu gösterir: **Harness'te modelin yetenek açıklarını yamayan parçalar, model güçlendikçe modelin kendisi tarafından içselleştirilir.** Yalnızca bu kitabın birinci bölümünde bile bu birkaç tur yaşandı: few-shot örnekleri ve "adım adım düşünelim" tarzı prompt teknikleri, instruction tuning ve reasoning modelleri tarafından içselleştirildi; çıktı formatı onarımı ve JSON ayrıştırma toleransı, structured output ve yerli tool calling tarafından içselleştirildi; metinden görüntüye prompt yeniden yazımı ise modelin yerli çok modlu anlama ve üretme yeteneği tarafından yutuldu. Her içselleştirme turunun yok ettiği şey, "çeviri" ve "iskele" (scaffolding) türü uyarlama katmanı kodudur.
 
 #### Autonomous Agent: Dinamik Otonom Karar Alma
 
@@ -417,13 +433,15 @@ Pratikte, workflow'lar ve autonomous Agent'lar ya-ya da seçimi değildir—bir�
 
 ![Şekil 1-7: n8n workflow editörü arayüzü](images/n8n-workflow.png)
 
+Karıştırmanın bir başka biçimi daha var: **önce autonomous Agent workflow'u yazar, sonra workflow onu çalıştırır**. Agent görevi okuduktan sonra topolojiye kendisi karar verir ve bir parça orkestrasyon kodu üretir; kod bir kez üretildikten sonra yürütme aşaması workflow'un determinizmine geri döner. Böylece autonomous Agent'ın bilinmeyen görevler karşısındaki esnekliği korunur, ama modelin her zamanlama kararına katılması gerekmez. Bölüm 10 bu biçimi ayrıntılı olarak ele alır.
+
 #### Ana Akım Agent Çerçevelerinin Kısa Karşılaştırması
 
 Aşağıdaki tablo, okuyucuların kendi senaryoları için doğru olanı hızla belirlemesine yardımcı olmak amacıyla güncel ana akım Agent çerçevelerini/platformlarını özetler:
 
 | Çerçeve/Platform | Temel Konumlandırma | Orkestrasyon Kalıbı | Geliştirme Yaklaşımı | Uygulanabilir Senaryolar |
 |-------------------|--------------------|----------------|----------------|-------------------------|
-| **OpenAI Agents SDK** | Hafif Agent geliştirme kütüphanesi | Autonomous (araç döngüsü) | Kod öncelikli | Hızlı prototipleme, tek Agent'lı uygulamalar |
+| **Codex Harness** | Codex'i çalıştıran açık kaynaklı Agent çalışma zamanı | Autonomous | Kod öncelikli, kendi uygulamanıza gömülebilir | Coding Agent, Agent'ı kendi ürününüze gömme |
 | **Claude Agent SDK** | Üretim düzeyinde Agent geliştirme çerçevesi | Autonomous (araç döngüsü + alt Agent'lar) | Kod öncelikli | Karmaşık otonom görevler, Kodlama Agent'ı |
 | **LangChain / LangGraph** | Genel amaçlı LLM uygulama çerçevesi | Workflow + Autonomous | Kod öncelikli | Karmaşık düşünce zincirleri, çok adımlı workflow'lar |
 | **n8n** | Görsel workflow otomasyonu | Workflow + Autonomous | Düşük kod (görsel sürükle-bırak) | İş otomasyonu, teknik olmayan ekipler |
@@ -433,13 +451,15 @@ Aşağıdaki tablo, okuyucuların kendi senaryoları için doğru olanı hızla 
 | **DeepSeek Harness** | Agent öz-evrim çerçevesi | Her şey bir eklentidir | Kod öncelikli, kolay özelleştirme | Agent geliştiricileri, araştırmacılar |
 | **Pi** | Minimal Coding Agent çerçevesi | Otonom | Kod öncelikli, kolay özelleştirme | Agent geliştiricileri |
 
+Tablodaki ilk iki satır ayrıca açıklanmayı hak ediyor. Codex, OpenAI'nin Coding Agent ürünüdür (uygulama, CLI, IDE eklentisi); Codex Harness ise bu biçimlerin hepsini çalıştıran çalışma zamanı katmanıdır[^ch1-codex-harness]. Codex Harness üç entegrasyon yolu sunar: `codex exec` betiklerdeki ve CI'daki tek seferlik işler için uygundur; Codex SDK, görevleri başlatan, sürdüren ve akış hâlinde işleyen üçüncü taraf uygulama kodu için uygundur; app-server ise JSON-RPC protokolü üzerinden kalıcı oturumlar, olay akışları ve onay geri çağırmaları sağladığından Agent'ı doğrudan ürünün içine koymaya uygundur. Claude Agent SDK ile Claude Code arasında da benzer bir ilişki vardır; fark şu ki Claude tarafında dışarıya açılan SDK arayüzüdür, Harness'ın uygulamasının kendisi açık kaynak değildir.
+
+[^ch1-codex-harness]: OpenAI. "Codex as a platform: build on the open agent harness", Ağustos 2026.
+
 Agent çerçeveleri hızla gelişir. Siz bu kitabı okurken bunların bazıları eskimiş, yeni çerçeveler popülerleşmiş olabilir. Bu yüzden belirli bir çerçevenin API'sini öğrenmek önemli değildir. Seçimde asıl ölçüt çerçevenin karmaşıklığı değil, iş mantığına odaklanmanızı sağlayacak kadar ince bir soyutlama katmanı sunup sunmadığıdır.
 
 Orkestrasyon kalıpları, Harness içindeki context ve tools'un organizasyonunu çözer—LLM çağrılarının, araçların ve veri akışlarının nasıl bağlandığını. Ama işi yapmak yeterli değildir; aynı zamanda doğru ve güvenli biçimde yapılması gerekir. Bu yüzden şimdi constrain, verify ve correct mekanizmalarının pratikte nasıl hayata geçtiğinin başlıca yolu olan guardrail'lere dönüyoruz.
 
 ### Guardrail'ler ve Güvenlik
-
-Bu bölüm, büyük resmi ortaya koymak için guardrail'lere üst düzey bir genel bakış sunar. Uygulama ayrıntıları ve pratik, Bölüm 2'de (bağlam katmanı: prompt injection koruması), Bölüm 4'te (yürütme katmanı: araç izin kontrolü) ve Bölüm 5'te (yürütme ve veri katmanları: kod yürütme güvenliği ve güven sınırının aşağı indirilmesi) devam eder; ilk kez okuyanların her ayrıntının peşine düşmesine gerek yok.
 
 Guardrail'ler, Harness'in "constrain, verify ve correct" katmanının başlıca uygulanma biçimidir—Agent davranışını güvenli ve kontrol edilebilir tutan katmanlı bir savunma. İyi tasarlanmış **guardrail'ler**, veri gizliliği risklerini (örn. system prompt sızıntısını önlemek) ve itibar risklerini (örn. model davranışını markayla tutarlı tutmak) yönetmeye yardımcı olur. Zaten belirlediğiniz risklere yönelik guardrail'lerle başlayın, yeni zafiyetler ortaya çıktıkça yenilerini ekleyin.
 
@@ -520,7 +540,7 @@ Bu bölüm, pratikten başlayarak AI Agent'ları anlamak ve inşa etmek için te
 
 **Context ve Tools'u Genişletmek Birincil Yetenek Kaldıracıdır**: Model sabitken Observation ve Action Space'i yeniden tanımlamak veya büyütmek—yani Context'i ve Tools'u genişletmek—çoğu zaman çözülemeyen bir görevi doğrudan çözülebilir hâle getirebilir. Manus'tan OpenClaw'a uzanan evrim, genelliğin büyük ölçüde arayüz sınırını genişletmekten geldiğini gösterir; bu genişleme ihtiyaç anında yapılmalı, izinler ve doğrulamayla eşleştirilmelidir.
 
-**Gözler (Context) Belirleyici Faktördür**: Context, bir static prefix'ten (system prompt + araç tanımları) ve dinamik bir trajectory'den (mesaj geçmişi) oluşur. Ablation, herhangi bir bileşenin kaldırılmasının sistemi belirgin biçimde kötüleştirdiğini gösterir. ReAct döngüsünün özü, modelin görevi ilerletmeye devam etmesi için trajectory'ye tekrar tekrar ekleme yapmaktır.
+**Gözler (Context) Belirleyici Faktördür**: Context, bir static prefix'ten (system prompt + araç tanımları) ve dinamik bir trajectory'den (mesaj geçmişi) oluşur. Ablation, bileşenlerin eşdeğer olmadığını gösterir: araç tanımlarını veya araç sonuçlarını kaldırmak doğrudan eylem ya da döngüyü kapatma yeteneğini alıp götürürken, diğer ikisini kaldırmanın bedeli o bilginin mevcut gözlemlerden yeniden kurulup kurulamayacağına bağlıdır. ReAct döngüsünün özü, modelin görevi ilerletmeye devam etmesi için trajectory'ye tekrar tekrar ekleme yapmaktır.
 
 **Harness Rekabet Avantajıdır**: Model yeteneği metalaşıyor; gerçek ayırt edici faktör Harness'tir—context ve tools'un etrafında inşa edilmiş, bir Agent'ın "işi güvenilir biçimde yapmasını" sağlayan constrain, verify ve correct mekanizmalarıdır. Üretim düzeyindeki Agent sistemlerinde, Harness kodunun büyük çoğunluğu yalnızca context ve tools'a değil bu güvenlik önlemlerine gider.
 
@@ -539,7 +559,7 @@ Aşağıdaki düşünce soruları, bölümün temel kavramlarını bir düzey da
 1. ★★ Bir Agent sistemine yalnızca tek bir yetenek ekleyebilseydiniz—daha güçlü bir model, daha zengin bir context, ya da daha fazla araç—hangisini seçerdiniz? Seçiminiz hangi koşullarda değişirdi?
 2. ★★★ Bir ReAct döngüsünde toplam cache okuma miktarı, tur sayısıyla yaklaşık karesel olarak büyür. Bu büyüme nasıl azaltılabilir?
 3. ★★ "Model as Agent" paradigması, modellerin tool calling kararlarında giderek daha otonom hale geldiği anlamına gelir. Ancak bu bölüm, Harness engineering'in öneminin aslında arttığını savunuyor. Bu iki eğilim nasıl bir arada var olabilir? Agent çerçevelerinin gelecekteki temel değeri nerede yatıyor?
-4. ★★ Ablation deneyinde, "araç sonucu geri bildiriminin" yokluğu Agent'ın sonsuz bir döngüye düşmesine neden oldu. Üretim ortamında, eksik araç sonuçlarının yanı sıra bir Agent'ın döngüye girmesine hangi başka durumlar neden olabilir? Hangi tespit ve sonlandırma mekanizmalarını tasarlardınız?
+4. ★★ Ablation deneyinde, "araç sonucu geri bildiriminin" yokluğu Agent'ın yineleme bütçesini tüketene dek yeniden denemesine yol açıyor. Üretim ortamında, eksik araç sonuçlarının yanı sıra bir Agent'ı bu tür bir döngüye hangi başka durumlar sokabilir? Hangi tespit ve sonlandırma mekanizmalarını tasarlardınız?
 5. ★ Bu bölüm beş Agent ürününü algı, eylem ve strateji olmak üzere üç boyutta analiz etti. Günlük kullandığınız bir yapay zeka ürününü seçin, aynı üç boyutta analiz edin ve mimarisinin mantıklı olup olmadığını değerlendirin. Siz tasarlıyor olsaydınız neyi iyileştirirdiniz?
 6. ★★ Özellikle uçuş rezervasyonu için bir müşteri hizmetleri sistemi tasarlıyor olsaydınız, bir workflow kalıbı mı yoksa bir autonomous Agent kalıbı mı seçerdiniz? Aynı sistemde her iki kalıbı da karıştırmak mümkün müdür?
 7. ★★★ Guardrail'ler bölümü araç risk derecelendirmesinden bahsetti. Bir araç genel olarak düşük riskli olup belirli parametre kombinasyonlarıyla yüksek riskli hale geliyorsa (örn. `delete_file`'ın normal bir dosyayı silmesi ile bir sistem dosyasını silmesi), dinamik risk değerlendirmesini nasıl tasarlardınız?

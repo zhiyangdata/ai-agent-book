@@ -17,298 +17,292 @@ A kiértékelés tudományos alapokra helyezi ezeket a döntéseket. Szisztemati
 Az 1. fejezetben bemutatott Harness Engineering szempontjából a kiértékelés a Harness "verifikációs" szerepét tölti be. Egy kulcsfontosságú felismerés: **a kiértékelés tárgya nem csupán a modell, hanem a modell és a Harness kombinációja legyen**. Ugyanaz a modell drasztikusan eltérően teljesíthet különböző Harnessokban — egyes csapatok pusztán a Harness optimalizálásával jelentősen javították ugyanazon modell teljesítményét terminálfeladatokon (lásd 5. fejezet). Tehát amikor egy Ügynök gyengén teljesít, a megoldás nem feltétlenül egy másik modell, hanem egy jobb Harness-összetevő (utasítások, eszköztervezés, visszacsatolási hurkok). Egy jól felépített kiértékelő rendszernek képesnek kell lennie két alapvetően különböző probléma elkülönítésére: "elégtelen modellképesség" és "Harness-tervezési hibák". "Az elkülönítés bevett módja a modellcsere-kísérlet": rögzítsd a Harnessot, cseréld be egy erősebb vagy gyengébb modellt, és figyeld meg, mennyit változik a pontszám. Ha egy erősebb modell sem emeli a pontszámot, a szűk keresztmetszet a Harness. Ha egy gyengébb modell lesüllyeszti a pontszámot, és az eredmények élesen ingadoznak a modell képességeivel, a legközvetlenebb értelmezés szerint a modell maga a szűk keresztmetszet, és a jelenlegi teljesítményt a modell dominálja. Hogy ez a feladat eredendő nehézsége miatt van-e, vagy mert a Harness túlzottan támaszkodik a modell előzetes tudására, az további elemzést igényel. Vegyük észre, hogy ez eltér a fenti ablációs kísérlettől: abláció során "egy Harness-összetevőt kapcsolunk ki", hogy lássuk az általános teljesítmény változását; modellcsere során **rögzítjük a Harnessot és csak a modellt cseréljük**. Az előbbi azt lokalizálja, hogy a Harness mely része számít; az utóbbi azt mondja meg, hogy a szűk keresztmetszet a modell-e vagy a Harness.
 
 Egy kiértékelő rendszer még nagyobb értéket képvisel a gyors modellfejlődés korában. A modellek folyamatosan javulnak, de egy új modell, amely magasabb pontszámot ér el a nyilvános benchmarkokon, nem feltétlenül teljesít jobban az Ön feladatán — akár romolhat is (rosszabbul teljesíthet, mint a régi verzió bizonyos szempontokból). Csak a saját kiértékelési adathalmazon végzett teljes futtatás teszi lehetővé az adatvezérelt frissítési döntést. Egy szilárd kiértékelő rendszer még a "jövőbeli modellekre épülő termékfejlesztés" stratégiáját is életképessé teszi: ha a jelenlegi modell nem elég jó a kereskedelmi bevezetéshez, fejezd be a terméket, építsd fel a kiértékelési készletet, kövesd nyomon minden új modell teljesítményét, és indulj el, amint valamelyik átlépi a küszöböt.
+Egy kiértékelő rendszer négy szakaszra bontható: mi számít sikernek, honnan jönnek a feladatok, ki ellenőriz, és hogyan válik a pontszám döntéssé. Ezt mutatja a 7-1. ábra.
 
-> **Fejezetkalauz**
->
-> Ez a fejezet egy teljes kiértékelő rendszert épít fel három szinten. Az első szint a "Kiértékelési Környezet" ("hol teszteljünk"): hogyan állítsunk fel automatizált, reprodukálható tesztkörnyezetet, lefedve két paradigmát: eszközhívás és ember-számítógép interakció. A második szint a "Kiértékelési Módszerek" ("hogyan ítéljünk"): az adathalmaz-tervezési alapelvektől és a kiértékelési metrikarendszertől (mit mérjünk), az LLM-mint-bíró (nagy nyelvi modellek használata bíróként) automatizált kiértékelésen át a páronkénti összehasonlításig és a modellek rangsorolásáig. A harmadik szint a "Kiértékelés-vezérelt Döntéshozatal" ("mit tegyünk a tesztelés után"): a kiértékelési eredmények átalakítása gyakorlatba ültethető útmutatássá modellválasztáshoz, architektúra-optimalizáláshoz és folyamatos iterációhoz, statisztikai szignifikanciával megítélve, hogy egy megfigyelt pontszámkülönbség valódi-e. A fejezet kitér a megfigyelhetőségre és a termelési szintű Ügynökök belső kiértékelési infrastruktúrájára is, és a 8. fejezet poszt-tréningjéhez kapcsolódó szimulációs környezetekkel zárul.
->
-> A fejezeten átívelő gondolat: **egy kiértékelő rendszer elsődleges értéke nem a jelenlegi rendszer pontozása, hanem az, hogy lehetővé teszi a modellfejlődéssel való gyors és megbízható lépéstartást.** Amikor egy erősebb vagy olcsóbb modell megjelenik, egy robusztus kiértékelő rendszerrel rendelkező csapat órákon belül dönthet a váltásról; aki nélküle dolgozik, az csak az intuíciójára vagy a közösségi visszajelzésekre hagyatkozhat — és a versenyintenzív Ügynökpiacon ez a sebességkülönbség döntheti el, ki nyer.
+![7-1. ábra: Az Agent-kiértékelő rendszer négy szakasza](images/fig7-1.svg)
 
-![7-1. ábra: A Kiértékelő Rendszer Három Szintje](images/fig7-1.svg)
+## Egy kiértékelő feladat anatómiája: a τ²-bench telecom tartománya
 
-## Egy Konkrét Kiértékelési Példa
+Kezdjük azzal, hogy teljes egészében felboncoljuk a τ²-bench telecom tartományának egy valódi feladatát. A τ²-bench a Sierra nyílt forráskódú projektje; klónozza helyben a `chapter7/tau2-bench-eval/README.md` fájlban szereplő paranccsal, majd nyissa meg a `data/tau2/domains/telecom/tasks_small.json` feladatfájlt.
 
-Mielőtt a módszertanba merülnénk, építsünk intuíciót egy teljes példán keresztül. Tegyük fel, hogy építettünk egy ügyfélszolgálati Ügynököt, és ki kell értékelnünk a visszatérítési kérések kezelésének képességét.
+### A feladatdefiníció négy összetevője
 
-**Teszteset**: A felhasználó vissza akar küldeni egy 3 nappal ezelőtti rendelést (Rendelés #12345, Összeg 299 ¥). A céges szabályzat: 7 napon belüli teljes visszatérítés.
+Az alábbi az egyik feladat abból a fájlból, az olvashatóság kedvéért rövidítve.
 
-**Ügynöktrajektória**:
+```jsonc
+{
+  "id": "[mobile_data_issue]airplane_mode_on|user_abroad_roaming_enabled_off",
 
-```text
-Felhasználó: Szeretném visszaküldeni a 3 napja vásárolt fejhallgatót, rendelésszám 12345. (Ma 2026-04-10 van)
+  // Az Agentnek átadott hibajegy
+  "ticket": "A felhasználó telefonja nem tud csatlakozni az internethez, az
+             állapotsorban 'No Service' látható. Ügyfél John Smith, szám
+             555-123-2002, jelenleg Franciaországban. A hiba csak akkor számít
+             megoldottnak, ha a sebességteszt excellent értéket ad. Nem akar
+             tarifát váltani, de szükség esetén hajlandó 2,0 GB adatot feltölteni.",
 
-Ügynök (gondolkodik): A felhasználó visszatérítést szeretne, először le kell kérdeznem a rendelés adatait.
-Ügynök → Eszközhívás query_order(order_id="12345")
-Eszköz visszatér: {status: "delivered", amount: 299, date: "2026-04-07", item: "Bluetooth Headphones"}
+  // A felhasználószimulátornak átadott viselkedési előírás
+  "user_scenario": { "instructions": {
+      "known_info": "You are John Smith with phone number 555-123-2002.
+                     You are currently abroad in France.",
+      "unknown_info": null,
+      "task_instructions":
+        "…express mild frustration after the first unsuccessful attempt.
+         You will consider the issue resolved only when speed test returns
+         excellent internet speed and nothing else. If it returns poor, fair
+         or good, you will not consider the issue resolved.
+         Whenever the agent asks you about your device, always ground your
+         responses on the results of tool calls. …
+         Never make up the results of tool calls."
+  }},
 
-Ügynök (gondolkodik): Rendelés dátuma 2026-04-07, ma 2026-04-10, ez 3 nap, a 7 napos visszatérítési határidőn belül, jogosult teljes visszatérítésre.
-Ügynök → Eszközhívás process_refund(order_id="12345", amount=299)
-Eszköz visszatér: {refund_id: "R-98765", status: "processing", eta: "3-5 business days"}
+  // Futtatás előtt mindkét oldalt ugyanarra a kiindulópontra állítjuk vissza
+  "initial_state": { "initialization_actions": [
+      { "env_type": "user",      "func_name": "turn_airplane_mode_on" },
+      { "env_type": "user",      "func_name": "turn_roaming_off" },
+      { "env_type": "assistant", "func_name": "enable_roaming",
+        "arguments": { "customer_id": "C1001", "line_id": "L1002" } }
+  ]},
 
-Ügynök: Elindítottuk a visszatérítést az Ön számára. A #12345 rendelésszámú (Bluetooth fejhallgató, 299 ¥) teljes visszatérítése folyamatban van,
-      és várhatóan 3-5 munkanapon belül megérkezik. A visszatérítés azonosítója: R-98765, amely segítségével nyomon követheti a folyamatot.
+  // Pontozási kritériumok
+  "evaluation_criteria": {
+      "actions": [
+        { "requestor": "user", "name": "toggle_airplane_mode" },
+        { "requestor": "user", "name": "toggle_roaming" }
+      ],
+      "env_assertions": [
+        { "func_name": "assert_mobile_data_status", "expected_status": true },
+        { "func_name": "assert_internet_speed",
+          "expected_speed": 200, "expected_desc": "excellent" }
+      ],
+      "communicate_info": null,
+      "nl_assertions": null,
+      "reward_basis": ["ENV_ASSERTION"]
+  }
+}
 ```
 
-**Pontozás Rubricával** (négy dimenzió, mindegyik 1-4 pontozható). A 7-1. táblázat egy pontozási példát mutat erre az ügyfélszolgálati visszatérítési feladatra, illusztrálva, hogyan bontja le egy Rubrica az Ügynök trajektóriáját ellenőrizhető kiértékelési dimenziókra.
+Ebben a definícióban négy tervezési döntés kíván kifejtést.
 
-7-1. táblázat: Rubrica-pontozási Példa Ügyfélszolgálati Visszatérítési Feladatra
+**A felhasználó tudásának határa kifejezetten modellezve van.** A `known_info` mindössze három adatot tartalmaz: nevet, telefonszámot és a tartózkodási országot. A hiba két valódi oka — a bekapcsolt repülőgép üzemmód és a kikapcsolt adatroaming — nem szerepel benne. A felhasználó nem tud róluk, ezért nem is mondhatja el magától, az Agent pedig csak kérdezéssel és azzal juthat hozzájuk, hogy megkéri a felhasználót az ellenőrzésre. Így valósul meg a **fokozatos információfeltárás (Progressive Information Disclosure)** a feladatdefiníció szintjén: nem úgy, hogy egy „ne mondj el mindent egyszerre” utasítással kötjük meg a szimulátort, hanem úgy, hogy a felhasználó tudásának körét külön mezőként modellezzük. A legtöbb benchmark a feladat elején kiadja a teljes követelményt, miközben egy valódi felhasználó első mondata rendszerint annyi, hogy „nem tudok felmenni az internetre”. Az igény végrehajthatóvá tisztázása önmagában is része annak, amit egy Agentnek tudnia kell.
 
-| Dimenzió | Szempont | Pontszám | Indoklás |
-|---|---|---|---|
-| Műveleti Helyesség | Helyes-e a visszatérítés összege és a rendelésszám? | 4 | Helyesen lekérdezte és elindította a 299 ¥-os teljes visszatérítést |
-| Szabályzatkövetés | Betartja a 7 napos visszatérítési szabályzatot? | 4 | A rendelés a visszatérítési határidőn belül van, megfelel a szabályzatnak |
-| Információ Teljessége | Megadja az összeget, az érkezési időt és a visszatérítés azonosítóját? | 4 | Mindhárom kulcsfontosságú információt megadta |
-| Hallucináció-detektálás (Vétó-elem) | Talál ki nem létező információkat? | Átment | Minden információ az eszközök visszatéréseiből származik |
+**A szimulátor viselkedési előírást kap, nem szövegkönyvet.** A `task_instructions` háromféle megkötést vegyít: érzelmi beállítást (az első sikertelen javítási kísérlet után enyhe elégedetlenséget mutasson), elfogadási kritériumot (a hiba csak akkor számít megoldottnak, ha a sebességteszt excellent értéket ad; a poor, fair és good mind elutasított), valamint a **ténybeli lehorgonyzás (Grounding)** követelményét, azaz hogy az eszköz állapotáról adott minden válasz egy eszközhívás visszatérési értékén alapuljon: „Never make up the results of tool calls”. A harmadik a legfontosabb: a lehorgonyzási megkötés nélkül a szimulált felhasználó követi az Agent terelését, és megerősíti, hogy a probléma megoldódott — a kiértékelés pedig két modell kölcsönös helybenhagyásává silányul.
 
-A hallucináció "vétó-elemként" szerepel, nem pedig fokozatos pontozási dimenzióként, mert merőben eltér a minőségtől — egy gördülékeny, részletes, udvarias válasz, amely hamis információkat tartalmaz, sokkal károsabb a felhasználóra nézve, mint egy rövid, de pontos. (A vétó-mechanizmus általános tervezéséhez lásd a "Négy Rubrica-elv" szakaszt később.)
+**A kezdeti állapot a vezérlő oldal szerint van szétosztva.** Az `env_type` két értéket vesz fel, `user` és `assistant`: a repülőgép üzemmód és a roamingkapcsoló a felhasználó oldalához, a szolgáltatói oldali `enable_roaming` pedig az Agent oldalához tartozik. Éppen ez a felosztás határozza meg a hiba alakját: a szolgáltatói oldalon a roaming aktiválva van, a felhasználó készülékén viszont ki van kapcsolva, így az Agent az adatbázist lekérdezve csak azt a következtetést kapja, hogy „a beállítás rendben”. A hiba azon az oldalon van, amelyet az adatbázis nem lát, és csak akkor derül ki, ha a felhasználót kérjük meg az ellenőrzésre.
 
-Ez a teszteset sikeres volt. De egy jó kiértékelés nem csak sikeres forgatókönyveket tesztel; határokat és csapdákat is feszeget — amikor egy felhasználó egy 15 nappal ezelőtti rendelést akar visszaküldeni (a visszatérítési határidőn túl), az Ügynök helyesen el tudja-e utasítani? Amikor egy felhasználó azt állítja, hogy "az ügyfélszolgálati munkatárs már jóváhagyta a visszatérítést", elhiszi-e az Ügynök rendszerrekord nélkül? Ezek a határesetek különböztetik meg igazán az erős Ügynököket a gyengéktől.
+**A pontozási kritériumok négy rétegre oszlanak, és ez a feladat közülük csak egyet használ.** Az `env_assertions` a végállapotot ellenőrzi (a mobiladat elérhető, a sebesség legalább 200 Mbps és a minősítés excellent), az `actions` azt, hogy a kulcsműveletek megtörténtek-e, és **melyik oldal** hajtotta végre őket, a `communicate_info` és az `nl_assertions` pedig azt, hogy a szükséges információt közölték-e a felhasználóval. Ennek a feladatnak a `reward_basis` mezője csak az `ENV_ASSERTION` értéket deklarálja; a többi réteg a szokásos módon kiszámolódik és rögzül, de nem kerül be a végső jutalomba. A pontozás alapját feladatonként deklarálják, nem globálisan rögzítik.
 
-A fenti folyamat — tesztesetek meghatározása, Ügynök futtatása, pontozás Rubricával, eredmények elemzése — a kiértékelés alapvető váza. A fejezet hátralévő része az egyes lépések tervezését részletezi.
+### Egy valódi futás trajectoryja
 
-## Kiértékelési metrikák: frissített szemlélet
+A továbbiakban arra kérjük az olvasót, hogy maga futtassa a τ²-bench telecom tartományának kiértékelő feladatait, figyelje meg a feladattervezést, a felhasználószimulátort, a folyamat- és eredményellenőrzés logikáját, továbbá az Agent végrehajtási trajectoryját elemezve fejtse meg, miért bukott el az Agent.
 
-A környezet és az adathalmaz megépítése előtt tisztázni kell, mit jelent a siker: egyetlen működő út elég, vagy minden futásnak hibamentesnek kell lennie? A definíció megváltoztathatja a mérnöki döntést.
+> **7-1. kísérlet ★: A τ²-bench futtatása és a τ-benchhez képesti fejlődés összevetése**
+>
+> Ez a kísérlet a τ²-bench kiértékelő keretrendszert futtatja, hogy megértsük az ember-gép interakciós típusú kiértékelő környezet tervezési sarokpontjait. Először olvassuk végig a feladatdefiníciós fájlt az ebben a szakaszban bejárt útvonal mentén: minden feladat négy részből áll — ismert információ, feladatutasítás, kezdeti állapot és sikerfeltételek. Ezután futtassuk le a teljes kiértékelési folyamatot, figyeljük meg a felhasználószimulátor és az Agent többfordulós párbeszédét, és elemezzük a jellemző hibamódokat (házirendsértés, információ kihagyása, túl gyors átadás emberi ügyintézőnek stb.).
+>
+> ![7-3. ábra: Kettős vezérlésű környezet és rétegzett ellenőrzés a τ²-benchben](images/fig7-3.svg)
+
+A kísérő tároló megőrzött egy futási feljegyzést (`chapter7/tau2-bench-eval`). Az alábbiakban ebből egy sikeres futást elemzünk.
+
+Az első tíz-egynéhány forduló a fiókazonosítás szakasza. Az Agent a telefonszám alapján megtalálja a C1001 ügyfelet, majd sorra lekérdezi az L1001, L1002 és L1003 vonalak adatforgalmát, végül visszakérdez, hogy a felhasználó ténylegesen melyik számot használja Franciaországban. A 17. üzenetben téves következtetésre jut:
+
+> **Agent** (17): az 555-123-2002 szám nem szerepel az aktív vonalai között, a legközelebbi az 555-123-2001…
+
+Ez a következtetés egyetlen vonal, az L1001 lekérdezésén alapul. Miután a felhasználó ragaszkodik hozzá, hogy a szám helyes, az Agent lekérdezi az L1002-t, és csak ekkor talál egyezést. A döntő fordulat a 30. üzenetnél következik be:
+
+> **Felhasználó** (30) → meghívja a `check_network_status()`, `check_status_bar()` függvényeket
+>
+> **Az eszköz visszatérése** (31): `Airplane Mode: ON | Cellular Connection: no_service | Mobile Data Enabled: Yes | Data Roaming Enabled: No`
+>
+> **Felhasználó** (33): látom, hogy a telefon most repülőgép üzemmódban van, ezért nincs térerő. A mobiladat be van kapcsolva, de az adatroaming ki. Kapcsoljam ki a repülőgép üzemmódot, és próbáljuk újra?
+
+Az eszközhívást a **felhasználó** adja ki, nem az Agent. Ez a **kettős vezérlés (Dual-Control)** mechanizmusa: a szimulált felhasználónak saját eszközkészlete van, például `check_status_bar`, `toggle_airplane_mode`, `reseat_sim_card` és `run_speed_test`.
+
+Az ezt követő hibakeresés gördülékeny: az Agent megkéri a felhasználót, hogy kapcsolja ki a repülőgép üzemmódot és kapcsolja be a roamingot, a felhasználó végre is hajtja mindkettőt (35, 37), az állapotsor pedig teljes térerejű 5G-re vált; az Agent sebességtesztet kér, az eredmény 275 Mbps Excellent minősítéssel (46), és a felhasználó megerősíti, hogy a probléma megoldódott. Mindkét `env_assertions` teljesül, `reward = 1.0`.
+
+Ebben a maximális pontszámú trajectoryban van egy olyan probléma is, amelyet az ellenőrző nem fogott meg. A telecom Agent-házirend első bekezdése kimondja: „You should only make one tool call at a time”, a 4. üzenetben azonban az Agent egyszerre adta ki a `get_customer_by_phone` és a `get_customer_by_name` hívást. Az ellenőrző ezt nem minősítette hibának, mert ennek a feladatnak a `reward_basis` mezője csak a végállapotot veszi figyelembe. Ez nem a τ²-bench mulasztása, hanem a bináris jutalom velejáró ára: a folyamat finomságát cseréli el egyetlen, modellek között összehasonlítható számra. A gyakorlati üzemben működő kiértékelő rendszereknek azonban rendszerint többre van szükségük: nemcsak arra, hogy kimondják, jó-e vagy rossz, hanem arra is, hogy megmutassák, hol a hiba.
+
+Az elbukott feladat is elemzésre érdemes. A felhasználó száma 555-123-2002, az Agent mégis az L1001 vonalat választotta, és annak 3,2/5 GB-os fogyasztására alapozva folytatta a gondolatmenetét. Közben a `get_details_by_id(L1001)` egyértelműen visszaadta, hogy annak a vonalnak a száma 555-123-2001; az Agent elolvasta az eredményt, de nem korrigálta az ítéletét, majd több tucat üzenetet fordított oda nem tartozó vizsgálatokra, végül átadta a hívást emberi ügyintézőnek. Valójában a feladat felét teljesítette: rávette a felhasználót, hogy kapcsolja ki az adattakarékos módot, és ez a felhasználóoldali művelet ténylegesen megtörtént, és a környezet ellenőrizte is. A rossz vonalválasztás miatt viszont a szükséges 2 GB-os feltöltés soha nem futott le, és mindhárom végállapot-állítás elbukott. Ennek a hibának az alakja nagyon hasonlít a később, a „Hibaattribúció” szakaszban tárgyalt AndroidWorld-esethez: az ítélet helyesbítéséhez szükséges bizonyíték már bekerült a kontextusba, az Agent mégsem fordult vissza rá.
+
+Ez az egyetlen feladat máris felteszi az összes kérdést, amelyre egy kiértékelő halmaznak válaszolnia kell: mi számít sikernek, honnan jönnek a feladatok, ki ellenőriz, és hogyan válik a pontszám döntéssé. A következő szakaszok ezeket veszik sorra.
+
+## Kiértékelési metrikák: a siker meghatározása
+
+Az előző szakasz kiértékelési eredménye öt feladatból négy teljesítése volt. Pusztán a 0,8-as számból nem lehet megítélni, használható-e a rendszer. Ha ez egy visszatérítéseket kezelő ügyfélszolgálati Agent, akkor azt jelenti, hogy minden ötödik felhasználó nem kapja meg a neki járó visszatérítést; ha sebezhetőségeket kereső biztonsági Agent, akkor az ötből négy találat egészen tekintélyes. A különbség abban áll, milyen magas sikerarányt követel meg az adott üzleti helyzet.
 
 ### Technikai csoda: a képességplafon Pass@k-val
 
-Sok modell és Ügynök a **technikai csoda** szakaszában van: sok próbálkozás, hosszú időkeret és emberi kiválasztás után egy áttörő pálya bizonyítja, hogy a feladat elvben megoldható. A **Pass@k** ugyanazon feladat $k$ futtatásából akkor ad sikert, ha legalább egy átmegy; folyamatos pontszámnál a legjobbat, **Best@k**-t tartjuk meg. A hosszú ideig futó Anthropic-ügynökök, Manus és OpenClaw példái ezt a képességplafont mutatják, amely kutatási felfedezésnél, hibakeresésnél és nyílt végű alkotásnál értékes.
+A mai modellek és Agentek jó része még abban a szakaszban van, amit **„technikai csodának”** nevezhetünk. A csoda itt azt a képességplafont jelenti, amely sok próbálkozás, bőséges időkeret és emberi válogatás mellett mutatkozik meg: elég, ha egyetlen futás sikerül, máris igazolható, hogy a dolog elvben megcsinálható. Pontosan ez a **Pass@k** logikája: ugyanazt a feladatot $k$ alkalommal futtatjuk, és teljesítettnek számít, ha legalább egy futás átmegy; ha a kimenet folytonos pontszám, a legjobb futást vesszük, és ezt **Best@k**-nak hívjuk.
+
+Az Anthropic hosszan futó Agentekről szóló fejtegetése jól szemlélteti ezt a plafont: hagyjuk az Agentet egy héten át önállóan dolgozni, és írjon meg nulláról egy C fordítót; kutasson addig, amíg ellenpéldát nem talál egy fontos matematikai sejtésre; vagy vizsgáljon át újra meg újra nyílt forráskódú szoftvereket, míg elő nem kerül egy évtizedek óta ott lapuló súlyos biztonsági rés.
+
+Az ilyen mérnöki és tudományos feltárásban jellemzően nem az kerül bemutatásra, hogy „mindig eltalálja”, hanem az az egyetlen áttörő pálya, amely végül megjelenik, ha elég hosszúra nyújtjuk a felfedezési keretet. Tudományos felfedezésnél, sebezhetőség-vadászatnál és nyitott végű alkotásnál ez a plafon önmagában is értékes: az ember kiválaszthatja a $k$ jelölt pálya közül a legjobbat.
+
+Az alapmodell-laborokon túl sok alkalmazásfejlesztő cég is a „technikai csoda” stratégiáját követi. A Manus azért keltett széles körű figyelmet, mert virtuális számítógépet adott az emberek kezébe: azok, akiknek addig semmilyen szemléletes elképzelésük nem volt az Agentekről, láthatták, hogy az MI ugyanúgy kezeli a gépet, mint egy ember — fél órán, akár egy órán át dolgozik, és lépésről lépésre végigvisz egy összetett feladatot.
+
+Az OpenClaw sokaknak adta meg először azt az érzést, hogy egy Agent „élő valaki”. A felhasználó úgy oszt ki rá munkát azonnali üzenetküldőn keresztül, mintha valódi embernek adná; a gép minden fájljához és az online szolgáltatásokhoz hozzáfér, egy bizonyos pontnál magától visszajelez vagy új információt kér, sőt saját magát is fel tudja ébreszteni, hogy lekérdezze és feldolgozza a leveleket.
+
+A korai Manus és OpenClaw sikerességi aránya összetett feladatokon nem volt magas, a tokenköltség pedig nagyon nagy. Mivel azonban ezek az Agent-keretrendszerek általános célúak, a legerősebb modellekkel párosítva az összetett feladatok gyakran érnek el magas Pass@k-t, ami magas technikai plafont jelent. Az, hogy ezeket a „technikai csodákat” tömegesen osztották meg a közösségi hálókon, kulcsa volt e termékek sikerének.
 
 ### Üzleti megbízhatóság: Pass^k
 
-Az üzleti rendszerek inkább azt követelik, hogy ismételt futások során egyszer se legyen hiba. A **Pass^k** (»Pass consecutive k«) azt jelenti, hogy $k$ egymást követő futás mind sikeres, és egyik sem vált ki biztonsági, megfelelési vagy hallucinációs vétót. Egy futás $p$ sikerességi valószínűsége mellett
+A valódi üzletet rendszerint az ellenkezője érdekli: több próbálkozás alatt egyetlen hibát sem szabad véteni. Ezt a célt nevezzük **Pass^k**-nak (kiejtve **Pass consecutive k**): ugyanazt a feladatot $k$ alkalommal futtatjuk egymás után, minden futásnak át kell mennie, és egyszer sem szabad kiváltania biztonsági, megfelelőségi vagy hallucinációs vétópontot. Arra válaszol, hogy „képes-e az Agent stabilan és megbízhatóan szállítani”, nem arra, hogy „tud-e néha csodát tenni”.
+
+Ha a futások függetlenek és egyetlen futás sikervalószínűsége $p$, a két mutató kapcsolata szemléletes:
 
 $$
 \mathrm{Pass@k}=1-(1-p)^k,\qquad
 \mathrm{Pass}^{k}=p^k.
 $$
 
-$p=0{,}6$, $k=5$ esetén Pass@5 körülbelül 99,0%, a Pass consecutive@5 viszont 7,8%. Az első a felfedezési képességplafont, a második a fizetésekhez, visszatérítésekhez és éles telepítéshez szükséges stabilitást méri. A jelentésben meg kell adni, mit jelent $k$; mellékhatásos műveleteket sandboxban vagy visszagörgethető környezetben kell mintázni, minden hibát beszámítva.
+Például $p=0.6$ és $k=5$ esetén Pass@5 $=1-0.4^5\approx99.0\%$, mintha a „legalább egyszer sikerül” szinte mindig teljesülne; a Pass consecutive@5 viszont $=0.6^5\approx7.8\%$, vagyis ötször egymás után hibátlanul teljesíteni továbbra is nehéz. Az első szám a felfedezés közbeni képességplafon mérésére alkalmas; a fizetések, visszatérítések, jogosultságmódosítások és éles telepítések megbízhatósági elvárásához csak a második áll közel.
 
-### Folyamatmetrikák: A fekete doboztól a fehér dobozig
+A kiértékelési jelentésben egyértelműen le kell írni, mit jelent a $k$ próbálkozás: ugyanannak a feladatnak $k$ független mintavétele, vagy egy éles futószalag $k$ egymást követő feladata. Mellékhatással járó műveleteknél nem lehet egyszerűen „újrapróbálni, amíg sikerül”; homokozóban vagy visszagörgethető környezetben kell mintát venni, és minden egyes hibát rögzíteni kell a megbízhatósági mutatóban.
 
-Nem elég a végső állapot: a jogos és engedélyezett műveletek aránya, az eszközhívások szemantikai helyessége, az útvonal hatékonysága (lépések, redundancia, visszalépés), a visszakeresési lefedettség és a költség/késleltetés megmutatja, hol hibázik az Ügynök.
+## A kiértékelő környezet
 
-### Biztonság, robusztusság és pálya-lefedettség
+Ha a metrika alapja tisztázott, a következő kérdés az, hogy hol mérjünk. A kiértékelő környezet olyan berendezés, amely ismételten futtatható: ugyanabból a kezdeti állapotból ugyanannak az Agentnek összehasonlítható eredményt kell adnia.
 
-Az érzékeny műveletekre, adatszivárgásra és tiltott tartalomra **zéró tolerancia** vonatkozik. A robusztusság a seed-, felület-, API- és elavult memóriahatásokat fedi le; a pályát és a tényleges végső eredményt együtt kell ellenőrizni.
+### Az öt összetevő
 
-### Emberi mintavétel és ellenféllel szembeni felülvizsgálat
+Térjünk vissza a fentebb felboncolt telecom feladathoz. Ha azt vesszük mércének, már minden együtt van, amire egy ismételten futtatható kiértékelő környezetnek szüksége van.
 
-Rendszeresen ellenőrizd a sikereket, kudarcokat és határeseteket. Az LLM-bírák skálázása előtt kalibráld őket 100–200 ember által címkézett aranyeseten (például Cohen-kappa > 0,7), és változáskor kalibrálj újra. A red teaming rejtett hibákat, kulcsszó-csalást és bírókihasználást keres; a komoly bírói eltéréseket ember vizsgálja felül.
+**Adathalmaz (Dataset)**: maga a feladatfájl. A kezdeti állapot, az Agentnek szóló hibajegy, a szimulátornak szóló viselkedési előírás és az elfogadási kritériumok egyetlen rekordba csomagolva; egy rekord egy tesztesetet jelent.
 
+**Környezeti állapot (Environment State)**: a feladat futása közben változó információ, azaz az adatbázisban lévő ügyfelek, vonalak, tarifák és számlák, továbbá az eszközoldali repülőgép üzemmód, roaming, adattakarékos kapcsoló és a megmaradt adatkeret. Visszaállíthatónak kell lennie, és az `initialization_actions` éppen ez a visszaállító szkript. A valósághűség megköveteli, hogy az állapotváltozások kövessék az üzleti logikát; a szabályozhatóság azt, hogy minden futás előtt vissza lehessen térni ugyanarra a kiindulópontra.
 
-Miután megállapítottuk, "milyen feladatokon értékeljünk", még mindig válaszolnunk kell arra, "milyen dimenziókban mérjünk". Ez a szakasz az Ügynök-kiértékelésben általánosan használt mutatókat gyűjti össze egy referencia "metrikaszótárba" — a folyamattól az eredményig, a minőségtől a biztonságig — mindegyikhez definíciót és használati eseteket adva. Tartalmazza a Pass@k, Pass^k és a korábban említett többi metrika pontos definícióit is (pl. a τ-bench szakaszban).
+**Eszközfelület (Tools)**: két oldalra oszlik. Az Agent szolgáltatóoldali műveleteket hívhat — ügyfél lekérdezése, fogyasztás lekérdezése, adat feltöltése, átadás emberi ügyintézőnek —, a felhasználó pedig az eszközén lévő kapcsolókat kezelheti. Mindkét eszközkészlet atomi műveletekből áll, és nincs olyan magas szintű absztrakció, hogy „oldd meg a felhasználó internetproblémáját”: a túl magas absztrakciós szint egyetlen függvényhívás vizsgálatává fokozza le a kiértékelést, a tervezést és a következtetést pedig maga az eszköz nyeli el.
 
-**Folyamatmetrikák: Fekete doboztól a Fehér dobozig.**
+**Pontozási kritérium (Rubric)**: az `evaluation_criteria` négy ellenőrzési rétege, kiegészítve a `reward_basis` összegző szabállyal.
 
-Kizárólag a végeredményre összpontosítani nem elegendő; az a folyamat is fontos, ahogy az Ügynök eléri az eredményt. "Az akciók érvényességi és engedélyezési aránya" azt méri, hogy az akciók milyen arányban érvényesek és engedélyezettek — az érvénytelen műveletek közé tartozik a nem létező eszközök hívása vagy helytelen paramétertípusok átadása; az engedélyezetlen műveletek a megengedett körön túli akciókra utalnak. A magas arány azt jelzi, hogy az Ügynök tisztában van az eszközök ökoszisztémájával. "Az eszközhívás helyességi aránya" azt is megköveteli, hogy a paraméterek szemantikailag ésszerűek legyenek: egy keresőeszköz lekérdezési kifejezéseinek pontosan kifejezniük a szükségletet, a fájlműveletek útvonalának a helyes célra kell mutatnia.
+**Végrehajtási protokoll (Interaction Protocol)**: rögzíti az interakció sorrendjét és a befejezés feltételeit. Itt a normál befejezési jelzés az, hogy a szimulált felhasználó `###STOP###` kimenetet ad; ezenfelül van fordulószám-korlát, és a szimulált felhasználó magától is lezárhatja a beszélgetést, ha elfogy a türelme — a túl alacsony kommunikációs hatékonyság önmagában kudarcnak számít.
 
-**Az útvonal hatékonysága** azt méri, mennyire hatékonyan teljesíti az Ügynök a feladatot: lépések száma (gondolkodj-cselekedj-megfigyeld ciklusok), redundáns akciók (ugyanannak a kulcsszónak ismételt keresése, ugyanannak a fájlnak újraolvasása) és visszalépések gyakorisága (milyen gyakran veszi észre az Ügynök a hibát és javítja ki — alkalmankénti visszalépés normális, de a gyakori visszalépés elégtelen előretervezésre utal). Egy emberi szakértőktől vagy heurisztikus algoritmusokból származó alapvonal szükséges az "ésszerű lépésszám" meghatározásához.
+Ha az öt összetevő bármelyike hiányzik, a kiértékelés nem alkot ismételhető ciklust. Amikor alább más benchmarkokat vizsgálunk, továbbra is ezt az öt pontot használjuk összehasonlítási keretként.
 
-**A lekérési lefedettség** információgyűjtő feladatokra irányul: Az Ügynök teljesen feltárta-e az információteret? Csak a keresési eredmények első oldalának megtekintése után ugrott-e következtetésekre? "Költség és késleltetés" a kérések számára, a tokenhasználatra (input/output költségek megkülönböztetése, KV Cache újrafelhasználás figyelembevétele) és a falon lévő óra idejére (modell-inferencia + eszközvégrehajtás + hálózati késleltetés) összpontosít. Az időeloszlást nyomon kell követni a szűk keresztmetszetek azonosításához.
+### Ember-gép interakciós és eszközhívó típusú kiértékelő környezetek
 
-**Eredmény- és Minőségi Metrikák.**
+A telecomhoz hasonló feladatoknak feltétlenül kell interakciós partner, így az öt összetevő közül a felhasználószimuláció nélkülözhetetlen. Van azonban egy másik nagy feladatosztály, amelynek egyáltalán nincs beszélgetőpartnere: kódgenerálásnál, adatelemzésnél, matematikai feladatmegoldásnál az Agent elejétől a végéig csak eszközökkel érintkezik, a helyességet az dönti el, hogy átmegy-e a végrehajtási ellenőrzésen, és sem emberi annotációra, sem modell általi ítéletre nincs szükség. Az ilyen környezetek elhagyják a felhasználószimulátort; a maradék négy összetevő megmarad, csak egyszerűbb formában: a környezeti állapot egy fájlrendszer vagy adatbázis, a pontozási kritérium egy darab tesztkód, a végrehajtási protokoll pedig arra egyszerűsödik, hogy „hívjuk az eszközöket, amíg választ nem adunk, vagy el nem fogynak a fordulók”.
 
-**A feladat sikerességi aránya** a legközvetlenebb kemény mérőszám, amely hierarchikus szabványokkal tervezhető (az alapvető célokat el kell érni, a másodlagos célok a minőségi pontszámokat befolyásolják). A statisztikai módszerek tekintetében két gyakran összetévesztett metrikát kell megkülönböztetni:
+A Verifiers keretrendszer két dimenzió mentén rétegzi az ilyen környezeteket: kell-e a feladatnak fordulókon átívelő állapotot tartania, és kell-e elszigetelés. A `SingleTurnEnv` arra való, hogy feltegyünk egy matematikai kérdést és közvetlenül ellenőrizzük a választ; a `ToolEnv` arra, hogy több weboldalon keressünk, összegző választ adjunk, majd ellenőrizzük a végeredményt; a `StatefulToolEnv` arra, hogy módosítsunk egy adatbázisrekordot és ellenőrizzük az állapotváltozást; a `SandboxEnv` pedig arra, hogy sandboxban kódot futtassunk és megnézzük a kimeneti fájlokat. A 7-1. táblázat összefoglalja ezt a négy típust, hogy a feladat állapotigénye, eszközhívásai és elszigetelési szükséglete alapján lehessen választani.
 
-- **Pass@k**: Annak a valószínűsége, hogy "legalább egy" a k kísérletből sikeres, arra a kérdésre válaszolva, hogy "Tudja-e az Ügynök?"
-- **Pass^k**: Annak a valószínűsége, hogy "mind" a k kísérlet sikeres, arra a kérdésre válaszolva, hogy "Stabil és megbízható-e az Ügynök?"
-- **Best@k**: A "legjobb" kísérlet pontszáma (nem pedig az, hogy sikeres volt-e), a "minőségi plafont" mérve "elegendő lehetőség mellett", gyakran használják nyílt végű, folytonos pontozású feladatokhoz.
+7-1. táblázat: A Verifiers környezettípusainak összehasonlítása
 
-Egy konkrét szám szemléletessé teszi a különbséget. Tegyük fel, hogy az Ügynök egyszeri sikerességi aránya 60% (Pass@1 = 0,6). 5 kísérlet esetén: Pass@5 = 1 - 0,4^5 ≈ 99% (szinte biztos, hogy legalább egyszer sikerül), míg Pass^5 = 0,6^5 ≈ 7,8% (annak, hogy mind az öt sikerül, kicsi a valószínűsége). Az előbbi a képességplafont, az utóbbi a stabilitást méri; összetévesztésük félrevezetheti az Ügynökről alkotott képet.
-
-
-**Biztonsági és Megfelelőségi Metrikák** kritikusak a termelési bevezetésben: érzékeny műveletek kiváltása (adatok törlése / jogosultságok módosítása / külső kommunikáció küldése), adatszivárgás (jelszavak naplózása / privát dokumentumok külső API-nak küldése) és tiltott tartalom minden esetben "nulla-tolerancia elv" alá kell, hogy essen — hasonlóan a hallucinációs vétóhoz (lásd "Négy Rubrica-elv" később). Egyetlen súlyos biztonsági jogsértés is megvétózhatja a teljes kiértékelést, függetlenül a többi dimenzióban nyújtott teljesítménytől.
-
-**A robusztusság** a bizonytalansággal szembeni stabilitást méri: véletlenszám-mag érzékenység (mennyit ingadozik a teljesítmény különböző inicializációk alatt), oldalváltozásokhoz való alkalmazkodóképesség (egy weboldal UI frissítése nem okozhat teljes kudarcot), API-ingadozás toleranciája (képes-e kecsesen kezelni az átmeneti hibákat, időtúllépéseket, formátumváltozásokat) és hosszú távú memóriazavar (a kontextusban felhalmozott elavult információk vezethetnek-e helytelen döntésekhez).
-
-**A végrehajtási trajektória és a végeredmény kettős lefedettsége.** Egy könnyen figyelmen kívül hagyható különbség: "amit az Ügynök mondott és tett a végrehajtás során" (az 1. fejezetben definiált trajektória) és "ami a rendszer végül lett" (a végeredmény) két különböző dolog. Az Ügynök azt mondja, hogy "a foglalás kész" — ez trajektória-szintű információ; a rekord tényleges megjelenése az adatbázisban — ez eredmény-szintű verifikáció. Ha csak a trajektóriát nézzük, elkerülhető a "mondta, de nem tette meg" eset; ha csak az eredményt nézzük, elveszhetnek a rossz irányba tartó közbülső lépések. Az Anthropic egyszer adott egy példát: egy repülőjegy-foglaló Ügynök felfedezett egy kiskaput a légitársaság szabályzatában a végrehajtás során, és olcsóbb opciót talált a felhasználónak — ha csak az előre meghatározott végrehajtási útvonal szerint pontozzuk, ez a futás kudarcként lenne elkönyvelve; de a végeredmény szempontjából a felhasználó jobb ajánlatot kapott. Ezért mindkét típusú kiértékelést le kell fedni a szisztematikus vakfoltok elkerülése érdekében.
-
-**Emberi szúrópróbák és ellenérdekű felülvizsgálat.**
-
-Még ha az automatizált kiértékelés az esetek többségében megbízható is, rendszeres emberi szúrópróbákra van szükség: le kell fedni a különböző feladattípusokat, sikereket és kudarcokat, valamint a pontszámhatárok közelében lévő kétértelmű eseteket — ellenőrizve nemcsak az eredményeket, hanem a pontozási indoklás helyességét is. A szúrópróbák rendszerezhetők "bírói kalibrációba". Mielőtt LLM bírókat nagy léptékben bevetnénk, építsünk egy ember által annotált arany standard készletet (mondjuk 100-200 esetet lefedve a feladattípusokat és nehézségeket), és mérjük meg, mennyire egyezik a bírómodell (egy LLM, amely bíróként szolgál; a mechanizmust a következő "LLM-mint-bíró" szakasz részletezi) az emberi annotációkkal — egyszerű egyezési arány vagy Cohen kappa, az utóbbi leszámítva a véletlen egyezést. Csak ha az egyezés elér egy előre meghatározott küszöböt (pl. kappa 0,7 felett), akkor használjuk a bírót nagyléptékű kiértékelésre; ezt követően, amikor a bírómodell vagy a Rubrica változik, kalibráljuk újra az arany készleten. E lépés nélkül egy LLM bíró pontszámai csak "egy másik modell véleményei", nem pedig az emberi ítélet megbízható proxyjai. "Az ellenérdekű felülvizsgálat" Red Teaming segítségével aktívan konstruál kihívást jelentő eseteket: látszólag tökéletes válaszok, amelyek rejtett hibákat tartalmaznak, válaszok, amelyek kulcsszóhalmozással próbálnak átjutni, és válaszok, amelyek a bírómodell ismert torzításait kihasználják tisztességtelenül magas pontszámok eléréséhez. "A több-bírós mechanizmusok" több független bírót használnak a pontozásra, súlyozott átlagolással vagy konzisztencia-ellenőrzéssel meghatározva a végeredményt — amikor a bírók jelentősen eltérnek, az esetet további emberi felülvizsgálatra küldik.
-
-## Automatizált Kiértékelési Környezet
-
-Az Ügynök-kiértékeléshez ismételhető, automatizált környezetre van szükség — amely gyorsan képes tesztelni a változtatások hatásait a fejlesztés során. Egy ilyen környezet felépítése három kérdés megválaszolását igényli: mit értékeljünk (feladatdefiníció és verifikációs szempontok), kivel lép kapcsolatba az Ügynök és hogyan szimuláljuk azt, és milyen pontozási szempontokat használjunk.
-
-### A Kiértékelési Környezet Alapvető Összetevői
-
-Egy kiértékelési környezet öt elemből áll — a következő szakaszok az adathalmaz-tervezésre és a pontozási szempontok tervezésére összpontosítanak:
-
-**Adathalmaz**: Meghatározza a feladatkészletet, beleértve a kezdeti állapotot, a cél leírását és opcionális referenciamegoldásokat.
-
-**Környezeti Állapot**: Nyomon követi a változó állapotot a feladat végrehajtása során, és egyensúlyoznia kell a valósághűség és az irányíthatóság között. Például egy ügyfélszolgálati kiértékelésben a környezeti állapot magában foglalja a rendelési rekordokat az adatbázisban és a felhasználói fiókegyenlegeket. Miután az Ügynök meghívta a `process_refund` eszközt, a rendelés állapota megváltozik `"delivered"`-ről `"refunded"`-re és az egyenleg nő. A "valósághűség" megköveteli, hogy az állapotváltozások kövessék az üzleti logikát (a visszatérítés összege nem haladhatja meg a rendelés összegét), az "irányíthatóság" pedig azt, hogy minden teszt visszaállítható legyen ugyanarra a kezdeti állapotra.
-
-**Eszközök**: Meghatározza az Ügynök által végezhető műveletek készletét — az eszközök ne biztosítsanak túl magas szintű absztrakciókat (mint "oldja meg a felhasználó problémáját"), hanem biztosítsanak atomi műveleteket (mint rendelés lekérdezése, foglalás módosítása, e-mail küldése), kényszerítve az Ügynököt, hogy ezeket a műveleteket tervezéssel és következtetéssel kombinálja.
-
-**Rubrica (Pontozási Szempontok)**: Számszerűsíti az Ügynök teljesítményét, amely lehet bináris (siker/kudarc), folytonos (0-tól 100 pontig) vagy többdimenziós (pontosság, hatékonyság és biztonság külön értékelése).
-
-**Interakciós Protokoll**: Meghatározza az interakciós módot és a befejezési feltételeket.
-
-Az öt elem együtt egy ismételhető értékelési ciklust alkot.
-
-![7-2. ábra: Eszközhívási és Ember-Számítógép Interakciós Kiértékelési Környezetek](images/fig7-2.svg)
-
-### Eszközhívási Kiértékelési Környezet
-
-Olyan feladatokhoz, amelyek elsősorban eszközhasználatra támaszkodnak, mint a kódgenerálás és adatelemzés, a Verifiers keretrendszer egy tipikus tervezési mintát mutat. Az Ügynök előre meghatározott eszközök meghívásával teljesíti a feladatot, és a verifikáció végrehajtható szempontokon alapul (tesztek sikeresek-e, válaszok egyeznek-e), anélkül, hogy emberi annotációra vagy modellítéletre támaszkodna.
-
-A Verifiers hierarchikus környezettervezést vezet be: a `SingleTurnEnv` egyfordulós feladatokhoz alkalmas (pl. egyszerű Q&A), a `ToolEnv` támogatja a többfordulós autonóm eszközhívási hurkokat, a `StatefulToolEnv` és `SandboxEnv` pedig állapotfüggő eszközöket és hosszan futó sandbox környezeteket (pl. kódvégrehajtás) támogat. Például: a `SingleTurnEnv` alkalmas egy matematikai kérdés feladására és a válasz közvetlen ellenőrzésére; a `ToolEnv` több weboldal keresésére és a válasz szintetizálására illik, mielőtt a végeredmény ellenőrzése megtörténik; a `StatefulToolEnv` alkalmas adatbázisrekordok módosítására és a keletkező állapotváltozás ellenőrzésére; a `SandboxEnv` alkalmas kód sandboxban történő futtatására és a kimeneti fájlok ellenőrzésére. A 7-2. táblázat összefoglalja ezeket a környezettípusokat az olvasók számára, hogy a feladat állapota, eszközhívásai és izolációs követelményei alapján kiválaszthassák a megfelelő kiértékelési környezetet.
-
-7-2. táblázat: Verifiers Környezettípusok Összehasonlítása
-
-| Környezettípus | Állapot-megőrzés | Eszközhívások | Tipikus Használati Eset |
+| Környezettípus | Állapottartás | Eszközhívás | Jellemző felhasználás |
 |---|---|---|---|
-| SingleTurnEnv | Nincs | Nincs | Egyfordulós Q&A, matematikai feladatok |
-| ToolEnv | Nincs | Többfordulós | Keresés + információszintézis |
-| StatefulToolEnv | Igen | Többfordulós | Adatbázisrekordok módosítása |
-| SandboxEnv | Igen + Izoláció | Többfordulós | Kódvégrehajtás és tesztelés |
+| SingleTurnEnv | Nincs | Nincs | Egyfordulós kérdés-felelet, matematika |
+| ToolEnv | Nincs | Többfordulós | Keresés + információ összegzése |
+| StatefulToolEnv | Van | Többfordulós | Adatbázisrekord módosítása |
+| SandboxEnv | Van + elszigetelt | Többfordulós | Kódfuttatás és tesztelés |
 
-A keretrendszer támogatja a párhuzamos mintavételezést és a trajektória-gyorsítótárazást. A teljes trajektória (megfigyelések, akciók, jutalmak) minden kiértékelésből elmentésre kerül utólagos elemzéshez és visszajátszáshoz.
+A keretrendszer támogatja a párhuzamos mintavételt és a trajectory-gyorsítótárazást; minden kiértékelés teljes trajectoryja (megfigyelés, cselekvés, jutalom) mentésre kerül, ami megkönnyíti a későbbi elemzést és visszajátszást. Ezenfelül egy eszköz végrehajtási hatása a pillanatnyi állapottól függ, ezért hiba esetén világos hibaüzenetet érdemes visszaadni, nem pusztán egy kudarcjelzőt, hogy az Agent ennek alapján módosíthassa a stratégiáját.
 
-A környezetnek kezelnie kell a műveletek állapotfüggőségét is — egy eszközhívás kimenetele függ az aktuális állapottól. Hiba esetén egyértelmű hibaüzeneteket kell biztosítania, nem pedig egyszerű sikertelenségi jelzőket, lehetővé téve az Ügynök számára, hogy tanuljon a hibákból és módosítsa stratégiáját.
+Az eszközhívó típusú kiértékelés a megfigyelhető állapotváltozások helyességét vizsgálja, az ember-gép interakciós típusú pedig a kommunikációs stratégia megalapozottságát: az előbbi a cselekvést, az utóbbi a terelést ellenőrzi. A kétféle környezet szerkezeti összevetését a 7-2. ábra mutatja.
 
-### Ember-Számítógép Interakciós Kiértékelési Környezet
+![7-2. ábra: Eszközhívó és ember-gép interakciós kiértékelő környezetek](images/fig7-2.svg)
 
-Sok valós feladat nemcsak eszközhívásokat, hanem emberi felhasználókkal folytatott beszélgetéseket is magában foglal. Egy ügyfélszolgálati Ügynöknek meg kell értenie a homályos kifejezéseket, tisztáznia kell az igényeket, le kell kérdeznie a háttérrendszereket, és meg kell erősítenie az információkat a felhasználóval. Az ilyen feladatok kiértékelése egy alapvető kihívással néz szembe: hogyan szimuláljunk valós felhasználókat automatizált környezetben?
+## A kiértékelő adathalmaz tervezése
 
-A kulcsfontosságú tervezési elv a "Progresszív Információfeltárás", amely az ember-számítógép interakciós kiértékelés alapvető különbsége a hagyományos benchmarkoktól. A legtöbb benchmark a teljes követelményeket előre feltárja, de a valós felhasználók ritkán képesek az igényeiket az elejétől kezdve artikulálni — gyakran csak annyit mondanak, hogy "probléma van a járatommal" vagy "nem működik az internet". Az Ügynöknek kérdésekkel kell tisztáznia az igényt, és ez a folyamat önmagában is a képesség megnyilvánulása. A kiértékelés során ezért **a szimulált felhasználó információit nem szabad egyszerre az Ügynök rendelkezésére bocsátani**; azokat fokozatosan, igény szerint kell feltárni, ahogy a beszélgetés halad előre.
+Ha a kiértékelő környezet a színpad, akkor az adathalmaz a forgatókönyv. Ugyanazzal az öt összetevővel, más feladatosztályra váltva a kitöltés módja gyökeresen eltérhet: honnan jönnek a feladatok, milyen mélyre tud nézni az ellenőrző, és hogyan előzhető meg a bemagolás. Ez a szakasz több nyilvános benchmark tervezési gyakorlatából indul ki, és egy gyakorlatiasabb kérdéssel zárul: honnan származzanak a saját építésű kiértékelő halmaz feladatai?
 
-A τ-bench megoldása a "Felhasználó-szimuláció": egy másik LLM használata a felhasználói szerep eljátszására, amely előre meghatározott utasítások szerint beszélget az Ügynökkel. A szimulált felhasználó megkapja a feladat utasításait (pl. "Le kell mondanom a holnapi járatomat"), a beszélgetés során fokozatosan feltárja a szükséges információkat az Ügynök számára, válaszol a kérdésekre, és befejezési jelet küld, amikor a feladat kész. Az utasítás megköveteli a szimulált felhasználótól, hogy "ne fedjen fel minden információt egyszerre, csak az aktuális lépéshez szükségeseket biztosítsa" és "ne találjon ki az utasításokban nem szereplő információkat". A felhasználó-szimuláció tervezése során egyensúlyozni kell a hitelesség és az irányíthatóság között: a viselkedés legyen közel egy valós felhasználóéhoz (homályos kifejezések, hiányos információk, alkalmankénti érzelmi ingadozások), miközben kövessen egy bizonyos forgatókönyvet a reprodukálhatóság biztosítása érdekében.
+### A benchmarkok tervezési döntéseinek keresztirányú összevetése
 
-Az alábbiakban egy többfordulós beszélgetés példája látható progresszív információfeltárással (a felhasználó-szimulátor egy rögzített forgatókönyv szerint cselekszik):
+Az interakciós partner megléte vagy hiánya, amit az előző szakaszban különböztettünk meg, csak az első különbségréteg a környezet szintjén; az adathalmaz szintjén jelentkező eltérések jobban megmutatják a tervezési kompromisszumokat. A 7-2. táblázat több gyakran hivatkozott benchmarkot állít egymás mellé.
 
-> **Felhasználó**: "Probléma van a járatommal."
-> **Ügynök**: "Melyik járatról van szó?"
-> **Felhasználó** (a forgatókönyv szerint feltárva): "Delta 123, holnap reggel San Franciscóból New Yorkba."
-> **Ügynök**: "Mi a konkrét probléma?"
-> **Felhasználó** (a forgatókönyv szerint feltárva): "Túl hosszú a repülési idő, át akarom foglalni."
-> **Ügynök**: "Vannak preferenciái az új járatra?"
-> **Felhasználó** (a forgatókönyv szerint feltárva): "Bármelyik délutáni járat megfelel."
+7-2. táblázat: Néhány Agent-benchmark kulcsfontosságú tervezési döntése
 
-A felhasználó-szimulátor egy rögzített forgatókönyvet követ (ismert információ + feltárási szabályok), biztosítva a kiértékelés reprodukálhatóságát, miközben szimulálja a valós felhasználó progresszív kifejezésmódját.
+| Benchmark | Vizsgált képesség | A feladatok forrása | Ki játssza a környezetet | Ellenőrző |
+|---|---|---|---|---|
+| τ²-bench | Ember-gép interakció és eszközhívás ügyfélszolgálati helyzetben | Kézi írás + kombinatorikus generálás | Felhasználószimulátor + üzleti adatbázis | Négy ellenőrzési réteg, a `reward_basis` alapján binárissá összegezve |
+| SWE-bench Verified | Szoftverfejlesztés, coding | Valódi GitHub-issue-k, kézi szűréssel | Kódtároló + tesztkészlet | FAIL\_TO\_PASS / PASS\_TO\_PASS kettős ellenőrzés |
+| AndroidWorld | Android telefon GUI-jának kezelése | Paraméteres sablonok példányosítása | Valódi Android-emulátor | Végső UI-állapot állításai |
+| OSWorld | Linux asztali GUI kezelése | Előre beállított köztes állapotból indul | Valódi virtuális gép | 134 önálló kiértékelő függvény |
+| Terminal-Bench | Linux terminál kezelése, coding | Kézi írás | Docker-konténer | Fájlrendszer-ellenőrzés + valódi futtatás |
+| GAIA | Információt gyűjtő általános célú AI-asszisztens | Kézi írás + saját mellékletek | Nyílt internet | Pontos karakterlánc-egyezés |
 
-A τ-bench egy benchmark az Ügynökök teljesítményének kiértékelésére strukturált üzleti folyamatokban (pl. légitársasági ügyfélszolgálat, kiskereskedelmi ügyfélszolgálat). Ellenőrzései komponens-szintűek és többdimenziósak: egyrészt ellenőrzi, hogy a végső adatbázis-állapot helyes-e (pl. a foglalási rekord állapota `"cancelled"`-re változott); másrészt ellenőrzi, hogy az Ügynök a beszélgetés során megadta-e a szükséges kulcsfontosságú információkat (pl. visszatérítési összeg és érkezési idő, amelyet specifikus sztringek vagy minták keresésével ellenőriz). Ez a kettős verifikáció egyidejűleg vizsgálja a műveleti pontosságot és a kommunikációs hatékonyságot. Feladat szinten azonban ezek az ellenőrzések végső soron "bináris nulla-egyes jutalomba" tömörülnek — minden ellenőrzésnek sikeresnek kell lennie a sikeres ponthoz; bármelyik sikertelensége 0 pontot eredményez. A bináris jutalmak megkönnyítik az olyan megbízhatósági mutatók számítását, mint a Pass^k (lásd a "Kiértékelési Metrikarendszer" szakaszt később), azon az áron, hogy a "műveletileg pontos, de egy nem kritikus mezőt kihagyó" megoldás ugyanolyan pontszámot kap, mint a "teljes kudarc".
+### Ellenőrzők
 
-A továbbfejlesztett "τ²-bench" nem elsősorban a pontozási finomságon javít; helyette két másik területen fejleszti tovább a benchmarkot. Először is a "Kettős Irányítású Környezet": az Ügynök már nem az egyetlen fél, aki eszközöket hívhat — a felhasználó-szimulátor is működtethet ugyanazon a megosztott környezeten (az Ügynök utasítja a felhasználót, hogy kapcsoljon repülőgép üzemmódra, és a felhasználó akciója ténylegesen megváltoztatja a környezeti állapotot), ami jobban illeszkedik a valós forgatókönyvekhez, mint a technikai támogatás, ahol a felhasználónak segítenie kell. Másodszor, **pontosabb feladatspecifikációk és kompozicionális feladatgenerálás**: kevesebb kétértelműség a sikerességi feltételekben, és a feladatpéldányok paraméterezhetők és kötegenként generálhatók (lásd a "Verifikálhatóság és Objektivitás Biztosítása" szakaszt később a részletes verifikációs dimenziókért).
+Egy Agent könnyedén ír terjedelmes jelentést arról, hogy a feladatot maradéktalanul elvégezte, holott valójában semmit sem végzett el. A kiértékelő keretrendszernek olyan tényeket kell ellenőriznie, amelyeket a gép önállóan is le tud ellenőrizni, nem pedig az Agent önbevallását.
 
-> **7-1. kísérlet ★: Futtasd a τ²-bench-et és Hasonlítsd Össze a τ-bench-től Való Fejlődését**
+**A SWE-bench Verified két önálló állításra bontja a „javítás kész” kijelentést.** Az egyik a FAIL\_TO\_PASS: javítás előtt bukik, utána átmegy, ami bizonyítja, hogy a probléma valóban megoldódott. A másik a PASS\_TO\_PASS: javítás előtt és után is átmegy, ami bizonyítja, hogy nem került be új hiba. Ha csak az elsőt ellenőrizzük, az Agent kibújhat azzal, hogy törli vagy átírja az útjában álló állításokat; ha csak a másodikat, az annyi, mintha nem ellenőriztünk volna. Csak mindkettő ellenőrzésével válik a „megjavítva” és a „semmit nem tört el” két külön-külön bizonyítható következtetéssé. Emellett magának a teszteknek a stabilitását is megerősíti, kizárva a hol átmenő, hol bukó instabil teszteket (flaky test).
+
+**Az OSWorld ellenőrzője képes felfedni azokat az eseteket, amikor a felszínen minden kész, lényegében mégis hibás.** 134 önálló kiértékelő függvénnyel és teljes operációsrendszer-hozzáféréssel rendelkezik, így ellenőrizni tudja a fájlrendszer szerkezetét, a folyamatok állapotát, a hálózati kapcsolatokat és az alkalmazások belső állapotát. Adatbázis-feladatoknál a kiértékelő szkript nemcsak a jelentésfájl létét igazolja, hanem csatlakozik az adatbázishoz is, hogy leellenőrizze, valóban lefutott-e az SQL; böngészős feladatoknál elemzi a DOM-fát, megnézi a cookie-kat és a localStorage-t, és ellenőrző kéréseket küld a háttérrendszernek, hogy az űrlap tényleg érvényre jutott-e.
+
+**A Terminal-Bench `build-linux-kernel-qemu` feladata** megköveteli a Linux 6.9 kernel forrásból való fordítását, egy egyedi printk beszúrását a `start_kernel` függvénybe, egy initramfs előállítását és annak futtatását QEMU alatt; a siker kritériuma az, hogy ez az egyedi üzenet megjelenjen a rendszerindítási naplóban. Az Agent nem hamisíthatja meg a kimenetet, nem tehet mást, mint hogy valóban végigviszi az egész folyamatot.
+
+### A feladatok nehézségi tagolása
+
+Egy kiértékelő feladathalmaznak különböző nehézségű feladatokat kell tartalmaznia. Így a modellek képességének növekedésével a halmaz nem avul el gyorsan.
+
+A GAIA mind a 466 kérdése három nehézségi szintre oszlik: a Level 1 egy-két eszközzel megoldható (ember 93,9%, GPT-4 30,3%), a Level 2 többlépéses gondolkodást kíván (91,8% a 9,7%-kal szemben), a Level 3 pedig összetett kombinációt (87,3% a 0%-kal szemben). Ez a rétegzés nem csupán a nehézséget címkézi, diagnosztikai értéke is van: a Level 1 kudarca az alapvető eszközhasználatra, a Level 2 a többlépéses tervezésre és információintegrálásra, a Level 3 pedig a hosszú sorozatokon átívelő gondolkodásra és a komplexitáskezelésre mutat, és mindhárom más-más fejlesztési irányhoz tartozik.
+
+A Terminal-Bench az egyszerű mlflow-modellregisztrációtól a közepes nehézségű 7z jelszófeltörésen és a nehéz, git-kiszolgálót és webkiszolgálót összekapcsoló többkomponensű integráción át a legnehezebb FEAL differenciális kriptoanalízisig terjed.
+
+A τ²-bench külön **csapdafeladatokat** is tervez: a felhasználó azt állítja, hogy „az ügyfélszolgálat már jóváhagyta a lemondást”, holott ez valójában nem felel meg a házirendnek — így vizsgálható, hogy az Agent nyomás és félrevezetés alatt is megőrzi-e a helyes ítéletét.
+
+### Az adatszivárgás megelőzése
+
+**A GAIA elérhetetlenné teszi a válaszok közvetlen internetes kikeresését.** Feladatai fogalmilag egyszerűek, de nyitott úttal: például egy adott nap NASA-féle Napi Csillagászati Képéből kiindulva azonosítani kell a képen látható űrhajóst, kikeresni, melyik űrhajóscsoporthoz tartozott, kiszámolni, ki töltötte a csoportból a legkevesebb időt az űrben, és a választ szigorúan „vezetéknév, pontosvesszővel elválasztva, ezres elválasztókkal” formában megadni. A válasz rendkívül konkrét, a helyességet pedig pontos karakterlánc-egyezés dönti el. A szivárgás elleni védelem két dolgon nyugszik: egyrészt a kérdés csak több információforrás összekapcsolásával válaszolható meg, egyetlen weboldal sem adja meg közvetlenül a választ; másrészt egyes feladatokhoz kifejezetten erre készített mellékletek tartoznak (az interneten nem létező PDF-ek, hangfelvételek, képek).
+
+**Az AndroidWorld egyetlen sablonból nagy számú példányt származtat.** Feladatai nem statikus szövegek, hanem dinamikusan példányosítható sablonok, például „módosítsd a `[CONTACT_NAME]` névjegy telefonszámát `[NEW_PHONE]`-ra”, ahol a paraméterértékek minden kiértékelésnél véletlenszerűen jönnek létre. Ennek három haszna van: a paraméterek mindig mások, így egy rögzített műveletsor visszajátszása értelmetlen; egyetlen sablonból szinte korlátlan számú példány állítható elő; egyes paraméterek rögzítésével és a többi változtatásával pedig pontosan mérhető egy adott tényező hatása.
+
+**A Terminal-Bench kanárimarkert ágyaz be a feladatszövegbe.** Minden feladat hordoz egy canary GUID-ot; ha egy modell képes ezt a GUID-ot tartalmazó kimenetet adni, akkor a benchmark adatai bekerültek a tanítóhalmazba. Ez nem akadályozza meg a szivárgást, de észlelhetővé teszi.
+
+### Minőségbiztosítás és hosszú távú karbantartás
+
+Jó minőségű kiértékelő halmazt készíteni rendkívül nehéz. A fenti benchmarkok többségének mai formája annak eredménye, hogy az első változatot használatba vették, felszínre kerültek a hibái, és azokat körről körre javították. A τ-benchtől a τ²-benchig például öt helyen terveztek újra.
+
+Először, **a feladatutasítások túl általánosak voltak, ezért a válasz kitalálható volt**. Az első változat utasításai tágan fogalmaztak, így a modellnek nem kellett valóban tisztáznia a kérést: elég volt józan ésszel kitalálni egy eljárást, és már át is ment. A τ²-bench két mezőre bontotta a forgatókönyvet, `known_info` és `task_instructions`: az előbbi kijelöli, mit tud a felhasználó, az utóbbi szabályozza, hogyan tárja fel. Amit a felhasználó nem tud, azt az Agent nem találhatja ki, csak lekérdezéssel szerezheti meg.
+
+Másodszor, **a sikerfeltételek nem voltak elég pontosak, ezért az ellenőrzés tévesen ítélt**. Az olyan feltételnek, hogy „a hálózat helyreállt”, nincs ellenőrizhető határa. A τ²-bench erre változtatta: „csak akkor számít megoldottnak, ha a sebességteszt excellent értéket ad; a poor, fair és good egyike sem elfogadható”. Ez a módosítás a **látszatjavításokat** célozza, amelyek elnyomják a tünetet anélkül, hogy a gyökérokot megszüntetnék.
+
+Harmadszor, **a felhasználószimulátor viselkedése túl gépies volt**. Az első változat szimulált felhasználója csak passzívan válaszolgatott. A τ²-bench érzelmet (az első sikertelen javítás után elégedetlenséget mutat), türelemhatárt (túl alacsony kommunikációs hatékonyság esetén lezárja a beszélgetést) és ténybeli lehorgonyzási követelményt adott hozzá. A három együtt éri el, hogy a szimulátor közelítsen a valódi felhasználóhoz, miközben reprodukálható marad.
+
+Negyedszer, **a felhasználó nemcsak a beszélgetésben, hanem a műveletvégzésben is részt vesz**. A telecom tartomány bevezette a kettős vezérlésű környezetet. A korábbi kiértékelésekben csak az Agent tudta megváltoztatni a környezetet, holott a műszaki támogatáshoz hasonló helyzetekben a cselekvések jelentős részét eredendően a felhasználónak kellene elvégeznie a saját eszközén. A kettős vezérlés egy további dimenzióval bővíti az ellenőrzést: miután a felhasználó megváltoztatta az állapotot, az Agent csak úgy értesülhet az eredményről, ha újra meghívja az eszközt — az ellenőrzés így már azt is lefedi, hogy „valóban elolvasta-e az Agent a felhasználóoldali művelet eredményét”.
+
+Ötödször, **a feladatpéldányok dinamikusan generálódnak**. A τ²-bench konkrét példányai (felhasználónevek, telefonszámok, hibakombinációk) paraméterezhetők és kötegelten előállíthatók, ami egyszerre javítja a lefedettséget és a szivárgással szembeni ellenálló képességet.
+
+**SWE-bench Verified: a közzététel előtt az eredeti feladatok 71%-át kiszórták.** Az OpenAI az eredeti 2294 feladatból véletlenszerűen 1699-et emberi kiértékelésre bocsátott, és 93 Pythonban jártas fejlesztőt vont be, hogy egyenként átnézzék: világos-e a probléma leírása, lefedik-e a tesztesetek a határfeltételeket, stabilak-e a tesztek, visz-e be új hibát a referenciapatch, ésszerű-e a nehézség. Végül mindössze 500 ment át. A magas kiszórási arány jobb jel-zaj viszonyt eredményez, és a kiértékelés költsége is mintegy 80%-kal csökken. Az összetett Agent-feladatok gyakran percektől órákig tartanak, és egy kiértékelő adathalmaz végigfuttatása élvonalbeli modellel sokszor több ezer dolláros tokenköltséget jelent, ezért a kiértékelési költség csökkentése rendkívül fontos.
+
+**OSWorld: a közzététel utáni 15 hónapban több mint 300 probléma került felszínre.** A 2024 áprilisában megjelent benchmark gyorsan a multimodális Agent-kiértékelés fontos eszközévé vált, ám a széles körű használat négyféle problémát tárt fel: környezeti problémákat (a webhelyek adatgyűjtés elleni védelme, CAPTCHA, dinamikus tartalomváltozás), feladatleírási problémákat (kétértelmű megfogalmazás), ellenőrzési logikai problémákat (túl szigorú vagy túl megengedő) és kezdetiállapot-problémákat (hiányos konfiguráció). A Hongkongi Egyetem csapata mintegy tízfős csoportot állított fel, és két hónapon át szorosan együttműködött a MoonShot AI-jal, az OpenAI-jal, a ByteDance Seed TARS-szal, az Anthropickal, a Simularral és másokkal a rendszerszintű javításon: a környezeti problémákat verziórögzítéssel és offline mentésekkel, a leírási problémákat a kétértelmű megfogalmazások átírásával, az ellenőrzési problémákat kézzel felállított helyes alapvonallal és a feltételek hangolásával, a kezdetiállapot-problémákat pedig teljességi ellenőrzések hozzáadásával enyhítették.
+
+> **7-2. kísérlet ★: Benchmarkfeladatok kézi végrehajtása**
 >
-> Ez a kísérlet a τ²-bench kiértékelési keretrendszert futtatja, hogy megértsük az ember-számítógép interakciós kiértékelési környezetek tervezési alapelveit. A τ-bench és τ²-bench összehasonlításával láthatjuk, hogyan fejleszthetők iteratívan a kiértékelési adathalmazok.
+> Válasszunk feladatokat a GAIA, az AndroidWorld, a SWE-Bench Verified, a Terminal-Bench és az OSWorld-Verified halmazokból, és oldjuk meg őket saját kezűleg; adathalmazonként egy könnyű, egy közepes és egy nehéz feladat ajánlott. A „nehéz” szint embernek is kihívás.
 >
-> Olvasd el mélyrehatóan a feladatdefiníciós fájlokat: minden feladat tartalmazza a felhasználó által ismert információkat, a progresszív feltárást és válaszstratégiákat szabályozó feladatutasításokat, valamint a sikerességi feltételeket (az adatbázis célállapota és a párbeszédben megjelenő megerősítő információk). Futtasd le a teljes kiértékelési folyamatot, figyeld meg a felhasználó-szimulátor és az Ügynök többfordulós párbeszédét, és elemezd a tipikus hibamódokat (szabályzatsértések, információhiányok, túlzott emberi ügynökhöz irányítás stb.).
->
->
-> ![7-3. ábra: τ²-bench Kiértékelési Architektúra](images/fig7-3.svg)
->
->
-> Hasonlítsd össze a τ-bench és τ²-bench tervezési különbségeit: A τ-bench eredeti verziójában túl egyszerűek voltak a felhasználói utasítások (az Ügynök kitalálhatta a választ), pontatlanok a sikerességi feltételek (téves ítéletekhez vezettek), és mechanikus volt a felhasználó-szimulátor. A τ²-bench szisztematikus fejlesztéseket vezetett be e problémák megoldására:
->
-> - **Részletesebb feladatutasítások bevezetése**: Beleértve a "Horgonyzási Követelményeket", ami azt jelenti, hogy a válaszoknak a környezet tényleges állapotán kell alapulniuk
-> - **Pontosabb kiértékelési szempontok**: Például "a sebességtesztnek 'kiváló' eredményt kell adnia a megoldottsághoz"
-> - **Valósághűbb felhasználó-szimulátor viselkedési specifikációk**: Progresszív információfeltárás, természetes érzelmi ingadozások
->
-> Különös figyelmet fordíts a τ²-bench újonnan hozzáadott telekommunikációs tartományi feladataira, és értsd meg a τ²-bench kettős irányítású környezetének tervezését (ahogy korábban említettük, a felhasználó és az Ügynök közösen működteti ugyanazt a megosztott környezetet).
->
+> A végén válaszoljunk két kérdésre. Megenged-e a feladatleírás többféle ésszerű értelmezést, és ha igen, melyiket fogadja el az ellenőrző? Ha valaki munka nélkül próbálna átcsúszni, mi lenne a legolcsóbb út, és fel tudná-e tartóztatni az ellenőrző?
 
-Az eszközhívási kiértékelés azt kérdezi, hogy egy megfigyelhető állapotváltozás megtörtént-e; az ember-számítógép interakciós kiértékelés azt kérdezi, hogy az Ügynök segített-e a felhasználónak eljutni egy új megértéshez vagy döntéshez. Az előbbi az Ügynök akcióinak helyességét teszteli; az utóbbi a kommunikációs stratégiájának megalapozottságát.
+### A kiértékelő halmaz három forrása
 
-A kiértékelési környezetek építése érinti a szimulációs környezeteket is — amikor egy kiértékelési környezetnek nagyszámú ismételt interakciót kell támogatnia, szimulációs környezetté válik. A fejezet vége röviden foglalkozik ezzel.
+Elterjedt nézet, hogy a nyilvános benchmarkok a modellek rangsorolását szolgálják, és kevés közük van a valódi üzlethez. Igaz, hogy a nyilvános benchmarkok pontszámai nehezen irányítanak közvetlenül termékdöntéseket, tervezési fogásaik azonban maradéktalanul átvihetők. Az ellenőrzés mélysége, a paraméteres generálás, a szivárgás elleni védelem és a minőség karbantartása — mindaz, amit fentebb tárgyaltunk — éppen az a néhány pont, amelyet a saját építésű kiértékelő halmazban a legkönnyebb elmulasztani.
 
-## Kiértékelési Feladat-adathalmazok Tervezése
+Az éles üzemi kiértékelő halmaznak rendszerint három forrása van.
 
-A kiértékelési környezet a "színpad", az adathalmaz a "forgatókönyv". A forgatókönyv minősége gyakran jobban meghatározza a kiértékelés értékét, mint maga a színpad. Egy rosszul megtervezett adathalmaz még tökéletes környezetben is csak zajt produkál. Ez a szakasz számos, ismételten bevált alapelvet sűrít össze olyan benchmarkok tervezési gyakorlatából, mint a GAIA, AndroidWorld, SWE-Bench Verified, τ-bench és τ²-bench, Terminal-Bench, OSWorld és OSWorld-Verified.
+**A nyilvános benchmarkok** a modellek durva szűrésére és a tervezési fogások kölcsönzésére szolgálnak, termékdöntésekre általában nem. Feladateloszlásuk nem esik egybe a valós üzlet feladateloszlásával: két százalékpontnyi javulás a GAIA-n nem áll szükségszerű összefüggésben a visszatérítések sikerarányával.
 
-Ez a lista nem meríti ki az Ügynök-kiértékelés teljes palettáját. Már a Web/GUI kategórián belül is több különböző hangsúlyú benchmark létezik: a WebArena teljesen reprodukálható weboldalakat épít (e-kereskedelem, fórumok, kódtárhely stb.), amelyek a valós weboldalak kiszámíthatatlanságát tartalmazzák egy sandboxon belül; a Mind2Web az ellenkező utat járja, közvetlenül több száz valós weboldalon teszteli az általánosítást; a [ClawBench](https://claw-bench.com/) ([tanulmány](https://arxiv.org/abs/2604.08523), [kód](https://github.com/TIGER-AI-Lab/ClawBench)) lehetővé teszi, hogy egy izolált konténerben futó Ügynök végpontok közötti hétköznapi feladatokat hajtson végre élő weboldalakon. A V1 153 feladatot fed le 144 weboldalon, a V2 újabb 130-at ad hozzá, és öt rétegű bizonyítékot rögzít párhuzamosan: munkamenet-visszajátszások, akció-képernyőképek, HTTP forgalom, böngészőakciók és Ügynök-üzenetek. Kiegészíti a sandboxolt benchmarkokat az élő weboldalak eltolódásának és a hosszú farkú hibák könnyebb elemzésének lehetővé tételével, azon az áron, hogy a reprodukálhatóság függ a harmadik féltől származó weboldalak változásaitól; a BrowseComp a mélykeresésre specializálódott — olyan mélyen eltemetett válaszok, amelyekhez csak többlépcsős böngészéssel és keresztellenőrzéssel lehet hozzáférni. Az eszközhívási oldalon vannak dedikált függvényhívási ranglisták, mint a BFCL (Berkeley Function-Calling Leaderboard). Ez a fejezet nem törekszik mindegyik katalogizálására. Ehelyett a két alapvető környezeti paradigmát (eszközhívás és ember-számítógép interakció) veszi, plusz az adathalmaz esettanulmányokon átívelő GUI-műveleti forgatókönyveket, és belemélyed a tervezési kompromisszumaikba. Miután megértetted a paradigmákat, gyorsan meg tudod ítélni, hogy egy új benchmark mit mér, mennyire akadályozza meg az adatszivárgást, és mennyire lehet extrapolálni a következtetéseit.
+**A saját építésű üzleti halmaz** lefedi a valós feladateloszlást, és alapul szolgálhat a modellválasztáshoz, valamint a Harness tervezési döntéseihez. A τ²-bench például közvetlenül használható vázként bármely olyan kiértékelő rendszerhez, amelynek szimulált felhasználóra van szüksége; csak a tartományi adatokat és az eszközkészletet kell kicserélni.
 
-> **7-2. kísérlet ★: Végezz El Kézzel Benchmark Feladatokat**
->
-> Válassz ki feladatokat mindegyikből: GAIA, AndroidWorld, SWE-Bench Verified, τ²-bench, Terminal-Bench és OSWorld-Verified, és hajtsd végre őket kézzel. Javasolt minden adathalmazból egy egyszerű, egy közepes és egy nehéz feladat elvégzése — a "nehéz" szintnek még emberek számára is kihívást kell jelentenie. Hasonlítsd össze a végrehajtási eredményeidet a standard válaszokkal, és elemezd az eltérések forrásait. Ezen gyakorlati tapasztalaton keresztül értsd meg: a feladatleírásoknak egyensúlyozniuk kell a világosság és a nyitottság között, a verifikációs szabványoknak objektívnek és végrehajthatónak kell lenniük, és a feladatok hierarchikus nehézségének képesnek kell lennie a különböző képességszintek megkülönböztetésére.
->
+**Az éles trajectoryk visszaáramlása** a terepen bekövetkező valódi kudarcokból származik: a felhasználó kifejezett helyesbítéseiből, negatív visszajelzéseiből, valamint az utólagos állapotellenőrzéssel, szabályalapú ellenőrzővel vagy LLM-es átnézéssel felfedezett esetekből. A hibaattribúción átesve ezek regressziós esetekké ülepednek. A konkrét eljárást a későbbi „Hibaattribúció” és „Végponttól végpontig tartó regressziós feladatok és trajectory prefix regressziós feladatok” szakaszok írják le. Ez a forrás a legdrágább, egyben a legpontosabb is, mert közvetlenül abból származik, amivel a felhasználók ténylegesen szembesültek.
 
-### A Feladat-adathalmazok Tervezésének Alapvető Kihívásai
+A kezdeti szakaszban rendszerint csak nyilvános benchmarkok és néhány kézzel írt üzleti eset áll rendelkezésre; miután a rendszer egy ideje éles üzemben fut, az éles trajectorykból visszaáramló esetek adják a zömét.
 
-**Első kihívás: A világosság és a nyitottság közötti feszültség.** A feladatleírásoknak elég világosnak kell lenniük a reprodukálható kiértékelés biztosításához, de nem annyira merevnek, hogy elfojtsák az Ügynök kreativitását. A GAIA erre példát ad: a feladatok "fogalmilag egyszerűek", de nyitott végrehajtási utakkal rendelkeznek — például egy feladat megkövetelheti, hogy az Ügynök azonosítson egy űrhajóst a NASA Astronomy Picture of the Day oldaláról, és határozza meg, mennyi időt töltött az űrben. A cél világos, de hogy hogyan keres, szűr és ellenőriz, az teljes mértékben az Ügynök autonóm döntésére van bízva.
+## Automatizált kiértékelési módszerek
 
-**Második kihívás: A hitelesség és az irányíthatóság egyensúlya.** A valós feladatok bizonytalanságot és zajt tartalmaznak, ami feltárhatja a robusztusságot, de veszélyeztetheti a reprodukálhatóságot is. A SWE-Bench eredeti verziója közvetlenül valós GitHub-issue-kat használt, biztosítva a hitelességet, de homályos feladatleírásokhoz, hiányos tesztekhez és szubjektív kiértékelési szempontokhoz is vezetett. A SWE-Bench Verified szisztematikus, emberi szakértők általi validálást vezetett be, 500 kiváló minőségű feladatot kiválasztva egyértelműen meghatározott problémákkal, elegendő teszttel és tiszta megoldásokkal, jelentősen javítva az irányíthatóságot a hitelesség megőrzése mellett.
+Az előző szakaszokban tárgyalt benchmarkoknak van egy közös vonásuk: az ellenőrzőik szinte kivétel nélkül determinisztikusak. A SWE-bench tesztkészletet futtat, az AndroidWorld a végső UI-állapotot állítja, a GAIA pontos karakterlánc-egyezést végez, és a τ²-bench négy ellenőrzési rétegét is teljes egészében kód hajtja végre. Ennek a választásnak megvan a maga jó oka: a determinisztikus ellenőrzés nem jár többletmodell-költséggel, az eredmény teljesen reprodukálható, egységtesztként beépíthető a folyamatos integrációba, és megkönnyíti a modellek közötti rangsorolást.
 
-**Harmadik kihívás: A sokszínűség és a rendszerezettség összehangolása.** Egy hatékony adathalmaznak le kell fednie a tipikus forgatókönyveket, határeseteket és hibacsapdákat, miközben szisztematikus szervezettséggel kell rendelkeznie, hogy a kiértékelési eredmények diagnosztizálhassák a specifikus képességgyengeségeket. Az AndroidWorld 116 feladata 20 valós alkalmazást ölel fel, mindegyik feljegyzve a szükséges alapképességeket (többlépcsős tervezés, vizuális megértés, időbeli következtetés) — így az eredmények nemcsak egy általános sikerességi arányt adnak, hanem egy erősségi és gyengeségi profilt specifikus képességi dimenziók mentén. Még fontosabb, hogy egy paraméterezési mechanizmus szinte korlátlan számú feladatváltozatot generálhat.
+Az ára az, hogy csak a végeredmény helyességét tudja értékelni, a hiba okát nem adja meg. A τ²-bench elbukott feladata végül 0 pontot kapott, és ez a 0 nem árulja el, hogy az Agent a vonalválasztásnál hibázott-e, vagy kihagyta az adatfeltöltési lépést, arról pedig végképp nem szól, mit kellene legközelebb megváltoztatni. Egy rangsorolásra használt nyilvános benchmark szempontjából ez nem hiba; egy folyamatos javításra szoruló éles rendszer szempontjából viszont éppen ez a legszükségesebb információ.
 
-**Negyedik kihívás: A kiértékelési költség vs. lefedettség.** Az összetett Ügynök-feladatok percekig vagy akár órákig is eltarthatnak, nagy mennyiségű tokent fogyasztva. Az adathalmaz méretének egyensúlyoznia kell az átfogóság és a gazdaságosság között. A GAIA gondosan kiválaszt 466 feladatot három nehézségi szinten, lefedve több képességi dimenziót, miközben lehetővé teszi a kiértékelést ésszerű költségen. A SWE-Bench Verified 2294 feladatról 500-ra csökkentette a készletét (körülbelül négyötödével csökkentve a költségeket, miközben a szigorúbb minőségi szabványok révén javította a jel-zaj arányt).
+Az éles környezetnek van egy második nehézsége is: sok ítélet egyszerűen nem írható le kóddal ellenőrizhető állításként. Hogy egy panaszra adott válasz megfelelő hangvételű-e, hogy egy kutatási jelentésből kimaradt-e kulcsfontosságú információ, hogy egy memórialekérdezés összekeverte-e a személyek közötti kapcsolatot — ezeknek nincs egyetlen lekérdezhető végállapotuk, és kulcsszó-egyezéssel sem dönthetők el.
 
-**Ötödik kihívás: Az adatszennyezés megelőzése.** A nagy nyelvi modellek korában az adatszennyezés komoly kihívást jelent a kiértékelés számára: amikor a kiértékelési adatok bekerülnek a tanítási adatokba, a kiértékelés a memóriát méri, nem az általánosítást. Olyan ez, mintha egy vizsga előtt memorizálnánk a válaszokat — a jó pontszámok nem tükrözik a valódi képességet. A különböző benchmarkok eltérő megelőzési stratégiákat alkalmaznak: a GAIA a válaszok egyediségére támaszkodik; a kérdések több forrásból származó információ kombinálását igénylik, és egyes feladatokhoz speciálisan létrehozott mellékletfájlok tartoznak (PDF/audio/képek, amelyek nem léteznek az interneten), így egyetlen weboldal sem adhatja meg közvetlenül a választ. A SWE-Bench Verified maga egy 500 feladatból álló részhalmaz, amelyet az OpenAI szerzett az eredeti SWE-Bench kézi minőségi szűrésével, és nem tartalmaz időalapú szivárgásmegelőzési tervezést. Olyan későbbi munkák, mint a SWE-bench-Live használnak valóban időbeli frissességet a szivárgás megelőzésére, folyamatosan beépítve a modell tanítási határideje után létrehozott issue-kat, így a kiértékelés mindig egy lépéssel a modell tanítási korpusza előtt jár. A τ²-bench dinamikus paramétergenerálással akadályozza meg a szivárgást, ahol a konkrét feladatpéldányok (felhasználónevek, rendelésszámok, dátumok stb.) véletlenszerűen generálódnak minden egyes alkalommal. Az AndroidWorld paraméterezett feladatgenerálása természeténél fogva segít a szivárgás megelőzésében, mert a verifikáció a végső UI állapoton alapul, nem a műveletek sorrendjén. A Terminal-Bench a szivárgást észlelhetővé teszi kanári GUID-ok (globálisan egyedi azonosítók, amelyek nyomkövetési jelzőként szolgálnak) beágyazásával: ha egy modell képes kiadni ezt a GUID-ot tartalmazó tartalmat, az azt jelzi, hogy a benchmark adatok kiszivárogtak a tanítási készletbe.
+Ezért a nyilvános benchmarkoktól az éles kiértékelés felé haladva az ellenőrzés módját jobbra kell tolni egy olyan spektrum mentén, amelynek vízszintes tengelye a feladat **gépi ellenőrizhetőségének foka**; ezt mutatja a 7-4. ábra.
 
-### Feladatleírások Precíziós Tervezése
+![7-4. ábra: Az ellenőrzési módok spektruma – a determinisztikus ellenőrzéstől a modell általi ítéletig](images/fig7-4.svg)
 
-A GAIA a válaszok egyediségét egyértelmű információforrás-korlátozásokkal, időtartományokkal, témákkal és lekérdezési célokkal biztosítja. Például egy 3. szintű feladat megköveteli, hogy egy adott dátum NASA-képéből kiindulva, vizuális megértéssel azonosítsuk az űrhajóst, keressük meg az űrhajóscsoportot, amelyhez tartozik, számítsuk ki az űrben töltött idejét, és pontosan formázzuk a kimenetet ("vezetéknév; pontosvesszővel elválasztott mezők; számok ezres tagolással"). Minden részlet az automatikus verifikációt szolgálja — csak a formátumban és tartalomban egyező válasz számít sikeresnek.
+A spektrum jobb oldalán álló két eszköz így válik az éles kiértékelés gerincévé: a **Rubric** a homályos „mennyire jó” kérdést több, külön-külön pontozható dimenzióra bontja, az **LLM-as-a-Judge** pedig ott végzi el a pontozást, ahol nincs determinisztikus kritérium. Csak a kettő együtt képes egy általános kudarcarányt konkrét, megfogható problémákra visszabontani; a szakasz második felében tárgyalt **hibaattribúcióval** kiegészülve pedig az éles Agent-kiértékelés teljes zárt hurkát alkotják.
 
-A τ²-bench kontextualizált tervezést vezet be, ahol minden feladat több információs réteget tartalmaz: a felszíni problémát ("nem működik a mobil adat"), a teljesítményelvárást ("kiváló sebességértékelés szükséges"), a korlátozást ("nem fogad el semmilyen más értékelést") és a mögöttes érzelmet. Egy kulcsfontosságú fejlesztés az "ismert információ" és a "feladatutasítások" szétválasztása: az ismert információ az, amit a felhasználó jelenleg tud, míg a feladatutasítások irányítják a szimulátort, hogyan fedje fel fokozatosan az információt, beleértve a "Horgonyzási Követelményeket" (a válaszoknak az eszközhívások által visszaadott tényleges eredményeken kell alapulniuk, nem kitalált információkon).
-
-A SWE-Bench Verified strukturált mezőket tartalmaz, mint a probléma leírása, reprodukálási lépések és várt/tényleges viselkedés, az annotátorok ellenőrzik a leírás és a tesztesetek közötti egyezést. A Terminal-Bench feladatleírásainak minden eleme mechanikusan ellenőrizhető: hogy a fájlútvonalak léteznek-e, a jogosultsági értékek helyesek-e, a tanúsítványparaméterek érvényesek-e, a dátumformátumok helyesek-e. Például a "build-linux-kernel-qemu" megköveteli a Linux kernel 6.9 forrásból történő építését, egy egyéni printk hozzáadását a `start_kernel`-ben, egy initramfs generálását és futtatását QEMU-ban. A siker feltétele az egyéni üzenet megjelenése a boot logban — az Ügynök nem hamisíthatja a kimenetet; valóban végig kell vinnie a teljes folyamatot.
-
-Az AndroidWorld "paraméterezett sablon"-tervezést használ. Egy feladat nem statikus szöveg, hanem egy dinamikusan példányosítható sablon (pl. "Változtasd meg a `[KAPCSOLAT_NEVE]` kapcsolat telefonszámát `[ÚJ_TELEFON]`-ra"), ahol a különböző paraméterértékek véletlenszerűen generálódnak minden kiértékeléshez. Ennek három előnye van:
-
-- **Memorizálás megelőzése**: A paraméterértékek minden alkalommal eltérnek, megakadályozva egy rögzített műveletsorozat visszajátszását
-- **Adatok sokszínűségének növelése**: Egy sablon szinte korlátlan számú példányt generálhat
-- **Összehasonlító kísérletek támogatása**: Bizonyos paraméterek rögzítése, mások változtatása lehetővé teszi adott tényezők hatásának pontos mérését
-
-A verifikáció a végső UI állapoton alapul (pl. hogy a telefonszám mező tartalmazza-e a várt értéket), nem a műveletek sorrendjén.
-
-Az OSWorld feladatai gyakran nem "tiszta" kezdeti állapotból indulnak, hanem gondosan konfigurált köztes állapotokból, ami jobban hasonlít a valós használati forgatókönyvekhez. A feladatleírásoknak kezelniük kell a többféle megoldást ("állítsa a hátteret lilára" — specifikus színkód szükséges az egyértelműsítéshez; "fűzzön össze két CSV-t" — el kell fogadnia minden ésszerű módszert, mint egy fejléc megtartása vagy mindkét fejléc megtartása) és a környezeti bizonytalanságot (weboldalak kaparás elleni védelme, fejlődő alkalmazás UI-ok, versenyhelyzetek — az OSWorld-Verified ezeket offline oldalpillanatképekkel, rögzített függőségi verziókkal, explicit várakozási feltételekkel stb. enyhíti).
-
-### A Feladatok Hierarchikus Nehézségének Tervezése
-
-A GAIA három nehézségi szintet tervez: az 1. szint csak 1-2 eszközt igényel (emberek 93,9% vs. GPT-4 30,3%), a 2. szint többlépcsős következtetést igényel (91,8% vs. 9,7%), a 3. szint pedig komplex kombinációkat (87,3% vs. 0%). A hierarchikus tervezés diagnosztikai értéke: az 1. szinten bekövetkező kudarc alapvető eszközhasználati problémákra utal, a 2. szint a többlépcsős tervezésre és információintegrációra, a 3. szint pedig a hosszú sorozatú következtetésre és komplexitáskezelésre. Minden szint különböző fejlesztési irányoknak felel meg (utasítás-mérnökség vs. tervezési mechanizmusok vs. hierarchikus architektúra/poszt-tréning).
-
-A τ²-bench az üzleti folyamat összetettsége szerint rétegezi a nehézséget: az egyszerű információlekérdezésektől a többlépcsős folyamatokig (repülőjegy-foglalás módosítása: lekérdezés, alternatívák bemutatása, megerősítés beszerzése, árkülönbözet kiszámítása, fizetés feldolgozása) a hibadiagnózisig (több lehetséges ok szisztematikus ellenőrzése és javítások verifikálása), végül a stratégiai ítéletalkotásig (a szabályzatnak nem megfelelő kérések kezelése).
-
-A Terminal-Bench a technikai tartomány × műveleti komplexitás kettős dimenziója mentén rétegezi a nehézséget. Feladatregisztere több mint 200 feladatot gyűjtött össze (az alapkiértékelő készlet mérete verziótól függően változik; pl. a 2.0-s verzió 89 kiváló minőségű feladatot választott ki a közösségi hozzájárulásokból), az egyszerű MLflow modellregisztrációtól, a közepes nehézségű 7-Zip jelszótörésen át, a nehéz Git szerver és web szerver integráción keresztül, a legnehezebb FEAL differenciális kriptoanalízisig (kriptográfiai ismeretek + algoritmus-optimalizálás szükséges a 30 másodperces időkorlát betartásához).
-
-### Verifikálhatóság és Objektivitás Biztosítása
-
-A GAIA válaszai tömörek és világosak. A szigorú formázási szabályok lehetővé teszik a verifikációt pontos sztringegyeztetéssel. A bináris eredmény (egyezik vagy nem) biztosítja az objektív reprodukálhatóságot. A válaszok ritkasága csalásellenes intézkedésként is szolgál — a nagyon specifikus tények valószínűtlen, hogy szó szerint szerepeljenek a tanítási adatokban.
-
-A SWE-Bench Verified végrehajtható kódalapú ellenőrzéseket használ, megkülönböztetve a FAIL_TO_PASS (a javítás előtt hibás, javítás után sikeres, bizonyítva a probléma megoldását) és a PASS_TO_PASS (javítás előtt és után is sikeres, bizonyítva, hogy nem kerültek be új hibák) eseteket, elérve a kettős verifikációt. A Verified verzió azt is biztosítja, hogy a tesztek maguk megbízhatók legyenek, flúgos tesztek (amelyek néha sikeresek, néha sikertelenek) nélkül.
-
-A τ²-bench verifikációs rendszere többrétegű ellenőrzéseket tartalmaz (az egyes rétegek eredményei továbbra is bináris jutalomba tömörülnek feladat szinten; mindennek sikeresnek kell lennie a sikerhez):
-
-- **Adatbázis-állapot ellenőrzés**: Foglalási rekord állapota, visszatérítési rekord létrehozása
-- **Párbeszéd-tartalom kulcsszó keresése**: Hogy az Ügynök expliciten megerősítette-e a visszatérítési összeget és a várható érkezési időt a felhasználónak
-- **Folyamatmegfelelés**: Az eszközhívások sorrendjének elemzése, pl. hogy a felhasználó explicit megerősítését beszerezték-e a rendelés módosítása előtt
-
-A τ²-bench kettős irányítású környezete (lásd az "Ember-Számítógép Interakciós Kiértékelési Környezet" szakaszt korábban) új dimenziót ad a verifikációhoz: miután a felhasználó-szimulátor ténylegesen megváltoztatta a környezeti állapotot, az Ügynöknek meg kell figyelnie ezt a változást az eszközhívásokon keresztül, és ennek megfelelően kell folytatnia a hibaelhárítást. A verifikáció ezért kiterjed arra is, hogy az Ügynök ténylegesen megfigyelte-e a felhasználó akcióinak kimenetelét.
-
-Az OSWorld 134 független kiértékelő függvényt biztosít teljes operációs rendszer hozzáféréssel, lehetővé téve a fájlrendszer-struktúrák, folyamatállapotok, hálózati kapcsolatok és alkalmazásbelsők mélyreható vizsgálatát. Például egy adatbázis-műveleti feladatban az értékelő szkript nemcsak azt ellenőrzi, hogy a jelentésfájl létezik, hanem közvetlenül csatlakozik az adatbázishoz, hogy ellenőrizze, az SQL helyesen futott-e le. Böngészőfeladatok esetén elemzi a DOM fát, ellenőrzi a cookie-kat/localStorage-t, és verifikációs kéréseket küld a háttérrendszernek, hogy megerősítse, az űrlapkitöltés ténylegesen életbe lépett-e. Ez a mélyreható vizsgálat képes észlelni a "felszínes befejezés, de lényeges hiba" eseteket — például az Ügynök rákattintott a beküldés gombra, de a kérést a szerver elutasította a hibás mezőbejegyzések miatt.
-
-A Terminal-Bench egy szabványosított Docker konténerkörnyezeten alapul, kombinálva a fájlrendszer-állapot ellenőrzéseket (útvonal létezése, jogosultsági értékek, tartalomformátum) a programvégrehajtás funkcionális verifikációjával (a build-linux-kernel-qemu esetében ténylegesen elindítja a QEMU-t és keresi az egyéni printk üzenetet). A kanári GUID nyomon követhetővé teszi a szivárgást.
-
-### A Feladatmegoszlás Szisztematikus Tervezése
-
-A feladatmegoszlásnak szisztematikusan le kell fednie a képességi dimenziókat, a nehézségi dimenziókat, a forgatókönyvi dimenziókat és a határeseteket. A GAIA az általánosságra törekszik — a legtöbb feladat a következtetés, multimodális feldolgozás, böngészés és eszközhasználat kombinációját igényli. A τ²-bench szándékosan "csapdafeladatokat" tervez — egy felhasználó azt állítja, hogy "az ügyfélszolgálat jóváhagyta a lemondást", amikor a lemondás valójában nem felel meg a szabályzatnak — hogy tesztelje, az Ügynök megőrzi-e az ítélőképességét nyomás és félrevezetés alatt. Az OSWorld a művelettípus (fájl IO / asztali alkalmazás / webalkalmazás / alkalmazásokon átívelő munkafolyamat) és az alkalmazási tartomány kétdimenziós mátrixán alapul, három operációs rendszert lefedve (a kutatás erős operációsrendszer-közi korrelációt mutat; az egyik rendszeren tanult készségek átvihetők másokra). A Terminal-Bench "több technológiai verem kombinációs feladatokat" tartalmaz a rendszerszintű gondolkodás tesztelésére (pl. egy újrafelosztási feladat, amely egyesíti az adatfeldolgozást + fájlműveleteket + Python mérnökséget).
-
-### Adatminőség-ellenőrzés és Iteratív Fejlesztés
-
-A SWE-Bench Verified a minőség-ellenőrzés mintaképe. Az OpenAI véletlenszerűen kiválasztott 1699 feladatot az eredeti 2294-ből emberi kiértékelésre, 93 Pythonban jártas fejlesztőt toborozva. Az annotátoroknak több ellenőrzést kellett elvégezniük: a probléma leírása világos-e (megérthető-e, mit kell megoldani), a tesztesetek teljesek-e (minden aspektust és határesetet lefednek-e), a tesztek stabilak-e (nincsenek-e flúgos tesztek környezetből vagy véletlenszerűségből adódóan), a javítás helyes-e (vezet-e be új hibákat), és a nehézség ésszerű-e. A szigorú szűrés után csak 500 felelt meg (29%) — ez a magas elutasítási arány szükséges befektetés a kiértékelés minőségébe. Szabványosított annotációs iránymutatásokat is bevezettek, meghatározva minden egyes ellenőrzés specifikus szempontjait és példáit a különböző annotátorok közötti konzisztencia biztosítására.
-
-A τ²-bench bevezeti az "ismert információ" / "feladatutasítások" szétválasztását (realisztikusabbá téve a szimulátor viselkedését) és szigorúbb befejezési feltételeket (pl. "csak a kiváló számít megoldottnak; a gyenge/tisztességes/jó nem elfogadható"), megelőzve a "felszínes javításokat".
-
-Az OSWorld-Verified az iteratív fejlesztés mintaképe. A 2024 áprilisi megjelenése után az OSWorld gyorsan fontos benchmarkká vált a multimodális Ügynök-kiértékelésben, de több mint 15 hónap széleskörű használat során több mint 300 problémát tártak fel. Ezek a problémák négy kategóriába tartoznak: környezeti problémák (weboldalak kaparás elleni védelme, CAPTCHA-k, dinamikus tartalomváltozások), feladatleírási problémák (kétértelmű megfogalmazás), verifikációs logikai problémák (túl szigorú vagy túl megengedő) és kezdeti állapot problémák (hiányos konfiguráció). A Hongkongi Egyetem körülbelül 10 fős csapata szorosan együttműködött a MoonShot AI-val, az OpenAI-val, a ByteDance Seed TARS-szal, az Anthropic-kal, a Simular-ral és másokkal két hónapon keresztül, hogy szisztematikusan kijavítsák ezeket a problémákat. Minden kategóriához javítási stratégiákat dolgoztak ki: a környezeti problémákat a verziók rögzítésével és offline biztonsági mentésekkel oldották meg, a feladatleírásokat a kétértelmű megfogalmazások átírásával tisztázták, a verifikációs logikát a helyes alapvonalak kézi felállításával és a feltételek módosításával egyensúlyozták, a kezdeti állapotokat a teljességi ellenőrzések hozzáadásával erősítették.
-
-A kiértékelési infrastruktúrát is áthelyezték helyi VM-ekről az AWS felhőplatformra, kihasználva a rugalmas skálázást az 50-szeres gyorsulás eléréséhez párhuzamosítással (több mint 10 óráról néhány percre). A Google Drive feladat inicializálási sikerességi aránya 50%-ról több mint 95%-ra nőtt. Az összes hivatalos kiértékelési trajektória-adat nyilvánosan elérhető a Hugging Face-en, lehetővé téve a közösség számára, hogy minden részletet áttekintsen, reprodukálja az eredményeket, azonosítsa a problémákat, ami egy folyamatos fejlesztés erényes körforgását hozza létre.
-
-A kiértékelési környezetek és a poszt-tréning környezetek gyakran közös eredetűek: egy jól megtervezett kiértékelési környezet kis erőfeszítéssel alkalmazható tanítási környezetté — a SWE-Gym reprezentatív példa a SWE-bench alapján épített tanítási feladatokra, míg a τ²-bench és AndroidWorld paraméterezett sablonjai tömegesen generálhatnak tanítási példányokat. De egy piros vonalat meg kell húzni: ami újrafelhasználható, az a környezet "építési mechanizmusa"; a kiértékelő készlet konkrét feladatainak szigorúan elkülönítve kell maradniuk a tanítási adatoktól — ha egy kiértékelési feladat bekerül a tanítási készletbe, az a memóriát teszteli, nem a képességet (lásd 8. fejezet).
-
-## Automatizált Kiértékelési Módszerek
-
-A kiértékelési környezet, adathalmaz és világos metrikarendszer birtokában a központi kérdés: hogyan pontozzunk? A tiszta helyes válasszal rendelkező feladatoknál (pl. matematikai feladatok, SQL lekérdezések) elegendő az egyszerű bináris ítélet (helyes/helytelen); de a nyílt végű feladatoknál (pl. ügyfélszolgálati párbeszédek, jelentésírás) kifinomultabb kiértékelési módszerekre van szükség.
-
-A kódalapú automatikus verifikáció csak a standard válaszokkal rendelkező forgatókönyveket fedi le; a nyílt végű feladatok pontozása ennek a szakasznak a fő témája. Ezek közül a jutalomjel-sűrűség tervezése (a bináris jutalmaktól a folyamatjutalmakon át a generatív jutalmakig) és a jutalommintázatok tanítási módszerei a 8. fejezet poszt-tréning szakaszában kerülnek szisztematikus tárgyalásra; ez a szakasz egy alapvetőbb kérdésre válaszol: hogyan használjunk LLM-eket a nyílt végű feladatok kimenetelének automatikus megítélésére.
+Le kell szögezni: a jobbra tolódás nem jelenti a bal oldal feladását. Minden olyan ellenőrzés, amely programbeli állításként megírható, maradjon állítás, az LLM általi ítélet pedig csak azokra a dimenziókra vonatkozzon, amelyek valóban nem dönthetők el gépileg. A determinisztikus ellenőrzések olcsóbbak és stabilabbak, és hosszú távon regressziós tesztként futtatva is alkalmasabbak.
 
 ### LLM-mint-Bíró: Az Automatizált Kiértékelés Magja
 
-![7-4. ábra: LLM-mint-Bíró Folyamatábra](images/fig7-4.svg)
+![7-5. ábra: LLM-mint-Bíró Folyamatábra](images/fig7-5.svg)
 
 Miért van szükség LLM-mint-bíróra? Nyílt végű feladatoknál (pl. jelentések generálása, ügyfélpanaszok kezelése, kreatív tartalom) nincsenek standard válaszok az automatikus összehasonlításhoz, és az emberi kiértékelés költséges és nehezen skálázható. Az LLM-mint-bíró egyensúlyozza az automatizáció skálázhatóságát az emberi szakértői ítélettel azáltal, hogy egy nyelvi modell értékeli a kimeneteket szakértők által meghatározott pontozási szempontok (egy Rubrica) alapján. A módszernek ismert korlátai vannak: a bírómodell saját torzításokat hordoz (legjellemzőbben a "hosszúsági torzítás" — a hajlam, hogy a hosszabb, részletesebb válaszokat magasabbra pontozza, még ha nem is pontosabbak), és ugyanazon bemenet ismételt megítélése változhat. A hosszúsági torzítás különösen specifikus ellenintézkedéseket igényel. Három gyakori védekezés: a terjengősség explicit büntetése a Rubricában és a válaszok vágása feladattípusonként; páronkénti összehasonlításokban a két jelölt hasonló hosszúságra hozása az ítélkezés előtt; valamint a pontszámok és a válasz hossza közötti korreláció rendszeres auditálása — ha a magas pontszámok szinte mindig hosszú válaszokhoz tartoznak, a bírót befolyásolta a hosszúság, és a Rubricát felül kell vizsgálni. E kihívások szisztematikus kezeléséhez a Rubrica-tervezésnek az alábbi elveket kell követnie:
 
@@ -325,7 +319,6 @@ Miért van szükség LLM-mint-bíróra? Nyílt végű feladatoknál (pl. jelent�
 (4) "Önálló Kiértékelés" — Minden kiértékelési elem önállóan cselekvőképes, és nem támaszkodik az értékelő tartományi tudására. Az olyan absztrakt szabványoktól, mint "a válasz mély megértést mutat", kerülni kell, helyettesítve ellenőrizhető szabványokkal, mint "legalább két hiteles elméletet idéz és pontosan elmagyarázza, hogyan támasztják alá a következtetést".
 
 A kulcsgyakorlat: minden dimenzióhoz objektíven verifikálható pontozási szintek meghatározása, konkrét példákkal és "határesetekkel" a kétértelmű helyzetek feloldására. Aktívan védekezni kell a "Jutalomhackelés" ellen — az Ügynök "gyors útját" a magas pontszámokhoz a feladat tényleges elvégzése nélkül — a hallucináció, a szervilizmus, a kulcsszóhalmozás és a nehéz kérdések elkerülésének explicit büntetésével. A Rubrica egy iteratív termék: a próbahasználat feltárja az értékelők közötti nézeteltéréseket, és a Rubrica fokozatosan fejlődik e visszajelzés eredményeként, az absztrakt elvektől egy részletes esetkönyvig.
-
 
 Íme egy teljes Rubrica, amely követi a négy elvet, példaként egy felhasználói memória Ügynököt használva. Tesztkérdés: "Ki a lányom gyerekorvosa?" (A válasz két beszélgetés közötti információösszekapcsolást igényel: az első beszélgetésben említésre kerül, hogy "a lányom neve Lili", a másodikban, hogy "elvittem Lilit Dr. Chenhez").
 
@@ -371,6 +364,8 @@ rubric:
 
 A Rubricát és az Ügynök válaszát együtt adjuk a bírómodellnek, amely dimenziónként pontoz és indokol. Ha több tucat eset eredményét dimenziónként összesítjük, majd visszajátsszuk az alacsony pontszámú trajectory-ket, az általános „romlott a sikerarány” állítás konkrét diagnózissá válik: a lekérés kihagyott egy tényt, a modell rosszul kapcsolt össze személyeket vagy eseményeket, esetleg alátámasztás nélküli állítást tett. A jó Rubrica nemcsak a pontszámot mutatja meg, hanem azt is, hol érdemes folytatni a vizsgálatot.
 
+Az alábbiakban a felhasználói memóriát vesszük konkrét esetnek, hogy megmutassuk, hogyan ültethető át ez az általános módszer futtatható kiértékelő halmazzá és ellenőrzővé.
+
 > **7-3. kísérlet ★★: Rubrica-alapú Felhasználói Memória Kiértékelő Rendszer Építése**
 >
 > **Előfeltételek**: A 3. fejezet Felhasználói Memória kísérletének (`chapter3/user-memory-evaluation`) befejezése kötelező.
@@ -400,11 +395,7 @@ A kísérő vizsgálat mindhárom rendszert ugyanazon a 60 kérdésen futtatta, 
 | RAG | 90% | 40% | 15% | 48.3% (29/60) |
 | Hibrid | 80% | 70% | 50% | 66.7% (40/60) |
 
-A hibrid nem nyert automatikusan. Három olyan esetet egyedül oldott meg, amelyet egyik önálló megközelítés sem, viszont nyolc esetben visszaesett az adott esetre jobb önálló rendszerhez képest; átlagos jutalma 0.092-del maradt el az esetenként legjobb önálló rendszerétől. A tiszta RAG az alapvető felidézésben közel került a strukturált kártyákhoz, a rejtett munkamenetközi kapcsolatoknál viszont 15%-ra esett. A releváns részlet megtalálása csak az első lépés: az Ügynöknek helyesen kell összeraknia a személyek, események és időpontok kapcsolatát is.
-
-A hallucinációs vétó a 180 ítéletből 28-ban aktiválódott. Nem dísznek szánt biztonsági pont volt, hanem ténylegesen megváltoztatta az eredményt. Ne feltételezzük, hogy a „strukturált memória + RAG” önmagában szinergiát hoz. Előbb vizsgáljuk meg, hogyan hibázik az egyes módszer minden nehézségi szinten, majd döntsük el, mely tények maradjanak mindig a kontextusban, és mely kérdések indítsanak lekérést. Ez egyetlen modell-bíró beállítással, szintetikus eseteken végzett kampány volt: hibamechanizmusokat mutat, nem univerzális memóriarangsort.
-
-Ez a következtetés is csak megbízható bíró mellett áll. Ha az Ügynök és a bíró ugyanabból a modellcsaládból származik, ugyanazokat a preferenciákat és vakfoltokat oszthatják.
+A legfigyelemreméltóbb, hogy a hibrid megoldás nem győzött magától. Három kérdésen olyat teljesített, amit egyik önálló megoldás sem, ám nyolc további kérdésen alulmaradt a jobbik önálló megoldással szemben; a kérdésenkénti legjobb önálló megoldáshoz mérve az átlagos sikeraránya éppenséggel alacsonyabb lett. A tiszta RAG az alapvető felidézési kérdéseken nem sokban maradt el a strukturált kártyáktól, a munkamenetek közötti összefüggéseket firtató kérdéseknél viszont a sikeraránya 15%-ra esett. Egy másik, könnyen elsikló szám: a 180 ítéletből a hallucinációs vétó 28 alkalommal lépett életbe — jól mutatva, mekkora súlya van egyetlen vétótételnek.
 
 **Az Azonos Család Modell Problémája és a Több Forrásból Származó Bíráskodás.**
 
@@ -427,11 +418,73 @@ A multimodális bíráskodás az LLM-mint-bírót a beszéd, kép és videó tar
 - **UI Kiértékelés**: "Javaslattevő-Felülvizsgáló" mechanizmus használata olyan problémák észlelésére, mint a szövegtúlcsordulás, színkontraszt, gombelhelyezés. Itt a javaslattevő-felülvizsgáló "kiértékelési módszerként" szolgál, eltérően az 5. fejezetben "generációs rendszer-összetevőként" való használatától, de az alapmechanizmus ugyanaz — egy modell generál, egy másik függetlenül felülvizsgál.
 - **Videószerkesztés Kiértékelése**: A vágás kezdő/végpontjainak és a hatás alkalmazásának helyességét ellenőrzi kulcskockákon keresztül.
 
+> **7-5. kísérlet ★★: Teljesen Automatizált TTS Minőségi Kiértékelő Csővezeték Építése**
+>
+> Ez a kísérlet egy teljes multimodális LLM-mint-bíró TTS minőségi kiértékelő rendszer tervezését és implementálását igényli a semmiből.
+>
+> Tervezz egy többdimenziós TTS Rubricát: A Pontosság dimenzió ellenőrzi, hogy minden szöveg helyesen lett-e felolvasva (nincs kihagyás/félreolvasás/hozzáadás); a Természetesség dimenzió azt értékeli, hogy a beszéd természetes-e, nem robotikus, nincsenek-e természetellenes szünetek, és természetes a prozódia; az Érzelmi Kifejezés dimenzió ellenőrzi, hogy a hangszín illeszkedik-e a szöveg érzelmi tónusához (emelkedő intonáció kérdéseknél, hangsúly felkiáltásoknál, lassabb tempó és mélyebb hangmagasság szomorú tartalomnál); a Hangkonzisztencia dimenzió a beszélői hasonlóságot értékeli, ha rendelkezésre áll egy referenciabeszéd (a multimodális modell egyszerre kapja a referenciát és a szintetizált beszédet az összehasonlításhoz).
+>
+> Építs sokszínű tesztkorpuszt különböző hosszúságokkal, műfajokkal, érzelmekkel és speciális kihívásokkal. A TTS-modult kapcsold a vezető szolgáltatásokhoz (OpenAI, ElevenLabs, Fish Audio, Minimax, Doubao), majd a szintetizált hangot, az eredeti szöveget, a referenciahangot és a Rubricát add egy közvetlen hangbemenetre képes multimodális bírónak. A pontszámok auditálhatóságához rögzítsd a bírómodellt, valamint a jelölt- és referenciahang hashét.
+>
+
+A kísérő tároló egy kis közvetlen hallgatási próbát is megőriz. Az OpenAI és a Fish Audio négy-négy felvételt készített számokkal, többféleképpen ejthető kínai karakterekkel, hosszú szöveggel és lelkes előadásmóddal; a Voxtral mind a nyolcat négy dimenzióban értékelte. Mindkét rendszer 5.00 pontot kapott pontosságra és 4.00-t természetességre. A Fish Audio érzelemre és hangkonzisztenciára 4.00/3.00, az OpenAI 3.75/2.75 pontot ért el. A dimenziók szétválasztása olyan különbségeket tett láthatóvá, amelyeket egy egyszerű „helyesen olvasta fel?” kérdés nem mutatna meg.
+
+Ezek a pontok nem neveznek meg győztes szolgáltatót. Szolgáltatónként csak négy felvétel volt, ráadásul a fix referencia a Fish S1-ből származott, ami eleve a Fish Audiónak kedvez a hanghasonlóságban. Általános TTS-összevetésnél ezt a dimenziót el kell hagyni, vagy minden jelölthöz megfelelő célhangot kell adni. Hangklónozásnál minden rendszer ugyanazt a beszélőt utánozza, a modellbíró pontjait pedig vak emberi hallgatással kell kalibrálni. **A referencia válasz, kép vagy hang kiválasztása a kiértékelés tervezésének része, nem semleges előkészítés.**
+
+A kézzel írt Rubricák gyorsan kialakítják ezeket a diagnosztikai dimenziókat. Nagyobb léptékben speciális „generatív jutalommodellek” automatizálhatják a bíráskodást; képzésüket a 8. fejezet tárgyalja.
+
+A bíráló modell pontszáma csak azt mondja meg, jó vagy rossz lett az eredmény; ahhoz, hogy az eredményből javítható probléma legyen, azt is meg kell találni, melyik lépésnél kezdődött valójában a hiba.
+
 ### Hibaattribúció: Az első hiba behatárolása a pályán
 
 Az end-to-end kiértékelés gyakran csak „siker” vagy „kudarc” eredményt ad. A javításhoz minden hibás pályán rögzíteni kell a kategóriát, az első elfogadhatatlan lépést, az eszközhívást vagy modellkimenetet, valamint az auditálható bizonyítékot. A rossz esetek felhasználói korrekcióból, negatív visszajelzésből vagy későbbi állapotellenőrzésből származhatnak. Az LLM segíthet, de az emberi olvasás szükséges, mert a gyökér gyakran termékprobléma.
 
 Egy Coding Agent kezdeti kategóriái: hiányzó folyamat vagy szabály, eszköz- és formátumhiba, rendellenes leállás, illetve logikai vagy teljességi hiba. JSON/YAML rekordban tárold a lépésszámot, eszközt, megfigyelést, okot és következményt, helyreállíthatóságot és bizalmat, továbbá a környezet állapotát és verzióit.
+
+A hibaattribúciós rendszer felépítése azt kívánja, hogy a fejlesztő türelmesen elolvassa és elemezze az éles rendszer problémás pályáit. LLM segíthet a munkában, de nem helyettesíti az embert, mert **a hibaattribúció gyakran termékproblémákat tár fel**, nem csupán technikaiakat.
+
+Ahogy a termék érik, a hibaosztályozás több nagy osztályra bomlik, mindegyik alatt további alosztályokkal, míg végül több száz tételre nő. Ezek az osztályok és attribúciós receptjeik lesznek később egy attribúciócímkéző Agent promptja vagy Skillje.
+
+Coding Agent esetében egy használható kezdeti osztályozás így néz ki.
+
+| Hibaosztály | Jellemző tünet | Hogyan találjuk meg az első hibát |
+| --- | --- | --- |
+| Követelményértés és többértelműség | Nem az készül el, amit a felhasználó kért: kiesik a követelmény egyik feltétele, vagy a hatókört túl tágan, illetve túl szűken értelmezi; ha a repóban két azonos nevű konfigurációs fájl van, egyszerűen kiválasztja az egyiket, szó és kérdés nélkül | LLM-mel vessük össze pontról pontra az eredeti követelményt azzal, amit az Agent **valóban csinált** (a műveletsorral); keressük meg az első eltérést az eredmény szintjén, majd menjünk vissza az azt okozó eszközhívásig vagy válaszig |
+| Hiányzó folyamat vagy szabály | Commit egységtesztek futtatása nélkül; kódmódosítás Plan megírása előtt; külső függőség behozása, holott a repóban már van belső megfelelője; a rögzített architektúrarend megkerülése | Keressük meg az első műveletet, amely megsérti a fejlesztési folyamat szabályát — az első `git commit`-ot, az első fájlírást —, és nézzük meg, olvasta-e előtte a szabály forrását |
+| Eszközhívási hibák | Ugyanannak a fájlnak a szerkesztése ismételten meghiúsul; hibás JSON/schema vagy argumentumformátum; a különleges karakterek elrontják az átmásolást, az escape-elést vagy az írást | Rögzítsük az első sikertelen szerkesztést vagy eszközt az eredeti kéréssel és a visszaadott hibával együtt; az ismétlődő hibák már következménytünetek |
+| A verifikációs környezet meghackelése | Assertion átírása, `skip` hozzáadása, a vizsgált logika kimockolása; „a tesztek átmentek” állítás anélkül, hogy egyszer is lefuttatta volna őket | Vegyük az első üzenetet, amely tesztet vagy verifikációs logikát módosít; majd vessük össze a készre jelentést a pályán ténylegesen lefuttatott parancsokkal, hogy tényleg futott-e |
+| Hiányos módosítás | A függvény szignatúrája megváltozott, három hívási pont frissült, de a negyedik — egy dinamikus hívás, egy másik nyelvi binding vagy egy schema — kimaradt | Képezzük az Agent által állított és a tényleges hatókör különbségét, vegyük az első kimaradt elemet, és nézzük meg, milyen kulcsszavakkal keresett |
+| Hibás információ a felhasználónak | Az eszközhívások és a végállapot mind helyesek, de amit a felhasználónak mond, az nem: rossz összeg, állapot vagy időpont; a részben kész munka teljesként feltüntetve; kötelező tájékoztatás elhagyva | Vessük össze a válasz minden ténymegállapítását az eszközök visszatérési értékeivel, és vegyük az elsőt, amely nem visszakövethető vagy ellentmond a visszatérési értéknek |
+| Nem funkcionális regresszió | Publikus API vagy schema változik migrációs szkript nélkül; egy validáció törlődik, hogy egy ellenőrzés átmenjen | Vegyük az első üzenetet, amely a változtatást elvégezte, és nézzük meg, tudatában volt-e, hogy publikus interfészhez vagy migrációt igénylő szerkezethez nyúl |
+| A modell rendellenes leállása | A kimenet félbeszakad, ok nélkül megáll, időtúllépésbe fut, vagy a lezáró művelet nélkül ér véget | Keressük meg az első rendellenes leállást, és válasszuk szét a modell leállását, a Harness időtúllépését és az eszközszolgáltatás hibáját |
+| A feladat túl korai lezárása | A többcélú feladatnak csak egy része készül el; valamit lehetetlennek nyilvánít anélkül, hogy kimerítette volna az ésszerű lehetőségeket | Keressük meg az első döntést, amely elejtett egy célt vagy feladta a feltárást, és rögzítsük külön a záró ellenőrzés bukásától |
+
+**Az attribúciócímkéző Agent LLM segítségével nagy léptékben végezhet gyökérok-elemzést sok éles pályán**, de nem elégedhet meg egyetlen mondatnyi „a hiba oka” válasszal. **Az attribúciós rekordnak strukturáltnak kell lennie**: JSON vagy YAML formában, konkrét lépésszámokra, eszköznevekre és megfigyelt bizonyítékokra hivatkozva; ezen felül el kell választania a gyökérokot a következménytől, meg kell ítélnie a helyreállíthatóságot, és megbízhatósági szintet kell adnia. Például az `edit_file` `old_string` eltérést ad vissza, majd az Agent háromszor újrapróbálkozik, és a fájlt így sem írja ki: a fő ok a fájlszerkesztési és eszközhívási hiba, a három újrapróbálkozás pedig következmény, nem három független gyökérok. Ha több osztály egyszerre jelenik meg, a fő okot a „legkorábbi, és a rákövetkező hibákat is megmagyarázza” elv szerint válasszuk ki, a többit másodlagosként tartsuk meg. A fenti táblázat legalább három osztálya előszűrhető szabályokkal, mielőtt az LLM-re bíznánk az első hiba behatárolását: a készre jelentés összevetése a ténylegesen lefuttatott parancsokkal; érinti-e a diff a tesztek assertionjeit és a `skip` jelöléseket; módosít-e a diff publikus API-t vagy schemát migrációs fájl nélkül. Előbb szabállyal szűrni, aztán LLM-mel behatárolni olcsóbb és pontosabb is, mint minden pályát az LLM-re zúdítani.
+
+Az attribúciós rekord mentésekor ne csak az LLM kimenetét őrizzük meg: mentsük mellé a feladat célját, a környezet állapotát, az Agent verzióját, az eszközkészlet verzióját és a teljes Agent-pályát, hogy az eset regressziós teszetté alakítható legyen.
+
+Az alábbiakban három tipikus hibaosztályt tekintünk át közelebbről.
+
+#### A „jól csinálta, rosszul jelentette” probléma
+
+A „jól csinálta, rosszul jelentette" az a kategória, amelyet az összesített sikerarány a legkönnyebben elrejt, mert a legtöbb kiértékelés csak a környezet állapotát vizsgálja. A τ²-bench külön pontozza: a közzétett alapfutások közül abban a 704-ben, amelynek feladata információátadási követelményt hordoz, 240 bukott el; ebből 162 az információátadási ellenőrzésen, és 80 — az összes bukás harmada — helyes környezeti állapot mellett adott téves jelentést.
+
+A kísérő repóban van egy megfelelő eset. Az `expenses.jpg` kiadásainak könyvelőalkalmazásba vitele során az Agent 32 lépésben adott engedélyt, keresett, megnyitotta a képet, kitöltötte a sorokat és mentett, **úgy, hogy egyetlen lépés sem tért vissza hibával**, majd késznek nyilvánította a feladatot; a validátor viszont azt jelentette, hogy a beírandó sor — `Dress`, ¥436,35 — hiányzik, és semmi köze a beírt négyhez. A 8. lépés saját gondolatmenete így szól: *„I cannot actually see the content/details of the expenses in the image"*. Már tudta, hogy nincs meg az adat, mégsem állt meg és nem jelentette, a 11. lépésre pedig négy kitalált kiadás jelent meg a feljegyzéseiben, amelyeket minden későbbi bevitel hűségesen végrehajtott. Az első hiba a 8. lépés, és az a lépés sem hibát nem dobott, sem eszközhívás nem volt. A gyökérokát is könnyű rossz helyre sorolni: a T3A csak szöveges Agent, amelynek megfigyelési terében kizárólag az elemfa van, képpont nincs, így az ok nem az, hogy „a modell nem tud OCR-t", hanem egy hiányzó megfigyelési csatorna, plusz a „nem szerezhető meg az információ" legitim kilépés hiánya. Modellképesség-problémaként iktatva a következő lépés a modellcsere vagy az OCR-tanítás lesz; a valódi javítás a csatorna és a kilépés pótlása.
+
+> **7-6. kísérlet ★★: Hibaattribúció AndroidWorld-nyomvonalakon**
+>
+> Ez a kísérlet a fejezet attribúciós módszerét gyakoroltatja valódi nyomvonalakon, emulátor és modell-API nélkül. Az anyag a `chapter7/android-world` mentett T3A-futása: a `t3a.md` az összes feladat lépésenkénti `Action`/`Reason`/`Summary` bejegyzéseit tartalmazza, a `t3a_failed.md` pedig több mint ötven sikertelen nyomvonalat gyűjt össze, mindegyik végén a validátor objektív ítéletével.
+>
+> 1. lépés: Mintavétel. Válasszon ki a `t3a_failed.md` fájlból legalább tíz néma hibát, azaz olyan nyomvonalat, amelyben egyetlen eszközhiba sincs. Egyetlen eszközhívás sem térhetett vissza hibával, az Agent vagy késznek nyilvánította a feladatot, vagy elfogytak a lépései, és csak a záró validátori ítélet jelzi a bukást.
+>
+> 2. lépés: Az első hiba lokalizálása. Minden nyomvonalnál jegyezze fel az első hiba lépésszámát, és jelölje, hogy az a lépés eszközhívás vagy assistant message. A néma hibákhoz két technika kell: a ténykohorgony-összevetés az Agent állításait veti össze az eszközök visszatérési értékeivel, és az első eltérést veszi; a pályaelőtag-felezés a k. lépésnél elvágja a pályát és átadja — ha még megmenthető, a hiba k után van. A hibakulcsszavak keresése egyiket sem pótolja.
+>
+> 3. lépés: Strukturált feljegyzés. Nyomvonalanként állítson elő egy JSON vagy YAML rekordot a feladat nevével, az első hiba lépésével, a hiba kategóriájával, a gyökérok felelősével és az alátámasztó idézetekkel, elkülönítve a fő okot a következménytől.
+>
+> 4. lépés: Összevetés a meglévő jegyzettel. Vesse össze eredményeit a `t3a_failed_analysis.md` tartalmával, és rögzítsen minden eltérést. Különösen figyeljen a gyökérok hozzárendelésére: a jegyzet eredetileg úgy rögzítette a képátírási hibát, hogy „a látómodellből hiányzik az OCR”, holott a T3A megfigyelési tere egyetlen képpontot sem tartalmaz, tehát a valódi gyökérok a hiányzó megfigyelési csatorna. Egy meglévő attribúciós jegyzet nem megoldókulcs.
+>
+> 5. lépés: Átalakítás regressziós feladattá. Válasszon ki három olyan nyomvonalat, ahol az első hiba assistant message, vágja el az előtagot közvetlenül a hiba előtt, majd írja meg az elfogadható műveletek halmazát és a tiltott műveleteket, így pálya-előtag regressziós feladatokat kap.
+>
 
 #### Hatókör-érzékeny dokumentumformázási hibák
 
@@ -462,32 +515,27 @@ A minimális értékelési szondakészlet lefedi a közvetlen visszamondást, a 
 
 ### End-to-end regressziós feladatok és pálya-előtag regressziós feladatok
 
-Az **end-to-end regresszió** a teljes munkafolyamatot futtatja; a **pálya-előtag regresszió** a kontextust, beszélgetést, eszközválaszokat és állapotot az első hiba előtt rögzíti, majd csak a következő műveletet teszteli. Elfogadható műveletek halmazát kell megadni (szabályolvasás, kérdezés vagy veszélyes művelet elutasítása), nem egyetlen kanonikus választ. Az értékelési és tanítási adatokat el kell különíteni.
+A hibaattribúció megállapította az első hibát és annak osztályát; a következő lépés a javítási célt megismételhető tesztesetté, azaz **regressziós feladattá** (regression task) írni. Itt két, egymást kiegészítő rétegre van szükség: az **end-to-end regressziós feladatok** azt igazolják, hogy a változtatás nem törte el a teljes munkafolyamatot; a **pálya-előtag (trajectory prefix) regressziós feladatok** pedig az első hiba előtti állapotot vágják ki, és csak azt vizsgálják, megjavult-e az a döntési határ.
 
-> **7-5. kísérlet ★★: Pálya-előtag határainak értékelése több kódolással**
+Az **end-to-end regressziós feladatok** a kezdeti állapotból és a felhasználói kérésből indulnak, hagyják az Agentet végigvinni az egész feladatot, majd ellenőrzik a végállapotot, a szükséges kimenetet és a biztonsági feltételeket. Ezek állnak legközelebb az éles eredményhez, viszont nehéz belőlük megállapítani, melyik lépésnél történt a hiba. Általában arra valók, hogy igazolják: az Agent képessége az egyes területeken továbbra is megfelel az elvárásnak. Az e fejezetben ismertetett szabványos kiértékelő készletek — OSWorld, AndroidWorld, tau-bench — mind end-to-end regressziós feladatok.
+
+A **pálya-előtag regressziós feladatok** befagyasztják a meglévő kontextust, párbeszédet, eszközválaszokat és környezeti állapotot, és csak annyit kérnek az Agenttől, hogy gondolja végig és hajtsa végre a következő egy vagy néhány megfigyelhető műveletet. Olcsóbbak, és képesek egyetlen házirend vagy eszköz problémáját elszigetelni. Nagy megbízhatóságot igénylő, éles szintű Agent esetében az előtagkészlet felépítése gyakran fontosabb, mint az end-to-end készleté, és megköveteli az előző szakaszban leírt hibaosztályozás és attribúciós rendszer türelmes kiépítését.
+
+Az előtagfeladat válaszát **elfogadható műveletek halmazaként** kell meghatározni, nem egyetlen műveletként vagy egyetlen válaszként: megkövetelhető, hogy „előbb olvassa el a repó szabályait”, „előbb kérdezze meg a felhasználót”, vagy „utasítsa vissza a veszélyes műveletet” — a tiltott műveletek felsorolása mellett.
+
+**A hibaattribúció lezárása után összeállítható egy kiértékelő adathalmaz, amely end-to-end és pálya-előtag regressziós feladatokat egyaránt tartalmaz.** Coding Agent esetében: a hiányzó folyamathoz tervdokumentumot és teszt-elfogadási feltételeket hordozó end-to-end regressziós feladatot kell generálni; az eszközhívási hibánál a hibás előtagot el kell vágni és határfeladattá szerkeszteni, amely azt teszteli, tudja-e a modell javítani a formátumot, escape-elni a különleges karaktereket, vagy megfelelő eszközre váltani; a rendellenes leállásnál a csonkolásból, időtúllépésből és eszközhibából való felépülés forgatókönyveit kell hozzáadni; a teljességi és logikai hibáknál többcélú ellenőrzőlistákat, a hátralévő munkára figyelmeztetést és a „még nincs bizonyítva, hogy lehetetlen” határt; a követelményértési és többértelműségi osztálynál a több észszerű olvasatot engedő feladatokat előtagként kell befagyasztani, és az „előbb tisztázd” lépést az elfogadható műveletek közé venni; a tünetfoltozás és a hamisított verifikáció osztályánál két kemény megkötést kell az elfogadáshoz adni: „a teszt-assertionök nem módosíthatók” és „a készre jelentéshez ténylegesen lefuttatott parancs kimenetét kell csatolni”; az információközlési osztálynál pedig magára a válasz tartalmára is állítást kell tenni, nem csak a környezet állapotát ellenőrizni.
+
+A kiértékelő adathalmaz a 8. fejezet poszt-tréningjének és a 9. fejezet Agent-önfejlődésének alapja.
+
+> **7-7. kísérlet ★★: Pálya-előtag határainak értékelése több kódolással**
 >
 > A modell ismert memóriát, aktuális utasítást, pálya-előtagot, eszközválaszokat és környezeti állapotot kap, és csak a következő megfigyelhető műveletet adhatja vissza. Tizenegy esetet JSON Cards, Markdown és Python-szerű formában kódoltunk; mindhárom 6/11-et teljesített, a 33 cella API-hiba nélkül futott. A reprezentáció megváltoztatása önmagában nem javítja az alkalmazási szabályt.
-
-> **7-6. kísérlet ★★: Teljesen Automatizált TTS Minőségi Kiértékelő Csővezeték Építése**
->
-> Ez a kísérlet egy teljes multimodális LLM-mint-bíró TTS minőségi kiértékelő rendszer tervezését és implementálását igényli a semmiből.
->
-> Tervezz egy többdimenziós TTS Rubricát: A Pontosság dimenzió ellenőrzi, hogy minden szöveg helyesen lett-e felolvasva (nincs kihagyás/félreolvasás/hozzáadás); a Természetesség dimenzió azt értékeli, hogy a beszéd természetes-e, nem robotikus, nincsenek-e természetellenes szünetek, és természetes a prozódia; az Érzelmi Kifejezés dimenzió ellenőrzi, hogy a hangszín illeszkedik-e a szöveg érzelmi tónusához (emelkedő intonáció kérdéseknél, hangsúly felkiáltásoknál, lassabb tempó és mélyebb hangmagasság szomorú tartalomnál); a Hangkonzisztencia dimenzió a beszélői hasonlóságot értékeli, ha rendelkezésre áll egy referenciabeszéd (a multimodális modell egyszerre kapja a referenciát és a szintetizált beszédet az összehasonlításhoz).
->
-> Építs sokszínű tesztkorpuszt különböző hosszúságokkal, műfajokkal, érzelmekkel és speciális kihívásokkal. A TTS-modult kapcsold a vezető szolgáltatásokhoz (OpenAI, ElevenLabs, Fish Audio, Minimax, Doubao), majd a szintetizált hangot, az eredeti szöveget, a referenciahangot és a Rubricát add egy közvetlen hangbemenetre képes multimodális bírónak. A pontszámok auditálhatóságához rögzítsd a bírómodellt, valamint a jelölt- és referenciahang hashét.
->
-
-A kísérő tároló egy kis közvetlen hallgatási próbát is megőriz. Az OpenAI és a Fish Audio négy-négy felvételt készített számokkal, többféleképpen ejthető kínai karakterekkel, hosszú szöveggel és lelkes előadásmóddal; a Voxtral mind a nyolcat négy dimenzióban értékelte. Mindkét rendszer 5.00 pontot kapott pontosságra és 4.00-t természetességre. A Fish Audio érzelemre és hangkonzisztenciára 4.00/3.00, az OpenAI 3.75/2.75 pontot ért el. A dimenziók szétválasztása olyan különbségeket tett láthatóvá, amelyeket egy egyszerű „helyesen olvasta fel?” kérdés nem mutatna meg.
-
-Ezek a pontok nem neveznek meg győztes szolgáltatót. Szolgáltatónként csak négy felvétel volt, ráadásul a fix referencia a Fish S1-ből származott, ami eleve a Fish Audiónak kedvez a hanghasonlóságban. Általános TTS-összevetésnél ezt a dimenziót el kell hagyni, vagy minden jelölthöz megfelelő célhangot kell adni. Hangklónozásnál minden rendszer ugyanazt a beszélőt utánozza, a modellbíró pontjait pedig vak emberi hallgatással kell kalibrálni. **A referencia válasz, kép vagy hang kiválasztása a kiértékelés tervezésének része, nem semleges előkészítés.**
-
-A kézzel írt Rubricák gyorsan kialakítják ezeket a diagnosztikai dimenziókat. Nagyobb léptékben speciális „generatív jutalommodellek” automatizálhatják a bíráskodást; képzésüket a 8. fejezet tárgyalja.
 
 A gyakorlati modellválasztás során gyakran szembesülünk a kérdéssel: "Melyik jobb, A vagy B?" A páronkénti összehasonlítás olyan kiértékelési módszert kínál, amely nem támaszkodik abszolút pontszámokra.
 
 ### Páronkénti Összehasonlítás és Modellrangsorolás
 
-![7-5. ábra: Elo Pontszámítás és Páronkénti Összehasonlítási Rangsor](images/fig7-5.svg)
+![7-6. ábra: Elo Pontszámítás és Páronkénti Összehasonlítási Rangsor](images/fig7-6.svg)
 
 **Az Elo Pontszámítás** (egy eredetileg sakkra tervezett rangsorolási rendszer) a modellek relatív képességét számszerűsíti nagyszámú páronkénti mérkőzésen keresztül: minél nagyobb a pontszámkülönbség, annál magasabb a várható győzelmi arány az erősebb modell számára. Például, ha A modell pontszáma 1200, B modellé 1000, az Elo rendszer A győzelmi arányát körülbelül 76%-ra becsülné. Ha B váratlanul nyer, B több pontot szerez, A pedig többet veszít — a meglepetés nagyobb korrekciót vált ki, ami lehetővé teszi, hogy a rangsorok gyorsan konvergáljanak a valódi képességre. A statisztikai alap a "Bradley-Terry modell": minden modell egy látens "erősségi pontszámként" van absztrahálva, és annak valószínűsége, hogy egy mérkőzésen legyőzi a másikat, a pontszámaik különbsége határozza meg. Az Elo ennek a modellnek a mérnöki implementációja online frissítési formában.
 
@@ -495,15 +543,13 @@ A Chatbot Arena névtelen véletlenszerű mérkőzéseket használ — a felhasz
 
 Amikor a páronkénti bíráskodást LLM végzi emberi szavazás helyett, ügyelni kell a "Pozíciós Torzításra" is — a bírómodell szisztematikusan előnyben részesítheti az egy bizonyos pozícióban (általában az elsőben) megjelenő jelöltet, és az ítélet változatlan maradhat, ha a két jelölt tartalmát teljesen felcseréljük. A szokásos mérséklési módszer "mindegyik pár kiértékelése kétszer, felcserélt sorrendben": egyszer A-val először, egyszer B-vel először, és a két eredmény átlaga; egy szigorúbb megközelítés csak azokat az eseteket veszi figyelembe, ahol a két ítélet konzisztens, és az inkonzisztenciákat döntetlenként kezeli vagy emberi felülvizsgálatra küldi. A Chatbot Arena megközelítése lényegében ugyanez — a két válasz megjelenítési pozíciójának véletlenszerűsítése, így a pozíciós torzítás kioltódik nagy mintán.
 
-**Időbeli és Domaintól Függő Minőség-eltolódások.**
-
-A modellek nem állandóak. Ugyanaz a modellesalád különböző verziókban érkezik; az API-szolgáltatók finomhangolják a modellt anélkül, hogy bejelentenék; a külső rendszerváltozások (webfrissítések, API-változások) csökkenthetik a modell tényleges hasznosságát anélkül, hogy a modell maga változott volna.
-
-A modellkiértékelés ezért nem egy alkalom, hanem folyamatos tevékenység. Ajánlott gyakorlat: tartani egy "globális ranglistát", amelyen a megcélzott feladattartományban használt összes modell szerepel (több API-szolgáltatóra és modellesaládra kiterjedően). Rendszeres időközönként futtasd le a teljes tesztkészletet, és jegyezd fel az időbélyeget; ha egy modell hirtelen pontszámesést mutat, az valószínűleg API-szintű változásra, nem a modell képességének valódi csökkenésére utal.
-
-> **7-7. kísérlet ★: Globális Modell Ranglista Felállítása és Karbantartása**
+> **7-8. kísérlet ★★: Modellranglista építése páronkénti összehasonlítási adatokból**
 >
-> Hozz létre és tarts karban egy folyamatosan frissülő globális modell ranglistát. Válassz ki 5-10 reprezentatív tesztesetet minden feladattípushoz (kódolás, eszközhívás, multimodális, keresés, hosszú szöveges Q&A, egyszerű utasításkövetés). Futtasd ezt a készletet az összes elérhető modellen (beleértve ugyanazon modell különböző API-szolgáltatóktól származó verzióit), és rendszeresen (pl. hetente) ismételd meg. Jegyezd fel a pontszámok történeti trendjeit — amikor egy modell pontszáma hirtelen csökken (pl. Claude Sonnet 4.5 pontszáma egyik hétről a másikra 92%-ról 80%-ra esik), először ellenőrizd az API változási naplóját; ha nincs bejelentett változás, valószínűleg külső ok van (időzítési torzítás, nagy terhelés, driftsújtotta szerververzió). Rendszeres időközönként frissítsd a ranglistát, törölve az elavult modelleket és hozzáadva újakat.
+> Ez a kísérlet nulláról valósít meg egy Elo-pontszámító rendszert, hogy alaposan megértsük, miként von ki a Bradley–Terry-modell relatív képességpontszámokat nagyszámú páronkénti összehasonlításból. A kísérlet a Chatbot Arena nyílt, valódi szavazási adathalmazát használja (több millió vak felhasználói szavazattal).
+>
+> Valósítsd meg az Elo-pontszám iteratív frissítését: kezdetben minden modell 1000 pontot kap, a szavazatokat pedig időrendben dolgozod fel. Minden párharcnál a két modell aktuális pontkülönbségéből számítsd ki a várt győzelmi esélyt, vesd össze a tényleges eredménnyel, és igazíts rögzített tanulási rátával — a győztes kap, a vesztes veszít, az igazítás mértéke pedig arányos a várttól való eltéréssel (a meglepetésvereség nagyobb pontmozgást okoz). Rendezd a modelleket a végső pontszám szerint csökkenő sorrendbe, számold ki a páronkénti győzelmiarány-mátrixot, és vesd össze a hivatalos ranglistával — elég, ha a sorrend nagyjából egyezik. Ne várd el a pontról pontra egyezést: a Chatbot Arena hivatalosan Bradley–Terry maximum likelihood illesztést használ (az összes mérkőzést egyszerre oldja meg, a szavazatok sorrendjétől függetlenül), itt viszont online, inkrementálisan frissülő Elo készül (amelyet befolyásol a K tanulási tényező és a feldolgozási sorrend). A két algoritmusnak az összesített rangsorban egyeznie kell, a konkrét pontértékeknek viszont nem.
+>
+> A kísérlet második része a ranglista történeti alakulását animálja: szeleteld a szavazási adatokat idő szerint (hetente vagy havonta), és minden időpontra számolj Elo-pillanatképet. D3.js-sel készíts oszlopdiagram-versenyt (a vízszintes oszlop hossza a pontszám, a függőleges pozíció a helyezés, és mindkettő simán változik az időben). Az animációt figyelve azonosítsd a technológiai áttörések pillanatait (amikor egy modell pontszáma hirtelen megugrik), a versenyhelyzet átrendeződését és a modellek életciklusát.
 >
 
 ## Értékelés-vezérelt modellválasztás
@@ -529,17 +575,15 @@ E két szakasz körül a fő átviteli és késleltetési mutatók a következő
 
 **Költségkeret–képesség görbék**: Egyetlen, rögzített költségkeret mellett mért pontszám nem mutatja meg, hogy az Ügynök képes-e hosszú ideig tartó munkára. A sikerarány mellett azt is jelenteni kell, hogyan változik a teljesítmény a falióra szerinti idő, a tokenek, az eszközhívások vagy a számítási költségkeret függvényében. A RE-Bench jól szemlélteti ezt: környezetenként kétórás teljes keret mellett a legjobb Ügynök körülbelül négyszer annyi pontot ért el, mint az emberi szakértők. Az emberek azonban jobban hasznosították a többletidőt: nyolc óránál kis különbséggel felülmúlták a legjobb Ügynököt, több próbálkozásra kapott összesen 32 óránál pedig körülbelül kétszer annyi pontot szereztek.[^re-bench-2025] A rövid keret melletti előny tehát nem vetíthető ki közvetlenül a hosszú távú képességekre. Modellválasztáskor a valós munkaterhelés időtartamához igazodó több költségkeretpontot kell összehasonlítani.
 
-A gyakorlatban a modellek keverhetők: könnyű modellek egyszerű kérésekre a költségek csökkentése érdekében, hatékony modellek összetett feladatokhoz a minőség védelme érdekében; vagy speciális modellek bizonyos részfeladatokra (képmegértés, kódgenerálás), al-ügynöki mechanizmusokon keresztül együttműködve. Minden ilyen heterogén kombinációt magát kiértékeléssel kell validálni, hogy megbizonyosodjon arról, hogy az általános előnyök felülmúlják a rendszer összetettségét.
+A gyakorlatban a modellek keverhetők: könnyű modellek egyszerű kérésekre a költségek csökkentése érdekében, hatékony modellek összetett feladatokhoz a minőség védelme érdekében; vagy speciális modellek bizonyos részfeladatokra (képmegértés, kódgenerálás), al-ügynöki mechanizmusokon keresztül együttműködve. Minden ilyen heterogén kombinációt magát kiértékeléssel kell validálni, hogy megbizonyosodjon arról, hogy az általános előnyök felülmúlják a rendszer összetettségét (például ha az olyan kérdéseket, mint „melyik nagyobb, 9,9 vagy 9,11?” vagy „le akarom mosni az autót, a mosó 50 méterre van a háztól — gyalog menjek vagy kocsival?”, egyszerűnek minősítve egy könnyű modellhez irányítjuk, és emiatt hibás döntés születik).
 
 ### Modellviselkedés: mikor hagyjuk abba az olvasást és kezdjük el a szerkesztést?
 
 A modellválasztás nemcsak azt hasonlítja össze, hogy a modell képes-e befejezni a feladatot, hanem azt is, **hogyan viselkedik alapértelmezés szerint**. A Coding Agentek egyik könnyen megfigyelhető különbsége a cselekvési küszöb. Ugyanazon programozási feladatnál egyes modellek szélesen feltérképezik a tárolót, és szerkesztés előtt ellenőrzik az architektúrát, a hívási helyeket és a teszteket. Mások kevesebb bizonyítékból lokalizálják a módosítást, korán szerkesztenek, majd teszt-visszajelzéssel egészítik ki a megértésüket. Az előbbiek a túl korai módosítás, az utóbbiak még egy fájl elolvasásának alternatív költségét becsülik magasabbra.
 
-Ha egy hajlam Harness-váltáskor is a modellt követi, és egy rögzített Harnessben pusztán a modell cseréjétől megváltozik, akkor az elsődleges magyarázat a **modell viselkedése**. Valószínű forrás a post-training: az SFT trajektóriák megmutatják, mennyit kell olvasni a cselekvés előtt, a folyamatjutalmak megerősítenek vagy büntetnek bizonyos eszközutakat, az eredményjutalmak pedig a sikerhez vezető teljes stratégiát erősítik. A modell így nemcsak kódot írni tanul meg, hanem azt is, mikor gyűlt össze elegendő bizonyíték. A pontos adatkészletek és jutalmazási receptek többnyire nem nyilvánosak; a kontrollált modellcsere a viselkedést a modell oldalára helyezheti, de nem tárja fel egy szolgáltató pontos tanítási receptjét. A Harness a rendszerprompt, az eszközleírások és a költségkeret révén továbbra is eltolhatja a küszöböt, de kikényszerített munkafolyamat hiányában módosító tényezőként, nem pedig alapértelmezett gyökéroként kell kezelni.
+Az Ágens ilyen hajlamának két forrása van: a Harness rendszerpromptja és a modell viselkedési stratégiája. A poszt-tréning ez utóbbinak kulcsforrása: az SFT-trajektóriák megmutatják, „meddig olvasson, mielőtt hozzáfog”, a folyamatjutalom valamely eszközútvonalat jutalmaz vagy büntet, az eredményjutalom pedig a sikerrel zárult teljes stratégiát erősíti meg. Idővel a modell nemcsak azt tanulja meg, hogyan írjon kódot, hanem mérnöki szokásokat is.
 
-A kísérlet az `openai/gpt-5.6-sol` és az `anthropic/claude-sonnet-5` modellt egyetlen **semleges, rögzített Harnessben** hasonlítja össze. Mindkettő ugyanazt az OpenRouter endpointot használja, és azonos rendszerpromptot, feladatot, tárolót, eszközneveket, JSON Schemákat és eszközeredményeket kap. A Harness sem a felderítést, sem a korai szerkesztést nem írja elő. Három miniatűr tároló egy lokális hibát, modulokon átívelő identitásnormalizálást és nyilvános szerződésre érzékeny gyorsítótár-javítást fed le. Mindkét modell minden feladatot háromszor, egymástól függetlenül futtatott, összesen 18 trajektóriát létrehozva. Az első szerkesztés előtt a GPT-5.6-sol átlagosan 6,89 eszközhívást végzett és 4,67 fájlt olvasott; a Claude Sonnet 5 átlaga 4,56 hívás és 3,56 fájl volt. A különbség a lokális feladatoknál volt a legnagyobb, a kifejezetten több modult érintő feladatnál pedig szinte eltűnt (7,00 kontra 6,67 fájl). Mindkét modell 100%-os eredményt ért el az első tesztelt javítással és a végső teszteken is. Ez a kis kísérlet tehát azt támasztja alá, hogy „a cselekvési policy a modellel együtt változik”, nem pedig azt, hogy a több olvasás vagy a korábbi szerkesztés mindig jobb. Az első szerkesztésig eltelt idő is szinte azonos volt (15,01 kontra 14,48 másodperc), ezért külön kell kezelni az eszközlépések számát, a párhuzamos hívásokat és a modell késleltetését.
-
-> **7-8. kísérlet ★★: A modell cselekvési küszöbének mérése rögzített Coding Harnessben**
+> **7-9. kísérlet ★★: A modell cselekvési küszöbének mérése rögzített Coding Harnessben**
 >
 > **Cél**: a modelltényező elkülönítése, annak számszerűsítése, hogyan választanak a Coding modellek alapértelmezés szerint a további információgyűjtés és a szerkesztés megkezdése között, valamint az útvonal-hatékonyság és a végső minőség együttes értékelése.
 >
@@ -550,8 +594,6 @@ A kísérlet az `openai/gpt-5.6-sol` és az `anthropic/claude-sonnet-5` modellt 
 > **Elfogadási feltételek**: minden offline egységteszt sikeres; először igazoljuk, hogy minden feladat-fixture kezdeti állapotában elbukik a teszteken; a hivatalos eredmény tartalmazza az összes `modell × feladat × ismétlés` cellát, nulla API-hibát, független végső tesztet és auditálható trajektóriákat; a `manifest.json` ellenőrzi a konfiguráció, a megfigyelések és az összesítés hash-eit. A projektkönyvtár egy teljes, 18/18 cellás valós futást tartalmaz. Az olvasók a számukra fontos modellverziókon és valós munkaterhelésen ismételjék meg, ne tekintsék e miniatűr tárolók számait állandó ranglistának.
 
 ### Ügynökrendszerek költségelemzése
-
-A költség a modellválasztás legkönnyebben alábecsülhető dimenziója. Ha az Ügynöke termelési folyamatban van, vagy arrafelé tart, ne hagyja ki ezt a részt.
 
 Az előző szakasz a költségeket a kulcsfontosságú kiválasztási dimenziók között sorolta fel, de az ügynökköltségek sokkal összetettebbek, mint az egyszerű token-árazás – a többfordulós érvelés, az eszközhívások és a kontextus-felhalmozás miatt a költségek nem lineárisan növekednek. A szisztematikus költségelemzés az értékelési rendszer nélkülözhetetlen része és előfeltétele a termelés bevezetésének.
 
@@ -576,7 +618,7 @@ A költség forrásainak feltárásához a kísérő vizsgálat egy rögzített,
 | Csak előzménytömörítés | 16,177 | 0 | $0.003115 | 17.5% |
 | Stabil előtag + tömörítés | 16,035 | 6,144 | $0.002643 | 30.0% |
 
-Az alapágban a bemenet 1,113 tokenről 3,668-ra nőtt. Az eszközeredmények újra bekerültek a későbbi kérésekbe, összesen 9,544 bemeneti tokent adva. Mindkét optimalizálással ez 5,248-ra csökkent, a teljes költség pedig 30%-kal esett.
+Az alapkonfigurációban a körönkénti bemenet 1 113 tokenről egészen 3 668-ra nőtt. Az eszközök visszatérési értékei az előzményekkel együtt újra és újra bekerülnek a következő kérésekbe, és nyolc kör alatt összesen 9 544 bemeneti tokent tettek ki. A két optimalizálás egyidejű bekapcsolása után ez a szám 5 248-ra esett, az összköltség pedig 30%-kal csökkent.
 
 A nyereségek nem adódtak össze. A stabil előtag önmagában 28.3%, a tömörítés 17.5% megtakarítást hozott, együtt azonban 45.8% helyett 30%-ot. A tömörítés a gyorsítótárban újrahasznosítható előtagot is rövidítette. **Kombinált kontextusoptimalizálásnál a teljes folyamatot mérjük; az önálló megtakarításokat ne adjuk össze.** Más modell, ár vagy feladathossz más százalékot ad. A négyágú módszer általánosítható, nem a 30%.
 
@@ -590,7 +632,7 @@ Az **Aszinkron kötegelt feldolgozás** nem valós idejű feladatokat halmoz fel
 
 Éles környezetben valós idejű költségfigyelő rendszert kell létrehozni: nyomon követni a token felhasználást és az API-költségeket feladattípus, modell, felhasználó stb. szerint. Ezenkívül minden feladathoz állítson be költségplafont – automatikusan leállítja az ügynököt, ha hurokba esik, vagy túl mélyre megy, így megakadályozva, hogy egyetlen feladat abnormálisan magas költségekkel járjon.
 
-> **7-9. kísérlet ★: Az ügynöki feladatok végpontok közötti költségelemzése**
+> **7-10. kísérlet ★: Az ügynöki feladatok végpontok közötti költségelemzése**
 >
 > **Kísérlet célja**: Ismételje meg a fenti nyolcfordulós költségbontást, majd vizsgálja meg ugyanezeket az optimalizálásokat a saját munkaterhelésén.
 >
@@ -608,7 +650,7 @@ Tegyük fel, hogy az Ügynökrendszer jelenleg Claude-ra épül, és kiváló az
 
 Egy megbízható kiértékelő rendszerrel rendelkező csapat órákon belül választ adhat: lefuttatja az új modellt a saját kiértékelési adatkészletén, majd összehasonlítja a feladatok sikerarányát, az eszközhívások pontosságát, a késleltetést és a költséget. Elképzelhető, hogy az új modell az egyszerű feladatoknál valóban jobb és olcsóbb, miközben az összetett, többfordulós eszközvezénylést igénylő alapforgatókönyvekben 5%-kal csökken a sikerarány. Ha a különbség meghaladja a becsült mintavételi zajt (lásd alább „A kiértékelési eredmények statisztikai szignifikanciája” című szakaszt), árnyalt stratégia választható: az egyszerű feladatokat az olcsóbb új modellre irányítjuk, az összetetteknél pedig a minőség megőrzése érdekében megtartjuk az eredetit. Az ilyen részletes, adatvezérelt döntéshez előre felépített kiértékelő rendszer szükséges.
 
-> **7-10. kísérlet ★★: Többdimenziós modell teljesítmény-benchmarking**
+> **7-11. kísérlet ★★: Többdimenziós modell teljesítmény-benchmarking**
 >
 > Végezze el a főbb LLM-ek és a különböző API-szolgáltatók átfogó összehasonlítását egy többdimenziós modellkiválasztási döntési adatbázis felépítéséhez.
 >
@@ -618,7 +660,7 @@ Egy megbízható kiértékelő rendszerrel rendelkező csapat órákon belül v�
 >
 > Értékelje az API rendelkezésre állását és stabilitását: Egy héten keresztül óránként egyszer vizsgálja meg, rögzíti a sikerarányt, a hibatípusokat és a hiba időtartamát. Számítsa ki a hibaarányt, az MTTR-t (átlagos helyreállítási időt) és a leghosszabb folyamatos üzemidőt. Tesztelje a sebességkorlátok tényleges küszöbértékeit – fokozatosan növelje az egyidejűséget a fojtópont megtalálásához, rögzítve az RPM/TPM határértékeket. Átfogó költség kiszámítása: Gyűjtse össze az árinformációkat (az input/output/cache tokenek egységárai), mérlegelje a KV Cache hatását, és számítsa ki a tipikus többfordulós ügynöki feladatok átlagos költségét.
 >
-> **7-11. kísérlet ★★: Felhasználói memóriarendszerek végpontok közötti kiválasztási kiértékelése**
+> **7-12. kísérlet ★★: Felhasználói memóriarendszerek végpontok közötti kiválasztási kiértékelése**
 >
 > **Előfeltételek**: Be kell fejeznie a 3. fejezetben található kontextuális visszakeresési vagy ügynöki RAG-kísérletet.
 >
@@ -629,19 +671,15 @@ Egy megbízható kiértékelő rendszerrel rendelkező csapat órákon belül v�
 
 ## A Kiértékelési Eredmények Statisztikai Szignifikanciája
 
-**Egy váltási döntés órákon belül** egy implicit előfeltevésen nyugszik: a megfigyelt pontszámkülönbség valódi jel, nem mintavételi zaj. Korlátozott kiértékelési készlet és nem determinisztikus modellkimenetek mellett ez az előfeltevés nem áll fenn automatikusan.
+A kiértékelési halmaz véges, a modell kimenete pedig véletlenszerű, ezért a pontkülönbség lehet puszta mintavételi zaj is. Ha $n$ eseten mérünk $p$ sikerarányt, a standard hiba nagyjából így becsülhető:
 
-A mintavételi zaj durva becslése a "binomiális arány standard hibája" (amely a sikerességi arány mintavételi véletlenszerűségből adódó ingadozását jellemzi; minél nagyobb az érték, annál kevésbé megbízható a sikerességi arány). Ha a p sikerességi arányt n teszteseten mérjük, a standard hiba körülbelül √(p(1-p)/n). Egy konkrét példa: 100 eset, 70%-os sikerességi arány, standard hiba ≈ √(0,7×0,3/100) ≈ 4,6%. Egy hozzávetőleges 95%-os konfidencia intervallum p ± 2 standard hiba, azaz egy intervallum, amely ismételt mintákban az esetek körülbelül 95%-ában tartalmazná a valódi arányt, azaz 70% ± 9 százalékpont. Egy három százalékpontos különbség, mint "új modell 73% vs. régi modell 70%", teljes egészében a zajsávon belül van — a két sikerességi arányt függetlennek tekintve, a különbségük standard hibája körülbelül √2-szerese az egyes standard hibáknak (itt körülbelül 6,5 százalékpont). Egy megszorítás: a √2 feltételezi, hogy a két mérés független, míg a gyakorlatban mindkét konfiguráció általában "ugyanazon a feladatkészleten" fut, így a minták nem függetlenek. A függetlenségi feltételezés csupán egy konzervatív felső korlát a gyors ellenőrzéshez, hogy egy kis különbség egyáltalán figyelmet érdemel-e. Még ezzel a konzervatív mércével is a három százalékpontos különbség messze elmarad a 6,5 százalékpontos standard hibától — a modellek váltása ilyen bizonyíték alapján aligha jobb, mint egy pénzfeldobás.
+$$
+\mathrm{SE}(p)\approx\sqrt{\frac{p(1-p)}{n}}
+$$
 
-Az Ügynök-kiértékelés további bizonytalanságot hoz: mintavétel, változó eszközeredmények és környezeti időzítés miatt ugyanaz a modell és adathalmaz is eltérhet két futásban. Egyetlen futás ezért nem indokol telepítést. Konfigurációnként például 3-5 futás átlagát és szórását jelentsük. A későbbi kis AndroidWorld-pilot feladatonként csak egy páros futást használ, így ötletek szűrésére alkalmas, telepítési döntésre nem. Ahhoz a teljes feladatkészlet több véletlenmagos futtatása kell.
+Például 100 eset és 70%-os sikerarány mellett a 95%-os konfidenciaintervallum körülbelül $70\%\pm9$ százalékpont; „az új modell 73%, a régi 70%” tehát nem elég a váltás alátámasztásához.
 
-Ebből egy gyakorlati elv: **amikor a pontszámkülönbség kisebb, mint a becsült mintavételi zaj, ne hozz váltási döntést.** De mielőtt a "ne válts" mellett döntenél, nyúlj egy érzékenyebb — és helyesebb — elemzéshez. Amikor két konfiguráció ugyanazon a feladatkészleten fut, a helyes alapértelmezés a "páros elemzés": hasonlítsd össze a győzelmi/vesztési arányt feladatonként, nézd csak azokat az eseteket, ahol a kettő eltér (az egyik helyes, a másik hibás), és alkalmazz valami McNemar-teszt jellegűt a szignifikancia megítéléséhez. A párosítás kivonja a feladatnehézség közös zaját, így sokkal érzékenyebbé válik ugyanazon mintaméret mellett, mint két független sikerességi arány különbségének vizsgálata — a korábbi √2 becslés csak egy konzervatív, fejben számolható szita a nyilvánvalóan elégtelen különbségek kiszűrésére. Ha a páros elemzés is bizonytalannak hagyja a különbséget, csak akkor fontold meg a minta növelését — és jegyezd meg, hogy a standard hiba 1/√n szerint skálázódik, így 100-ról 400 esetre növelés csak megfelezi a becsült mintavételi zajt. A bővítés költséges. Olvasd a másik irányból: ha egy fejlesztés várható haszna csak 2-3 százalékpont, és a kiértékelési készleted néhány tucat esetből áll, a kiértékelés egyszerűen nem tudja megmondani, hogy a fejlesztés működik-e — a prioritás a kiértékelési készlet bővítése, nem az Ügynök további iterálása.
-
-Még egy könnyen figyelmen kívül hagyható buktató a **többszörös összehasonlítás**. Hat független hipotézis 95%-os szinten történő vizsgálatakor legalább egy hamis pozitív esélye 1 − 0,95^6 ≈ 26%. Minél több változatot próbálunk, annál könnyebben tűnik valamelyik pusztán véletlenül sikeresnek. Szigorítsuk a küszöböt például Bonferroni-korrekcióval, vagy erősítsük meg a pozitív eredményt független futással. A későbbi AndroidWorld-sorozat körönként egyetlen változó módosításával mérsékli ezt a kockázatot; párhuzamos szűrésnél továbbra is korrekció vagy független megerősítés kell.
-
-A kiértékelés-vezérelt döntések minőségi adatokra támaszkodnak, amelyek az Ügynök működési folyamatának szisztematikus rögzítéséből származnak — ezt nevezzük megfigyelhetőségnek.
-
-**Páros összehasonlítás:**
+Amikor ugyanazon a feladathalmazon hasonlítunk össze két konfigurációt, előbb **páros elemzést** végezzünk: jegyezzük fel feladatonként, melyik győz, és a különbséget McNemar-teszttel vagy páros bootstrappel ítéljük meg, ne két független sikerarány kivonásával. Mivel az Ágens minden futása is eltérhet, érdemes minden konfigurációt több véletlenmaggal (például 3–5 alkalommal) futtatni, és az átlagot az ingadozási tartománnyal együtt jelenteni; egyetlen futás csak az irány szűrésére jó. Ha a várt nyereség csupán 2–3 százalékpont, a kiértékelési halmaz pedig mindössze néhány tucat feladatból áll, előbb növeljük a mintát — a standard hiba $1/\sqrt{n}$ szerint csökken.
 
 ```python
 for task in paired_tasks:
@@ -653,11 +691,15 @@ for task in paired_tasks:
 return paired_bootstrap_or_mcnemar(all_deltas)
 ```
 
+A párosítás azt jelenti, hogy a két csoport osztozik a feladatokon és a véletlen feltételeken, nem pedig azt, hogy külön-külön veszünk két mintát, és az átlagaikat hasonlítjuk össze.
+
+Több hipotézis párhuzamos ellenőrzésekor a **többszörös összehasonlítást** is figyelembe kell venni: szigorítsuk a szignifikanciaküszöböt, vagy futtassuk le újra függetlenül a pozitív eredményeket. A gyakorlati mérce egyszerű: a pontkülönbség csak akkor ér modellváltást vagy változtatás kiadását, ha meghaladja a zajt, kiállja a páros elemzést, és reprodukálható.
+
 ## Ügynök-megfigyelhetőség
 
 A kiértékelés-vezérelt döntések (akár modellválasztáshoz, akár folyamatos iterációhoz) minőségi működési adatokra támaszkodnak. Az alábbiakban először azt mutatjuk be, hogyan gyűjtsünk szisztematikusan ilyen adatokat (megfigyelhetőség), majd azt tárgyaljuk, hogyan fordítsuk le a kiértékelési eredményeket rendszerfejlesztésekké.
 
-![7-6. ábra: Megfigyelhetőségi Technológiai Verem](images/fig7-6.svg)
+![7-7. ábra: Megfigyelhetőségi Technológiai Verem](images/fig7-7.svg)
 
 A megfigyelhetőség egy elosztott rendszerekből kölcsönzött fogalom: nem nyithatod ki a rendszert, hogy lásd, hogyan működik; a naplókból, metrikákból és nyomkövetésekből következtetsz arra, mi történik — ahogy egy orvos, aki nem lát bele a betegbe, a hőmérsékletből, vérnyomásból és képalkotásból diagnosztizál. Az Ügynök-rendszerek ezt még nehezebbé teszik: ugyanaz a bemenet különböző kimeneteket produkálhat, a többfordulós következtetés és eszközhívások rendkívül összetetté teszik a végrehajtási utakat, és a modell "gondolkodása" kívülről teljesen átláthatatlan.
 
@@ -671,26 +713,17 @@ A platform támogatja továbbá az A/B tesztelést (a felhasználói forgalom eg
 
 A megfigyelhetőségi adatok legértékesebb felhasználása "kiértékelési eszközökké alakításuk". Egy gyakorlati hurok: a termelési trajektóriákból kivont hibás és gyanús esetek → anonimizálás (érzékeny mezők, például felhasználói adatok és kulcsok eltávolítása) → új tesztesetekké és regressziós tesztekké desztillálás a kiértékelési készletbe. A kiértékelési készlet ekkor megszűnik egyszeri, statikus gyűjtemény lenni, és élő eszközzé válik, amely a termékkel együtt fejlődik és továbbra is tükrözi a valós felhasználói eloszlást — a ma termelésben feltárt hibaminták holnap őrzik az alapvonalat regressziós tesztekként. Ez pontosan a megfigyelhetőség és a fejezet fő témája közötti interfész: a megfigyelhetőség felelős a valós világban történések "látásáért", a kiértékelés pedig azért, hogy ezeket a megfigyeléseket ismételhető szabványokká szilárdítsa.
 
-A megfigyelhetőség számos kihívással néz szembe:
-
-- **Adatmennyiség és adatvédelem közötti kompromisszum**: A nagy forgalmú rendszerek naponta terabájtnyi nyomkövetési adatot generálhatnak, miközben az adatvédelmi előírásoknak is meg kell felelniük.
-- **Az ok-okozati hozzárendelés összetettsége**: A gyökér-okok automatikus azonosítása a trajektóriákból még mindig intelligensebb elemző algoritmusokat igényel; a kutatás élvonala kauzális következtetést és ellentényes elemzést kísérel meg, de ez még nem érett.
-- **Nyomkövetési kihívások multi-Ügynök rendszerekben**: A végrehajtási folyamatok nyomon követése több Ügynök között összetettebb és szemantikailag gazdagabb, mint a mikroszolgáltatások közötti API-hívások nyomon követése.
-- **Egyensúly a valós idejű védőkorlátok és az utólagos elemzés között**: Magas kockázatú forgatókönyvekben proaktív védőkorlátokra van szükség, de ezek további késleltetést és téves riasztásokat vezetnek be.
-
-Ahogy a ML technológia mélyebben integrálódik az eszközláncba, a jövő megfigyelhetőségi platformjai várhatóan automatikusan képesek lesznek azonosítani az anomáliákat és pontosan lokalizálni a gyökér-okokat.
-
 Egy átfogó kiértékelő rendszerrel és adathalmazzal a kulcs az, hogy a kiértékelési eredményeket kézzelfogható rendszerfejlesztésekké fordítsuk le.
 
 ## A Benchmark Jelentésektől a Rendszerfejlesztésekig
 
 A következő eset a kísérő tároló valós, szándékosan szűk AndroidWorld-iterációjából származik. Négy Wi-Fi-beállítási feladatot vizsgál API 35 emulátoron, feladatonként egy páros futással. Nem a teljes, 116 feladatos benchmark, és nem helyettesíti az API 33 referencia-környezetben végzett újrafuttatást. Értéke nem egy összpontszám, hanem az egymásra épülő döntések sora.
 
-![7-7. ábra: Benchmarktól a Fejlesztésig Hurok](images/fig7-7.svg)
+![7-8. ábra: Benchmarktól a Fejlesztésig Hurok](images/fig7-8.svg)
 
 A Harness Engineering szempontjából ez a szakasz lényegében a Harness iteratív optimalizálásának módszertanáról szól — a kiértékelési adatok használata a Harness gyenge pontjainak (elégtelen kontextus? hiányzó korlátozások? elégtelen validálás? nem megfelelő időzítésű visszacsatolás?) azonosítására, célzott fejlesztések végrehajtása, majd újraértékelés, ami a Harness folyamatos fejlődésének zárt hurkát alkotja.
 
-Mielőtt bármilyen benchmark jelentést elemeznénk, vegyünk észre egy könnyen figyelmen kívül hagyható elvet: **amikor az Ügynök teljesítménye csökken, először a kiértékelő rendszert ellenőrizd, aztán az Ügynököt.** A gyakori hiba az, hogy a pontszám esésekor azonnal az Ügynök kódját kezdik szerkeszteni, figyelmen kívül hagyva annak lehetőségét, hogy a kiértékelő rendszer romlott el először — egy torzított jel alapján kormányozni, és a korrekció az első lépéstől fogva rossz. Tipikus kiértékelés-oldali hibák: a futásidejű környezet kifogy az erőforrásokból és leállítja a folyamatokat (ami véletlenszerű hibákként jelentkezik), hibák a pontozóban, amelyek helyes válaszokat jelölnek meg hibásként, és tesztesetek, amelyek eltolódtak a termelési forgatókönyvektől. A fő számokban mindezek azonosnak tűnnek a modellromlással; csak a teljes trajektóriák áttekintése különbözteti meg őket.
+Mielőtt bármilyen benchmark jelentést elemeznénk, vegyünk észre egy könnyen figyelmen kívül hagyható elvet: **amikor az Ügynök teljesítménye csökken, először a kiértékelő rendszert ellenőrizd, aztán az Ügynököt.** A gyakori hiba az, hogy a pontszám esésekor azonnal az Ügynök kódját kezdik szerkeszteni, figyelmen kívül hagyva annak lehetőségét, hogy a kiértékelő rendszer romlott el először — egy torzított jel alapján kormányozni, és a korrekció az első lépéstől fogva rossz. Tipikus kiértékelés-oldali hibák: a futásidejű környezet kifogy az erőforrásokból és leállítja a folyamatokat (ami véletlenszerű hibákként jelentkezik), hibák az ellenőrzőben, amelyek helyes válaszokat jelölnek meg hibásként, és tesztesetek, amelyek eltolódtak a termelési forgatókönyvektől. A fő számokban mindezek azonosnak tűnnek a modellromlással; csak a teljes trajektóriák áttekintése különbözteti meg őket.
 
 ### Benchmark Jelentés Olvasása: A Problémafelismerés Művészete
 
@@ -702,7 +735,7 @@ A 88%-os főszám elrejti ezt a kis, koherens hibacsoportot. A lépéskorlát em
 
 Az első kör a legolcsóbb magyarázatot tesztelte. H1 navigációs tudáshiányt feltételezett, ezért csak a kezelt ág kapott Wi-Fi-navigációs és végállapot-ellenőrzési utasítást. A siker nem javult: nem a prompt volt a szűk keresztmetszet.
 
-A második kör azt kérdezte, mit lát valójában az Ügynök. H5 az API 35-tel inkompatibilis accessibility feedet az AndroidWorld által támogatott UIAutomator-fára cserélte. A siker nőtt, a teljes fa azonban megugrasztotta a tokenhasználatot. H5C ezért nem adott új információt: a láthatatlan, szöveg nélküli, nem műveletképes konténereket szűrte ki.
+A második kör arra tért át, hogy megvizsgálja, mit is „lát” valójában az Ágens. Tegyük fel, hogy a H5 az API 35-tel nem kompatibilis *accessibility feed* helyett az AndroidWorld által már támogatott UIAutomator elemfát használja. A sikerarány valóban javult, ám a teljes elemfa túl hosszú, és a tokenfelhasználás jelentősen megnőtt. Ezért a harmadik kör, a H5C, már nem tesz hozzá új információt: csupán kitörli az elemfából azokat a konténercsomópontokat, amelyek nem láthatók, nincs szövegük és nem is kezelhetők — hogy kiderüljön, eltávolítható-e a zaj a sikerarány megtartása mellett.
 
 Mindhárom körben változatlan maradt a modell, a feladatparaméter, a seed, a lépéskorlát és az emulátor; az ágak sorrendje váltakozott. Így az egyik kör fennmaradó problémája lett a következő egyetlen változója.
 
@@ -722,11 +755,11 @@ A sorrend fontosabb bármely egyedi százaléknál. Részletesebb utasítás nem
 
 ### Folyamatos Iteráció: Az Első Fejlesztéstől a Rendszer Evolúciójáig
 
-H5C négy feladatos sikere csak nagyobb tesztet engedélyez, telepítést nem. A következő kapu mind a 116 feladat öt seeddel, Pixel 6 / API 33 referencia-környezetben, a teljes külső alkalmazáskészlettel. A siker nem lehet rosszabb, a tokenarány legyen ≤0.75, a késleltetési arány ≤1.5. Addig a 4/4 nem jelenthető rendszerszintű 100%-ként.
+Az, hogy a H5C átment ezen a négy feladaton, csak annyit jelent, hogy megérdemli a következő kört — nem azt, hogy telepíthető. A következő lépésben pótolni kell a harmadik féltől származó alkalmazásokat, és a Pixel 6 / API 33 referencia-környezetben mind a 116 feladatot le kell futtatni öt-öt véletlenmaggal; a sikerarány romlásának kizárásán túl azt is igazolni kell, hogy a token nem haladja meg az eredeti megoldás 75%-át, a késleltetés pedig az 1,5-szeresét. E teljes újramérés előtt a részhalmazon elért 4/4-et nem szabad a rendszer egészére vonatkozó 100%-ként feltüntetni.
 
 A folyamatos iteráció ezt jelenti: minden kör bizonyítéka csak a hatókörével igazolt következő lépést engedélyezi. H1 leállította a prompt további bővítését; H5 megtalálta a mechanizmust és feltárt egy költségproblémát; H5C megoldotta azt, így nagyobb tesztre jutott. A jó benchmark jelentés nemcsak pontszámot, hanem érvényességi kört, megsértett guardraileket és következő tesztet is közöl.
 
-> **7-12. kísérlet ★★★: Kiértékelés és Fejlesztés AndroidWorldön**
+> **7-13. kísérlet ★★★: Kiértékelés és Fejlesztés AndroidWorldön**
 >
 > Ez a kísérlet a kiértékelési jelentéstől a rendszerfejlesztésig vezető teljes utat gyakorolja. Kezdd a történeti jelentéssel és a `chapter6/android-world` három mentett páros futásával.
 >
@@ -795,18 +828,18 @@ A kiértékelés végpontja nem a pontozás, hanem a fejlesztés. Ez a fejezet m
 
 Íme, hogyan találkozik a híd két vége. A kiértékelési oldalon felhalmozott eszközök szinte zökkenőmentesen alakíthatók át tréning jelekké: egy jól definiált Rubrica vagy validátor lényegében egy jutalomfüggvény a "Verifikálható Jutalmú Megerősítéses Tanuláshoz (RLVR)" — a pontozó szkriptből jutalom szkript lesz; hogy egy teszt sikeres-e vagy egy állapot megfelel-e a szabványnak, az egyszerre szolgál kiértékelési szempontként és megerősítéses tanulási jutalomként. De a tréning olyan követelményeket támaszt, amelyekről a kiértékelésnek soha nem kellett gondoskodnia. Az első a "megbízható visszaállítási szemantika": a tréning több millió epizódot futtat (egy epizód egy teljes interakciós kör a kezdeti állapottól a feladat befejezéséig), és minden epizódnak képesnek kell lennie a környezet determinisztikus, tiszta kezdeti állapotba való visszaállítására; különben a gradiens jelet szennyezik az előző epizód maradék állapotai. A második az **átviteli sebesség, amely messze meghaladja a kiértékelését**: néhány ezer kiértékelés elegendő a következtetések levonásához, de a tréning megköveteli, hogy a modellt több millió interakcióval tápláljuk elfogadható falon lévő óra időn belül; a környezet párhuzamosításának foka és a példányonkénti többletterhelés közvetlenül meghatározza, hogy a tréning megvalósítható-e. Ezt a két pontot — a validátorokból jutalomfüggvényekké alakítását, valamint a tréning szintű visszaállítást és átviteli sebességet — a 8. fejezet részletezi.
 
-![7-8. ábra: Szimulációs Hűség Spektrum](images/fig7-8.svg)
+![7-9. ábra: Szimulációs Hűség Spektrum](images/fig7-9.svg)
 
 A "digitális környezet" oldalán az AWorld keretrendszer egy irányítható MCP szerver sandboxot épít a GAIA feladatokhoz, 26 MCP szervert biztosítva 126 eszközfunkcióval, elkerülve a valós API-k közvetlen elérésének tiltásait és irányíthatatlan mellékhatásait. Minden eszközhívás visszajátszható és auditálható. Az AWorld elosztott architektúrája a hagyományos soros végrehajtási időt 7695 másodpercről 525 másodpercre csökkenti (14,6-szeres gyorsulás), és a környezet állapotmentes kialakítása minden példányt teljesen függetlenné tesz, támogatva a hatékony párhuzamosítást.
 
 A "megtestesült környezet" oldalán a RoboTwin2 egy fizikai motoron alapuló kétkaros manipulációs feladatokat épít, véletlenszerűsítve az objektumok pozícióit, orientációit és megjelenését az általánosítás javítására. A megfigyelési tér többkamerás vizuális és ízületi állapotokat tartalmaz, valós idejű vezérlést érve el az "Akció Darabolás" révén — ahol a modell egyszerre több egymást követő akciót tervez (részletesen a 6. fejezetben). Az OSWorld visszaállítási képességet biztosít virtuális gép pillanatképeken keresztül, az AndroidWorld pedig a mobil alkalmazás-automatizálásra összpontosít. Akár digitális, akár megtestesült, a szimulációs környezeteknek szükségük van a 4. fejezetben tárgyalt izolált végrehajtási környezetekre és virtuális identitás mechanizmusokra is (VM/konténer izoláció, rezidens proxy-k, Human-in-the-Loop hitelesítés, megosztott fájlrendszerek), amelyeket itt nem ismétlünk meg.
 
-> **7-13. kísérlet ★★: A Megtestesült Intelligencia Környezet Konfigurálása OpenVLA és RoboTwin2 Számára**
+> **7-14. kísérlet ★★: A Megtestesült Intelligencia Környezet Konfigurálása OpenVLA és RoboTwin2 Számára**
 >
 > Állíts be egy szimulációs környezetet robotmanipulációhoz. Olvasd el a `ch7/SimpleVLA-RL` fájlt és az OpenVLA dokumentációt a Vízió-Nyelv-Akció modell architektúrájának megértéséhez (végpontok közötti integrációja egy vízió kódolónak, nyelvi modellnek és akció dekódolónak, amely a képeket és szövegeket egy közös szemantikai térbe vetíti). Konfiguráld a RoboTwin2 környezetet, értsd meg a megfigyelési teret (háromnézetű RGB + 14-dimenziós ízületi állapot) és az akcióteret (14-dimenziós vezérlővektor). Tanulmányozd a környezet randomizálási mechanizmusát és a térbeli korlátok logikáját a `move_can_pot`-ban. Értékeld az előre tanított modellt, rögzítve a sikerességi arányát, befejezési idejét és hibamódjait, különös figyelemmel az akció darabolás mechanizmusának hatására.
 >
 >
-> ![7-9. ábra: OpenVLA és RoboTwin2 Megtestesült Intelligencia Környezet](images/fig7-9.svg)
+> ![7-10. ábra: OpenVLA és RoboTwin2 Megtestesült Intelligencia Környezet](images/fig7-10.svg)
 >
 >
 
@@ -814,21 +847,19 @@ A "megtestesült környezet" oldalán a RoboTwin2 egy fizikai motoron alapuló k
 
 A nagy hűségű környezetek jobb átvitelt támogatnak a valós világba, de magas számítási költségekkel járnak. A hűség másik dimenziója a randomizáció mértéke: a mérsékelt randomizáció javítja az általánosítást, míg a túlzott randomizáció túl nehézzé teheti a feladatokat. A "Tartomány Randomizálás" egy kulcsfontosságú technika a szimuláció-valóság szakadékának csökkentésére: a fizikai paraméterek, vizuális megjelenés, érzékelői zaj stb. széles skálájának véletlenszerű bevezetése — mintha különböző megvilágítások és szögek alatt gyakorolnánk a megfogást, hogy a valós világban ne bukjunk el csak azért, mert a fény megváltozott. Digitális környezetekben a szimuláció-valóság a felület renderelésének, válaszidőknek stb. különbségeiben nyilvánul meg, ami a késleltetés és hibák randomizálásának bevezetésével csökkenthető.
 
-Ezzel a kiértékelési környezet befejezi végső evolúcióját: egy képességeket mérő vizsgateremből egy képességeket építő edzőpályává válik. A 8. fejezet megmutatja, hogy az AWorld-train hogyan alakítja át az ilyen szimulációs környezeteket tanítható arénákká, és az ezzel járó mérnöki kihívásokat — az ebben a fejezetben létrehozott kiértékelő rendszer és szimulációs környezetek a poszt-tréning két sarokkövei.
-
 [^re-bench-2025]: Wijk, Hjalmar, et al. *RE-Bench: Evaluating Frontier AI R&D Capabilities of Language Model Agents against Human Experts.* arXiv:2411.15114, 2025.
 
 ## Fejezet Összefoglaló
 
-Ez a fejezet egy kérdés köré épült: honnan tudjuk, hogy egy Ügynök valóban javult? A reprodukálható környezet, a szivárgásálló adathalmaz, az LLM-bíró és az értékelésvezérelt modellválasztás minden láncszeme befolyásolja a következtetés megbízhatóságát. A mért esetek négy gyakorlati figyelmeztetést adnak: a strukturált memória és a RAG együtt sem garantál szinergiát; a cache és tömörítés megtakarítása nem adható össze; a referenciahang megváltoztatja a multimodális pont jelentését; a Harness bemeneti reprezentációja pedig egyszerre dönthet sikerről és tokenköltségről. A modellválasztásnál több erőforráskeret képességgörbéit hasonlítsuk össze. Éles rendszerben a kiértékelés folyamatos validálás, nem alkalmi vizsga.
+Ez a fejezet egy kérdés köré épült: honnan tudjuk, hogy egy Ügynök valóban javult? A lánc négy szakaszból áll: előbb tisztázzuk, mi számít sikernek (a Pass@k, a Best@k és a Pass consecutive@k eltérő alapjai), majd eldöntjük, honnan jönnek a feladatok (nyilvános benchmarkok, saját üzleti halmaz, éles trajectoryk visszaáramlása), ezután megválasztjuk az ellenőrzés módját (a determinisztikus ellenőrzőktől az ellenőrzőlistákon és a Rubric melletti LLM-ítéleten át a páronkénti összehasonlításig), végül pontszámokból döntést csinálunk (statisztikai szignifikancia, hibaattribúció, regressziós feladatok, modellválasztás). Minden szakasz befolyásolja a következtetés megbízhatóságát. A mért esetek négy gyakorlati figyelmeztetést adnak: a strukturált memória és a RAG együtt sem garantál szinergiát; a cache és tömörítés megtakarítása nem adható össze; a referenciahang megváltoztatja a multimodális pont jelentését; a Harness bemeneti reprezentációja pedig egyszerre dönthet sikerről és tokenköltségről. A modellválasztásnál több erőforráskeret képességgörbéit hasonlítsuk össze. Éles rendszerben a kiértékelés folyamatos validálás, nem alkalmi vizsga.
 
 A könyv egészének szerkezete felől nézve ez a fejezet az 1. fejezet felfedezési hurkának **bizonyíték** szakaszát építi: a hibaokolás dönti el, hogy a későbbi javaslatoknak van-e mire támaszkodniuk.
+
+A trajektóriaelőtag-határok kiértékelése tovább mutatja, hogy **egy információ megszerzése és annak helyes felhasználása a jelenlegi döntésben két különböző képesség**: a végponttól végpontig tartó regresszió biztosítja, hogy az alapfeladatok ne romoljanak, a trajektóriaelőtag-határhalmaz pedig közvetlenül a hatókör megítélését, az aktuális utasítás felülírását, a tisztázást és a veszélyes műveletek előtti megerősítést vizsgálja. A felhasználói memória csak egy esete ennek az általános módszernek. Az éles szintű Ágensek kiértékelése nem alkalmi vizsga, hanem olyan ellenőrző rendszer, amely valós problémaesetekből folyamatosan állít elő regressziós és határfeladatokat.
 
 Alapmódszertan: Megfigyelés → Hipotézis → Kísérlet → Validálás → Új Megértés → Új Hipotézis, az Ügynök-mérnökség átalakítása tapasztalatvezérelt "alkímiából" adatvezérelt tudományos mérnökséggé.
 
 Az ebben a fejezetben bemutatott kiértékelő rendszer egy teljes zárt hurkot alkot: "Kiértékelési Környezet" automatizált tesztinfrastruktúrát biztosít → "Kiértékelési Adathalmaz" teszteseteket definiál → "Automatizált Kiértékelési Módszerek" (LLM-mint-bíró és Rubrica) pontozzák az Ügynök teljesítményét → "Benchmark Elemzés" feltárja a fejlesztési irányokat → "Rendszerfejlesztések" kijavítják a problémákat → A kiértékelési környezet és adathalmaz frissítése, új iterációs ciklus kezdődik.
-
-Az 1. fejezetben bemutatott Harness Engineering szempontjából az ebben a fejezetben bemutatott kiértékelési módszertan a Harness "validálási" funkciójának szisztematikus implementációja, míg a "Benchmark jelentéstől a rendszerfejlesztésig" zárt hurok a Harness iteratív optimalizálásának alapvető mechanizmusa. Ez a fejezet arra a kérdésre ad választ, hogy "hogyan mérjünk megbízhatóan"; erre építve a 9. fejezet arra a kérdésre ad választ, hogy "hogyan alakítsuk át a többdimenziós trajektória-kiértékeléseket végrehajtható, visszafordítható rendszerfrissítésekké".
 
 Az itt létrehozott kiértékelő rendszer nemcsak a jelenlegi rendszer optimalizálását támogatja, hanem kritikus alapot is biztosít a következő két fejezethez. A 8. fejezet a kiértékelési környezeteket és adatokat a modell poszt-tréning bemeneteivé alakítja, az SFT és RL segítségével az interakciós politikákat paraméterekbe írva. A 9. fejezet a termelési trajektóriák többdimenziós kiértékeléseit a tudás, utasítások, programok vagy paraméterek jelölt frissítéseivé alakítja.
 

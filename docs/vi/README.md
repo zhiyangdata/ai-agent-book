@@ -1,9 +1,9 @@
 # Hiểu sâu về AI Agent: Nguyên lý thiết kế và thực hành kỹ thuật
 
-[![PDF](https://img.shields.io/badge/PDF-tải%20về-success.svg)](#-sách-điện-tử) [![Đọc trực tuyến](https://img.shields.io/badge/🌐_Đọc_trực_tuyến-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/dịch-14%20ngôn%20ngữ-informational.svg)](#-sách-điện-tử)
+[![PDF](https://img.shields.io/badge/PDF-tải%20về-success.svg)](#-sách-điện-tử) [![Đọc trực tuyến](https://img.shields.io/badge/🌐_Đọc_trực_tuyến-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/dịch-15%20ngôn%20ngữ-informational.svg)](#-sách-điện-tử)
 [![Trending GitHub Project of the Day](https://img.shields.io/badge/GitHub%20Trending-Project%20of%20the%20Day-orange?logo=github)](https://github.com/trending)
 
-**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · Tiếng Việt ← hiện tại · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)**
+**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · Tiếng Việt ← hiện tại · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)**
 
 > 📥 **[Tải PDF / EPUB](#-sách-điện-tử)** (khuyên dùng) — nên đọc sách qua bản PDF / EPUB để có trải nghiệm tốt nhất; bạn cũng có thể [đọc trực tuyến](https://bojieli.github.io/ai-agent-book/) (chuyển đổi ngôn ngữ, mục lục đóng/mở được, tìm kiếm toàn văn; tự động xây dựng lại sau mỗi lần đẩy lên main).
 
@@ -13,7 +13,7 @@
 >
 > Nếu bạn đang đọc một bản PDF cũ, chúng tôi khuyên bạn [tải PDF mới nhất](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-vi.pdf). Ấn bản mới còn có nhiều nội dung được sửa chữa và điều chỉnh; vui lòng sử dụng phiên bản mới nhất.
 
-| 📚 **10 chương** nội dung, từ nền tảng đến sản xuất | 📂 **93** dự án đi kèm (70+ chạy độc lập) | 🌐 **14 ngôn ngữ**: Trung / Anh / Tây Ban Nha / Indonesia / Ả Rập / 繁體中文（台灣） / Nga / Tamil / Việt / Nhật / Thổ Nhĩ Kỳ / Hàn / Hungary / Do Thái |
+| 📚 **10 chương** nội dung, từ nền tảng đến sản xuất | 📂 **93** dự án đi kèm (70+ chạy độc lập) | 🌐 **15 ngôn ngữ**: Trung / Anh / Tây Ban Nha / Indonesia / Ả Rập / 繁體中文（台灣） / Nga / Tamil / Việt / Nhật / Thổ Nhĩ Kỳ / Hàn / Hungary / Do Thái / Bồ Đào Nha |
 | :---: | :---: | :---: |
 
 ## 📖 Sách điện tử
@@ -61,7 +61,7 @@ Sách xoay quanh công thức cốt lõi **Agent = LLM + Context + Tools**, mư�
 | 3 | 📚 **Bộ nhớ người dùng và kho tri thức** | Ghi nhớ người dùng qua phiên + tri thức ngoài: bộ nhớ người dùng, RAG, chỉ mục cấu trúc, đồ thị tri thức | [Đọc](../../book-vi/chapter3.vi.md) | [12](../../chapter3/README.vi.md) |
 | 4 | 🛠️ **Công cụ** | Công cụ là đôi tay Agent: giao thức MCP, cảm nhận/thực thi/cộng tác, Agent bất đồng bộ hướng sự kiện, khám phá công cụ tích cực | [Đọc](../../book-vi/chapter4.vi.md) | [8](../../chapter4/README.vi.md) |
 | 5 | 💻 **Coding Agent và sinh mã** | Mã là "công cụ tạo ra công cụ mới"; Coding Agent cấp sản xuất đầy đủ | [Đọc](../../book-vi/chapter5.vi.md) | [13](../../chapter5/README.vi.md) |
-| 6 | 🎙️ **Tương tác: mở rộng không gian quan sát và không gian hành động** | Mở rộng không gian quan sát và hành động của Agent theo phương thức và thời gian: hệ thống bất đồng bộ và hướng sự kiện, giọng nói, Computer Use và robot | [Đọc](../../book-vi/chapter6.vi.md) | [13](../../chapter6/README.vi.md) |
+| 6 | 🎙️ **Tương tác: mở rộng không gian quan sát và không gian hành động** | Mở rộng không gian quan sát và hành động của Agent theo phương thức và thời gian: hệ thống bất đồng bộ và hướng sự kiện, giọng nói, Computer Use và robot | [Đọc](../../book-vi/chapter6.vi.md) | [14](../../chapter6/README.vi.md) |
 | 7 | 🎯 **Đánh giá Agent** | Biến hiệu suất thành tín hiệu có thể so sánh: môi trường, chỉ số, ý nghĩa thống kê và lựa chọn dựa trên đánh giá | [Đọc](../../book-vi/chapter7.vi.md) | [13](../../chapter7/README.vi.md) |
 | 8 | 🧠 **Post-training mô hình** | Ba giai đoạn—tiền huấn luyện, SFT và RL: khi nào chọn SFT hay RL, nội tại hóa lời gọi công cụ và hiệu quả mẫu | [Đọc](../../book-vi/chapter8.vi.md) | [19](../../chapter8/README.vi.md) |
 | 9 | 🔄 **Sự tiến hóa liên tục của Agent** | Lấy tín hiệu học tập từ quỹ đạo thực thi và cập nhật kiến thức, chỉ dẫn, chương trình và tham số | [Đọc](../../book-vi/chapter9.vi.md) | [9](../../chapter9/README.vi.md) |
@@ -108,14 +108,14 @@ Nên đăng ký API key từ vài nền tảng để thuận tiện học tập.
 | **Zhipu GLM** | <https://open.bigmodel.cn/> | GLM-4.6, tiếng Trung mạnh, hiệu năng/ch giá tốt | Trung Quốc đại lục |
 | **Siliconflow** | <https://siliconflow.cn/> | Các mô hình mở (DeepSeek, Qwen, v.v.), truy cập nhanh từ Trung Quốc đại lục | Trung Quốc đại lục |
 | **DeepSeek** | <https://platform.deepseek.com/> | API chính thức của DeepSeek | Toàn cầu + Trung Quốc đại lục |
-| **Krill AI** | [www.krill-ai.net](https://www.krill-ai.net/register?invite=Q8D3L35725) | Truy cập một điểm đến các mô hình chính toàn cầu và nội địa Trung Quốc (OpenAI, Claude, Gemini, Grok, Kimi, GLM, DeepSeek, Qwen, Minimax) | Toàn cầu + Trung Quốc đại lục |
+| **Krill AI** | [www.krill-code.com](https://www.krill-code.com/register?invite=Q8D3L35725) | Truy cập một điểm đến các mô hình chính toàn cầu và nội địa Trung Quốc (OpenAI, Claude, Gemini, Grok, Kimi, GLM, DeepSeek, Qwen, Minimax) | Toàn cầu + Trung Quốc đại lục |
 | **OpenRouter** | <https://openrouter.ai/> | Truy cập một điểm đến các mô hình chính toàn cầu và nội địa Trung Quốc (GPT, Claude, Gemini, Kimi, GLM, DeepSeek, Qwen, v.v.) | Toàn cầu |
 
 ## 💎 Nhà tài trợ
 
 Cảm ơn **Krill AI** đã tài trợ dự án này! Krill cung cấp dịch vụ trung chuyển API chính thức, ổn định và cực nhanh cho GPT / Claude / Gemini và nhiều mô hình Trung Quốc, hỗ trợ tùy chỉnh cấp doanh nghiệp, xuất hóa đơn, hỗ trợ kỹ thuật riêng 7×16h, cùng kết nối WebSocket được tối ưu độc quyền cho tốc độ token đầu tiên cực nhanh.
 
-Krill dành ưu đãi đặc biệt cho độc giả của sách: đăng ký qua [liên kết này](https://www.krill-ai.net/register?invite=Q8D3L35725) và nhập mã khuyến mãi "ai-agent-book" khi nạp tiền để được giảm 23% cho lần mua gói Codex đầu tiên!
+Krill dành ưu đãi đặc biệt cho độc giả của sách: đăng ký qua [liên kết này](https://www.krill-code.com/register?invite=Q8D3L35725) và nhập mã khuyến mãi "ai-agent-book" khi nạp tiền để được giảm 23% cho lần mua gói Codex đầu tiên!
 
 > 🧪 Trạng thái thực thi, bằng chứng và các tiêu chí nghiệm thu chưa đạt của thí nghiệm được theo dõi riêng tại [`EXPERIMENT_STATUS.md`](../EXPERIMENT_STATUS.md); việc clone hoặc cài đặt mã nguồn không chứng minh thí nghiệm đã hoàn thành.
 

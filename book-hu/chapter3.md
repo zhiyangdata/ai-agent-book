@@ -14,11 +14,9 @@ Folytatva a 2. fejezet kontextusmérnöki megközelítését, ez a fejezet kiter
 
 ## Felhasználói memória rendszer
 
-A felhasználói memóriarendszer nélkülözhetetlen egy olyan AI Ágens építéséhez, amely valóban személyre szabott, folyamatos szolgáltatást nyújt. A memória nem minden kimondott szó leirata. Mi sem emlékszünk minden barátunkkal folytatott beszélgetés nyers tartalmára; az ismételt interakciók során fokozatosan kialakítunk egy élénk mentális modellt róluk – hobbijaikról, szokásaikról, értékeikről –, és ez a modell lehetővé teszi, hogy megértsük, sőt akár előre jelezzük is, mire van szükségük.
+Ahhoz, hogy egy Agent munkamenetek között személyre szabott szolgáltatást nyújtson, tartós felhasználói memóriaréteg kell. Ez nem minden elhangzott mondatot tárol, hanem egy külön LLM-hívással kinyeri, tömöríti és átvizsgálja a később hasznos tényeket — ebben különbözik a kontextusbeli tanulástól, amely csak az aktuális ablakon belül hat.
 
-A felhasználói memóriarendszer magja egy aktív, folyamatos tanulási folyamat, amelynek célja egy tömör, hatékony prediktív modell felépítése a felhasználóról. További számítási kapacitást használ – dedikált LLM-hívásokat, amelyek elemzik, összegzik és strukturálják –, hogy explicit módon kinyerje és tömörítse a hosszú beszélgetési előzményekben szétszórt kulcsfontosságú információkat. A kontraszt a kontextusba tanulással (in-context learning) éles: a felhasználói memória perzisztens és újra áttekinthető; a kontextusba tanulás átmeneti és eltűnik, amikor a szekció véget ér.
-
-Értsük meg ezt a folyamatot egy konkrét példán keresztül. Tegyük fel, hogy egy felhasználó és egy Ágens a következő beszélgetést folytatja:
+Egy konkrét példa világossá teszi a folyamatot. Tegyük fel, hogy a felhasználó és az Agent között a következő párbeszéd zajlik:
 
 ```text
 User: Segíts lefoglalni egy járatot Tokióba jövő péntekre. Inkább ablak melletti
@@ -30,7 +28,7 @@ Agent: Itt a lehetőségek. A preferenciád alapján szűrtem az ablak melletti
 User: Igen, és használd a United MileagePlus számomat: 12345678.
 ```
 
-Miután ez a beszélgetés véget ért, az Ágens keretrendszer meghív egy dedikált LLM-et a párbeszéd elemzésére és a hosszú távon megjegyzendő információk kinyerésére:
+A beszélgetés végeztével az Agent keretrendszer egyetlen célzott LLM-hívással elemzi azt, és kinyeri, ami hosszú távon érdemes a megjegyzésre:
 
 ```text
 Kinyert emlékek:
@@ -40,11 +38,7 @@ Kinyert emlékek:
 - A felhasználónak utazási tervei vannak Tokióba (közelmúltbeli tevékenység)
 ```
 
-**Szelektivitás** – az Ágens nem jegyez meg átmeneti információkat, például hogy „a keresés 3 lehetőséget adott vissza”, csak a jövőben hasznos tényeket.
-
-**Absztrakció** – az „ablak melletti ülést szeretek” általános preferenciává válik, nem kötődik az adott járathoz.
-
-**Struktúra** – akár Markdownot, JSON-t vagy más formátumot használunk, a jó szervezettség megkönnyíti a későbbi visszakeresést. A következő foglaláskor az Ágensnek már nem kell újra rákérdeznie az ülésre vagy az étkezésre.
+A kinyerésnek egyszerre három szabálynak kell megfelelnie: **szelektivitás** (dobjuk el a rövid életű részleteket, például hogy „a keresés 3 találatot adott”), **absztrakció** (általánosítsuk a mostani „ablak melletti ülést” tartós preferenciává) és **strukturáltság** (a tényeket visszakereshető mezőkben tároljuk).
 
 ### A memóriaképességek értékelése: Háromszintű keretrendszer
 
@@ -95,13 +89,11 @@ Ez a fejezet a két központi szintre összpontosít: a trajektóriára és a fe
 
 Miután megválaszoltuk a "hol tároljuk" és a "hogyan értékeljük" kérdéseket, a következő kérdés a "hogyan tároljuk" – ugyanaz a felhasználói információ különböző részletességgel és struktúrával reprezentálható. A következő négy tárolási formátum a memória granularitásának és strukturális összetettségének progresszióját mutatja.
 
-
 ![3-2. ábra: Négy memóriastratégia összehasonlítása](images/fig3-2.svg)
 
+A **Simple Notes** minimalista tervezést testesít meg: minden emlék egyetlen legkisebb, tovább nem bontható tény (például „a felhasználó e-mail-címe: john@example.com”). Előnye, hogy rendkívül olcsó, és O(1)-es műveleteket támogat (vagyis olyanokat, amelyek ideje állandó, és nem nő az adatmennyiséggel). Az információk összefüggése viszont teljesen elvész: a „vezető mérnökként dolgozik a TechCorpnál, és az ajánlórendszer fejlesztéséért felel” három önálló ténnyé bomlik („a TechCorpnál dolgozik”, „beosztása vezető mérnök”, „az ajánlórendszerért felel”), és ugyanazon állás belső összefüggése szétszakad. Amikor olyan lekérdezést kell megválaszolni, amelyhez több információt kell összerakni, a rendszernek újra össze kell illesztgetnie a töredékeket.
 
-Az **Egyszerű jegyzetek** a minimalista tervezést testesítik meg. Minden memória egy minimális, oszthatatlan tény, a műveletek pedig O(1) költségűek. Az ára, hogy a tények közötti kapcsolatok elvesznek: egyetlen munka adatai különálló tényekre bomlanak, ezért az összetett kérdésekhez a rendszernek újra össze kell raknia a darabokat.
-
-A **Bővített jegyzetek** holisztikus nézőpontot alkalmaznak, minden memóriát teljes kontextust tartalmazó bekezdésként mentenek el. A narratív szerkezet megőrzi a jelentés teljességét és gazdagságát. Ennek ára a tárolási redundancia és a frissítés bonyolultsága: egy tulajdonság változása több bekezdés átírását is igényelheti.
+Az **Enhanced Notes** egésznek látja a dolgot: minden emléket teljes kontextust tartalmazó bekezdésként őriz meg. Ugyanaz a munkahelyi információ például így tárolható: „A felhasználó vezető szoftvermérnök a TechCorpnál, három éve gépi tanulással foglalkozik, jelenleg egy ötfős csapattal ajánlórendszer-projektet vezet.” Ez az ábrázolás megőrzi az információ elbeszélő szerkezetét, és biztosítja, hogy a jelentés teljes és gazdag maradjon. Ára viszont a tárolási redundancia (ugyanaz az információ több bekezdésben ismétlődik) és a bonyolult frissítés (egy tulajdonság megváltozásakor több bekezdést kell újraírni).
 
 **JSON kártyák** háromszintű beágyazott struktúrát alkalmaznak (Kategória → Alkategória → Kulcs-érték pár, pl. személyes.kapcsolat.email, munka.beosztas.cim), utánozva, ahogy az emberek kategorizálnak. Támogatják a részleges frissítést (a munka.beosztas.cim módosítása nem érinti a munka.ceg.nevet), kiszámíthatóak és bővíthetőek. A merev struktúra azonban feltételezi, hogy az információk tisztán kategorizálhatók – "Pythonban fejlesztek személyes projekteket hétvégén" egyszerre időpreferencia, technikai preferencia és tevékenységtípus; egyetlen kategóriába kényszerítés ezeket a dimenziókat ellaposítja.
 
@@ -119,11 +111,11 @@ A gyakorlati kiválasztási szempont: használj Haladó JSON kártyákat a "krit
 
 ### Haladó tudásreprezentáció: végrehajtható kód
 
-A fent tárgyalt négy formátum, legyen bár egyszerű vagy összetett, alapvetően "szöveg" – ami azt jelenti, hogy a memória "tárolása" és "használata" két külön lépés marad: először visszakeresni a releváns szöveget, majd betáplálni egy hibázható LLM-be, hogy elolvassa és kiszámolja. A szöveges memória kiválóan alkalmas egyedi tények felidézésére, de küzd a sok rekordra kiterjedő statisztikák összesítésével, ellentmondó tények észlelésével vagy logikai szabályok érvényesítésével, mert mindezek a műveletek az LLM "fejben számolására" támaszkodnak. A User as Code[^uac] egy megoldást javasol: a reprezentációs közeg váltása szövegről "végrehajtható kódra". Az Ágens felhasználói modelljét egy "élő szoftvermérnöki projektként" kezeli – tipizált Python objektumokkal tárolja a felhasználói állapotot, és hétköznapi Python függvényekkel kódolja a kényszerszabályokat, így a "felhasználó reprezentálása" és a "felhasználóról való következtetés" ugyanabban a médiumban történik, amelyet egy interpreter végrehajthat.
+A fenti négy formátum lényegében szöveg: jól előhív egy-egy tényt, de az összesítést, az ellentmondások felderítését és a korlátok érvényesítését az LLM „fejszámolására” hagyja. A User as Code[^uac] a felhasználó állapotát típusos, végrehajtható objektumokká alakítja, a szabályokat pedig közönséges függvényként írja le, így a „reprezentáció” és a „következtetés” ugyanazt az ellenőrizhető közeget használja.
 
-A memória frissítését két fázisra bontja[^uac]: a "memória fázisra" (minden szekció után az LLM egyenként, sztringként kinyeri a tényeket a beszélgetésből, hozzáfűzve egy append-only tény naplóhoz) és a "strukturáló fázisra" (időszakosan az LLM újragenerálja a teljes tipizált Python reprezentációt a teljes tény naplóból – a tényeket dataclass-okba szervezve, `date()`-et használva a dátumokhoz, tipizált listákat a gyűjteményekhez, és `notes: list[str]`-et a nehezen tipizálható egyéb tételekhez). Ez az adatbázisok klasszikus "write-ahead log + időszakos checkpoint" tervezési mintája, először alkalmazva LLM memóriára: a függő napló biztosítja, hogy egyetlen tény se vesszen el, és az időszakos checkpoint tömöríti őket egy tiszta, lekérdezhető struktúrába. (Ez az időszakos újraépítési folyamat összhangban van a fejezet későbbi "memória tömörítési és szervezési mechanizmusával", azzal a különbséggel, hogy a kimenet kód, nem szöveg.)
+A „write-ahead log + ellenőrzőpont” mechanizmust veszi kölcsön: a munkamenet végén a tények először egy csak hozzáfűzhető naplóba kerülnek, majd a tipizált állapot rendszeres időközönként újraépül a teljes naplóból. Így megmarad a nyers bizonyíték, és emellett lekérdezhető, végrehajtható származtatott állapotot is kapunk.
 
-Az alábbiakban egy egyszerűsített példa látható. A strukturáló fázis a felhasználó útlevelét és utazásait tipizált állapotként tárolja:
+Az alábbi egyszerűsített állapotrészlet mutatja, hogyan illeszkedik egymáshoz a tipizált állapot és a szabályok:
 
 ```python
 state = {
@@ -140,11 +132,7 @@ state = {
 }
 ```
 
-A tipizált állapottal három olyan feladat, amely korábban az LLM "szöveg olvasása és fejben számolása" volt, most determinisztikus kóddá válik:
-
-Először, **statisztikai aggregáció**. „Hányszor utaztam külföldre 2025-ben?” – szöveges memóriával minden utazást vissza kell keresni és megszámolni, ami sok rekordnál könnyen hibázik; a User as Code-ban ez egyetlen kifejezés, közel 100%-os pontossággal[^uac]:
-
-**Determinisztikus összesítés:**
+A tipizált állapot determinisztikus függvényekre bízza azokat a műveleteket, amelyekhez korábban az LLM-nek „végig kellett olvasnia és fejben számolnia”. A **statisztikai aggregáció** például így írható meg:
 
 ```python
 count(
@@ -154,9 +142,7 @@ count(
 # => 2
 ```
 
-Másodszor, "konfliktusészlelés". Az "aktuális gyógyszerek" és az "allergia előzmények" egymás mellé helyezésével egyetlen függvény gyógyszerosztály szerint összevetheti őket, feltárva a különböző beszélgetésekben szétszórt ellentmondásokat, amelyeket szöveges formában szinte lehetetlen automatikusan összekapcsolni:
-
-**Ütközésészlelés:**
+A **konfliktusfelismerés** összevetheti a jelenlegi gyógyszereket az allergiaelőzményekkel:
 
 ```python
 def check_drug_allergy(profile):
@@ -166,9 +152,7 @@ def check_drug_allergy(profile):
                 emit_conflict(medication, allergy)
 ```
 
-Harmadszor, "kényszerek érvényesítése". Az Ágens kódolhat ilyen ellenőrző függvényeket, és automatikusan aktiválhatja őket minden állapotfrissítéskor – anélkül, hogy a felhasználónak szólnia kellene, vagy az Ágensnek bármit vissza kellene keresnie. Például egy útlevél érvényességi kényszer: figyelmeztetés, ha az útlevél kevesebb mint 180 nappal a nemzetközi utazás indulási dátuma után jár le.
-
-**Korlátok érvényesítése:**
+A **kényszerérvényesítés** az állapot minden frissítésekor automatikusan ellenőrzi az útlevél érvényességét, anélkül hogy megvárná a felhasználó újabb kérdését:
 
 ```python
 def check():
@@ -214,9 +198,9 @@ A fent tárgyalt tárolási formátumok és memóriatípusoknak végül működ�
 
 **A 2025-ös tanulmány és a v2 — kivonat, összehasonlítás, döntés.** Az LLM jelölt tényeket vont ki, a vektoros keresés közeli emlékeket talált, majd az LLM az **ADD**, **UPDATE**, **DELETE** és **NOOP** közül választott. A „Pekingben élek” után a „Sanghajba költöztem” UPDATE-elte a korábbi emléket, és íráskor oldotta fel az ellentmondást. A tanulmány a többugrásos és időbeli kérdésekhez készült **Mem0-g** gráfmemóriát is leírta. A tár tömör maradt, de egy hibás frissítés vagy törlés elveszíthette az előzményeket, és minden jelölt keresést, majd egy második LLM-döntést igényelt.
 
-**A 2026-os v3 — csak hozzáadó írás és hibrid keresés.** Egyetlen LLM-hívás vonja ki a tényeket, és csak **ADD** műveletet végez, így a „Pekingben él” és a későbbi „Sanghajba költözött” külön dátumú tényként együtt marad. A keresés egyesíti a szemantikus hasonlóságot, a BM25-öt, az entitásokat és az időt; az Agent által megerősített műveletek is elsőrangú tények. Ez megőrzi az előzményeket, csökkenti az LLM-hívásokat, és több jelből találja meg az aktuális tényt. A Mem0 szerint a LoCoMo 71.4-ről 92.5-re (+21.1), a LongMemEval 67.8-ről 94.4-re (+26.6) javult. A jelenlegi OSS eltávolította a külső gráfot és a `relations` kimenetet; az entitáskapcsolatok csak a belső keresést erősítik, ezért a Mem0-g történeti terv. Lásd a [v2→v3 átállási útmutatót](https://docs.mem0.ai/migration/oss-v2-to-v3).
+**2026, v3 — csak hozzáfűző írás, hibrid keresés.** A mostani folyamat egyetlen LLM-hívással emel ki tényeket, és kizárólag **ADD**-et végez; a „Pekingben lakik” és a későbbi „Sanghajba költözött” két, időbélyeggel ellátott tényként él egymás mellett. Lekérdezéskor a rendszer összeolvasztja a szemantikai hasonlóságot, a BM25 kulcsszavas találatot és az entitásegyezést, és az időinformációval együtt rangsorol; az Agent által megerősítetten elvégzett műveletek szintén elsőrendű tényekké válnak. Így egyszerre kerüli el, hogy egy hibás UPDATE/DELETE elveszítse a történetet, csökkenti az LLM-hívások számát, és többféle keresési jelzés meg időrendezés segítségével találja meg az aktuálisan érvényes tényt. A Mem0 arról számol be, hogy a LoCoMo 71,4-ről 92,5-re nőtt (+21,1), a LongMemEval pedig 67,8-ról 94,4-re (+26,6). A mai OSS-változat eltávolította a külső gráftárolót és a `relations` visszatérési értéket, az entitásösszekapcsolást pedig csak belső keresési súlyozásra használja; ezért a Mem0-g történeti tervezésként értendő. Részletek: [Mem0 OSS v2-ről v3-ra migrációs útmutató](https://docs.mem0.ai/migration/oss-v2-to-v3).
 
-**Memobase: Felhasználói profilok plusz eseménymemória.** A Memobase (nyílt forráskódú projekt memodb-io/memobase) tervezési filozófiája eltér a Mem0-étól: ahelyett, hogy egy általános célú memória csővezetéket építene, a "felhasználói profilok" specifikus formájára összpontosít. Két részre szervezi a felhasználói memóriát. A "Felhasználói profil" konfigurálható slotok halmaza, téma és altéma szerint szervezve (pl. alap_info→név, érdeklődés→játékpreferenciák, munka→beosztás), amely a beszélgetésekből kinyert stabil felhasználói attribútumokat tárolja. A fejlesztők pontosan szabályozhatják a profil hatókörét és részletességét. Az "Eseménymemória" a felhasználói élményeket idővonal mentén rögzíti, idővel kapcsolatos kérdések megválaszolására, mint "Mikor beszéltünk utoljára a költségvetésről?" Mérnöki oldalon a Memobase pufferelt kötegelt feldolgozást használ: a beszélgetések felhalmozódnak, amíg egy méret- vagy időkorlát el nem indít egy memória-kinyerési futtatást. Ez amortizálja az LLM-hívások költségét, és mivel a lekérdezési oldal csak a már megszervezett profilokat és eseményeket olvassa, a késleltetés alacsony marad.
+**Memobase: Felhasználói profilok plusz eseménymemória.** A Memobase (nyílt forráskódú projekt memodb-io/memobase) tervezési filozófiája eltér a Mem0-étól: ahelyett, hogy egy általános célú memória csővezetéket építene, a "felhasználói profilok" specifikus formájára összpontosít. Két részre szervezi a felhasználói memóriát. A "Felhasználói profil" konfigurálható slotok halmaza, téma és altéma szerint szervezve (pl. alap_info→név, érdeklődés→érdeklődési körök, munka→beosztás), amely a beszélgetésekből kinyert stabil felhasználói attribútumokat tárolja. A fejlesztők pontosan szabályozhatják a profil hatókörét és részletességét. Az "Eseménymemória" a felhasználói élményeket idővonal mentén rögzíti, idővel kapcsolatos kérdések megválaszolására, mint "Mikor beszéltünk utoljára a költségvetésről?" Mérnöki oldalon a Memobase pufferelt kötegelt feldolgozást használ: a beszélgetések felhalmozódnak, amíg egy méret- vagy időkorlát el nem indít egy memória-kinyerési futtatást. Ez amortizálja az LLM-hívások költségét, és mivel a lekérdezési oldal csak a már megszervezett profilokat és eseményeket olvassa, a késleltetés alacsony marad.
 
 Mindegyik keretrendszer a memóriatervezési térnek csak egy részét fedi le: a Mem0 tényszerű bejegyzései közel állnak a szemantikus memóriához, míg a Memobase profiljai a szemantikus memóriát, eseménymemóriája pedig az epizodikus memóriát közelítik. A látókört tágítva felvázolható egy "többtípusú memória-együttműködés referencia architektúrája" (3-4. ábra) a korábban bevezetett kognitív tudományi kategóriákra építve – a tervezési tér általánosítása, nem egy adott projekt implementációja:
 
@@ -353,7 +337,7 @@ A BM25 úgy tekinthető, mint e két korlát klasszikus korrekciója. Megtartja 
 
 $$\text{Score}(Q, D) = \sum_{i} \text{IDF}_{\text{BM25}}(q_i) \cdot \frac{\text{TF}(q_i, D)\,(k_1+1)}{\text{TF}(q_i, D) + k_1\left(1 - b + b \cdot \frac{|D|}{\text{avgdl}}\right)}$$
 
-Itt $q_i$ egy lekérdezési kifejezés, $|D|$ a dokumentum hossza, $\text{avgdl}$ pedig a korpusz átlagos dokumentumhossza. Az $\text{IDF}_{\text{BM25}}$ azért kapott alsó indexet, mert nem ugyanaz a képlet, mint a fenti TF-IDF $\text{IDF}$-je: a BM25 egy robusztusabb változatra vált.
+Itt $q_i$ a lekérdezés egy szava, $|D|$ a dokumentum hossza, $\text{avgdl}$ pedig a korpusz átlagos dokumentumhossza. A képletben az $\text{IDF}_{\text{BM25}}$ alsó indexet kapott, mert nem ugyanaz a képlet, mint a fenti TF-IDF $\text{IDF}$-je: a BM25 robusztusabb alakot használ helyette:
 
 $$\text{IDF}_{\text{BM25}}(t) = \ln\frac{N - \text{DF}(t) + 0.5}{\text{DF}(t) + 0.5}$$
 
@@ -400,7 +384,7 @@ Az első a **párhuzamos visszakeresés**: a rendszer egyszerre küldi el a lek�
 
 A második az **eredményfúzió**, amely a két eredményhalmazt egységes jelöltkészletté egyesíti. A nehézség az, hogy a két út pontszámai közvetlenül nem hasonlíthatók össze: a sűrű visszakeresés koszinusz-hasonlósági pontszámai (általában 0 és 1 között) és a ritka visszakeresés BM25-pontszámai (amelyek 0-tól akár több tízig terjedhetnek) teljesen eltérő skálán és eloszlásban mozognak. Gyakori fúziós módszer a **Reciprocal Rank Fusion (RRF)**, amely teljesen elveti az eredeti pontszámokat, és csak a rangsorokat veszi figyelembe. Az egyes dokumentumok kombinált pontszáma az egyes eredményhalmazokban elfoglalt helyezésük simított reciprokszámának összege, vagyis pontszám = Σ 1/(k + rang), ahol k egy simítási konstans (gyakran 60), amelyet a legelőkelőbb helyezések közötti pontszámkülönbség csökkentésére használnak. Az RRF egyszerű és robusztus, de csak a ranginformációt használja, így eldobja az eredeti pontszámok gazdag relevanciajelét.
 
-A harmadik a **neurális újrarangsorolás**. Egy cross-encoder a fuzionált készlet legjobb N jelöltjén mélyen összeveti a lekérdezést és a dokumentumot, majd elkészíti a végső sorrendet. Ez nem helyettesíti a fúziót: a fúzió határozza meg a közös jelöltkészletet, az újrarangsorolás pedig ezen belül finomítja a sorrendet.
+Hangsúlyozni kell azonban, hogy a folyamat harmadik szakasza, a **neurális újrarangsorolás (Neural Reranking)**, nem azért létezik, hogy „pótolja az RRF által elveszített pontszámokat”: bármilyen módon olvasztottunk is össze az előző lépésben, az újrarangsorolást érdemes hozzátenni, mert erősebb illesztési paradigmára vált. A keresztkódolóval mély, kölcsönható illesztést végeztet a lekérdezés és a dokumentum között, és ennek pontossága messze meghaladja azt, amikor a keresési szakaszban a kettős kódoló külön-külön kódol, majd vektorműveletekkel hasonlítja a hasonlóságot. A gyakorlatban a fúzióból származó jelöltkészlet első N jelöltjét (például az első 50-et) pontozza egyenként és pontosan, és ebből áll elő a végső sorrend. Figyeljünk rá, hogy az újrarangsorolás nem **helyettesíti** a fúziót: a fúzió feladata, hogy a két ágból egységes jelöltkészletet állítson elő, az újrarangsorolásé pedig az, hogy ezen a készleten finomrendezzen.
 
 Egy analógia: egy toborzó, aki az önéletrajzokat gyors első szűrésre átfutja, a bi-encoder; egy interjúztató, aki mély beszélgetést folytat minden jelölttel, a cross-encoder. Az előbbi nagy léptékben, előre kinyert jellemzők alapján szűr; az utóbbi lehetővé teszi, hogy a lekérdezés és minden jelölt dokumentum „szemtől szembe” találkozzon, és szóról szóra kiértékelésre kerüljön. Az újrarangsoroló a „Cross-Encoder” architektúrát használja, éles ellentétben a visszakeresési szakaszban használt „Bi-Encoder”-rel. Egy **Bi-Encoder** független vektorokat generál a lekérdezéshez és a dokumentumhoz, majd vektorműveletekkel számít hasonlóságot; nagyon gyors, de nem képes mély illesztési kapcsolatokat megragadni, ezért tömeges adathalmazok kezdeti szűrésére alkalmas. Egy **Cross-Encoder** **egyetlen szöveggé fűzi össze a lekérdezést és a jelölt dokumentumot**, majd betáplálja a modellbe, lehetővé téve a szóról szóra történő összehasonlítást és egy átfogó relevanciapontszám előállítását. Sokkal lassabb, de pontosabb a relevancia megítélésében. Az olyan gyakran használt újrarangsoroló modellek, mint a [BAAI/bge-reranker-v2-m3](https://huggingface.co/BAAI/bge-reranker-v2-m3), ezt az architektúrát alkalmazzák.
 
@@ -428,11 +412,9 @@ Az iparági jelentések gyakran említik a „visszakeresési hibaarányt” is.
 
 ## A lapos szövegen túl: Tudásszervezés és visszakeresés
 
-Az előzőekben bemutatott RAG-alapok – a sűrű és ritka beágyazás, valamint a hibrid visszakeresés – azt oldják meg, hogyan találjuk meg gyorsan egy adott szövegrészlethez a leginkább kapcsolódó néhány elemet. Egy alapvetőbb kérdés azonban megmarad: **hogyan kell megszervezni magukat a szövegrészleteket?** Az egyszerű darabolás elveszítheti a tudás belső szerkezetét és a dokumentumok közötti kapcsolatokat. Ebben a szakaszban előbb fejlettebb tudásszervezési módszereket mutatunk be, majd ezeket visszafordítjuk a fejezet elején tárgyalt felhasználói memóriára, hogy pontosabbá tegyük annak visszakeresését.
+Az előbb bemutatott RAG-alapok (sűrű beágyazás, ritka beágyazás, hibrid keresés) azt a kérdést oldják meg, hogy „adott egy szövegdarab, hogyan találjuk meg gyorsan a hozzá leginkább illőket”. De van egy alapvetőbb kérdés: **magukat a szövegdarabokat hogyan kellene megszervezni?** Ha a dokumentumot egymással össze nem függő, lapos szövegdarabokra vágjuk, elveszítjük a tudás sajátos belső hierarchiáját és a dokumentumokon átívelő kapcsolatokat; olyan szerkezetileg összetett és logikailag szigorú anyag esetén, mint egy műszaki kézikönyv, egy jogi dokumentum vagy egy tudományos cikk, a szétszórt töredékek keresgélése olyan, mintha egy regényt szótári szócikkek véletlenszerű olvasásából próbálnánk megérteni. Ahhoz, hogy egy Agent valóban „megértsen” egy tudásterületet, túl kell lépnie a lapos szövegdarabokon, és olyan strukturált indexet kell építenie, amely visszaadja a tudás hierarchiáját és összefüggéseit. Ez a szakasz először ezeket a fejlettebb szervezési módszereket mutatja be, majd — és ez a döntő lépés — **visszaalkalmazza őket a fejezet elején tárgyalt felhasználói memóriára**, megoldva a felhasználói memória keresésének pontossági problémáját.
 
 Hat témát tárgyalunk, amelyek nem szigorú lépcsőfokok, hanem a tudás szervezését és visszakeresését különböző oldalakról közelítik meg: a RAPTOR és a GraphRAG **strukturált indexelését**; az OpenViking könnyűsúlyú **fájlrendszer-paradigmáját**; azt, **hogyan kell frissíteni a tudást**, elkülönítve az új bizonyítékot gyorsan befogadó növekményes frissítést a teljes tudásbázist rendszeresen felülvizsgáló átszervezéstől; az **Ágens RAG-ot**, amelyben az Ágens maga választ visszakeresési stratégiát; a **Kontextuális visszakeresést**, amely nem egy magasabb réteg, hanem az alapvető darabolást javítja; végül pedig a mély tudás kinyerését **strukturált adathalmazokból**.
-
-A hagyományos RAG erőteljes, de alapvető módszere – a dokumentumok független, egymással nem összefüggő szöveges darabokra vágása a "Dokumentumdarabolás" szakasz standard eljárásával – alapvető korláttal rendelkezik: ez a laposítás figyelmen kívül hagyja a tudásban rejlő struktúrát. Strukturálisan összetett, szorosan érvelő dokumentumok esetében – műszaki kézikönyvek, jogi szövegek, tudományos cikkek – a szétszórt töredékek visszakeresése olyan, mintha egy regényt szótárbejegyzések véletlenszerű olvasásával próbálnánk megérteni. Ahhoz, hogy egy Ágens valóban "megértse" egy tudásterületet, túl kell lépnünk a lapos szöveges darabokon, és olyan strukturált indexeket kell építenünk, amelyek tükrözik a tudás belső hierarchiáját és kapcsolatait.
 
 Egy mélyebb probléma, hogy még ha építünk is egy RAG rendszert, pusztán a nyers esetek számának strukturálatlan tudásbázisba helyezése nem garantálja, hogy a visszakeresési mechanizmus képes lesz az összes releváns információt előhívni, ami ahhoz vezet, hogy a modell helytelen következtetéseket von le hiányos kontextus alapján.
 
@@ -550,11 +532,7 @@ Bár a rendszeres átszervezés teljes körű folyamat, az eredménye nem írhat
 
 Egy erőteljes tudásbázis felépítése után a következő kérdés, hogy az Ágens hogyan használhatja azt intelligensen és autonóm módon. A hagyományos RAG folyamat egy egyszerű egyirányú adatfolyam: a felhasználó lekérdezése közvetlenül a visszakeresésre szolgál, az eredmények közvetlenül bekerülnek a modell kontextusába, és a modell közvetlenül generálja a végső választ. Ez a „Nem-Ágens” mód hatékony, de a plafonja alacsony: alapvetően egy passzív visszakereső és generáló csővezeték, nincs képessége egy probléma mély megértésére, szétbontására vagy iteratív feltárására.
 
-Ennek a korlátnak a leküzdéséhez a RAG-ot egy rögzített adatfeldolgozási folyamatból egy dinamikus, az Ágens által vezetett iteratív feltárási folyamattá kell fejlesztenünk. Ez az „Ágens RAG” központi gondolata.
-
-A hagyományos RAG olyan, mintha egyetlen könyvtári keresés lenne megengedett, mielőtt meg kell írnod a jelentést. Az Ágens RAG olyan, mint egy kutató, aki folyamatosan visszatér különböző polcokhoz, módosítja a keresési stratégiákat és keresztellenőrzi a forrásokat – csak akkor kezd el írni, ha már megvan az anyag.
-
-Ebben az új paradigmában a tudásbázis visszakeresése már nem egy automatizált előkészítő lépés. Ehelyett egy "eszközként" van beágyazva, amelyet az Ágens bármikor meghívhat. Az Ágens a ReAct mintát (lásd az 1. fejezet definícióját) alkalmazza, egy "Gondolkodj → Cselekedj → Figyeld meg" cikluson keresztül vezetve a folyamatot.
+Ennek a korlátnak a leküzdéséhez a RAG-ot egy rögzített adatfeldolgozási folyamatból egy dinamikus, az Ágens által vezetett iteratív feltárási folyamattá kell fejlesztenünk. Ez az „Ágens RAG” központi gondolata. A hagyományos RAG olyan, mintha egyetlen könyvtári keresés lenne megengedett, mielőtt meg kell írnod a jelentést. Az Ágens RAG olyan, mint egy kutató, aki folyamatosan visszatér különböző polcokhoz, módosítja a keresési stratégiákat és keresztellenőrzi a forrásokat – csak akkor kezd el írni, ha már megvan az anyag. Ebben az új paradigmában a tudásbázis visszakeresése már nem egy automatizált előkészítő lépés. Ehelyett egy "eszközként" van beágyazva, amelyet az Ágens bármikor meghívhat. Az Ágens a ReAct mintát (lásd az 1. fejezet definícióját) alkalmazza, egy "Gondolkodj → Cselekedj → Figyeld meg" cikluson keresztül vezetve a folyamatot.
 
 Egy összetett kérdéssel szembesülve az Ágens először "gondolkodik", hogy elemezze az alapvető igényt, és autonóm módon eldöntse, milyen lekérdezési kulcsszavak lennének a leghatékonyabbak az információ visszakereséséhez. Ezután "cselekszik" a `knowledge_base_search` eszköz meghívásával. Miután "megfigyelte" az előzetes eredményeket, nem azonnal generál választ. Ehelyett kiértékeli, hogy az információ elegendő-e – ha nem, belép a következő ciklusba, finomítja a lekérdezést egy pontosabb kereséshez, vagy akár más eszközöket is segítségül hív. Csak amikor úgy ítéli meg, hogy elegendő információt gyűjtött össze, szintetizálja az összes kontextust egy végső, megalapozott válasz generálásához.
 
@@ -579,7 +557,7 @@ Az Ágens RAG összeolvasztja a visszakeresést és a következtetést az Ágens
 >
 > Az összehasonlítás meggyőzően mutatja, hogy az Ágens RAG értéke a "problémamegoldásban", nem csupán a "kérdések megválaszolásában" rejlik. Némi válaszsebességet áldoz fel a robusztusságért és a válaszminőségért a nehéz problémákon – és ebben a kísérletben, az ítélkezési forgatókönyvben, a passzív csővezetékről az aktív felfedezőre való váltás közvetlenül, szignifikáns többugrásos pontosságnövekedésként jelentkezik.
 
-Ez a fejezet és az előző egyaránt a Kontextussal foglalkozik – az egyik egyetlen szekción belül, a másik több szekción keresztül. Amit ez a fejezet elsősorban konszolidál, az a deklaratív tudás a felhasználókról és a világról. A 9. fejezet újra felhasználja ugyanazt a kinyerési és visszakeresési infrastruktúrát, de a műveleti sikerek és kudarcok által alátámasztott viselkedési tudásra alkalmazza: "milyen feltételek mellett mit tegyen az Ágens?" A következő fejezet az Eszközökre tér át: hogyan lépnek kapcsolatba az Ágensek a külvilággal eszköztervezésen és az MCP interoperabilitási szabványon keresztül. Az eseményvezérelt futtatókörnyezetet a 6. fejezet tárgyalja.
+Ezen a ponton már a teljes technológiai készlet a kezünkben van, az alapszintű visszakereséstől a strukturált indexelésen át az ügynöki RAG-ig. Idézzük fel a kérdést, amelyet a fejezet első fele nyitva hagyott: amikor a felhasználói emlékek ezres nagyságrendűvé válnak, hogyan kérjük vissza pontosan a néhány relevánsat, és hogyan különböztetjük meg az egymásnak ellentmondó rekordokat? Most **fordítva** alkalmazzuk ezeket a tudásbázis-technikákat a fejezet elején tárgyalt felhasználói memóriára. A 3-9. és 3-11. kísérlet a korábban felállított háromszintű kiértékelési keretet (és a 3-1. kísérlet kiértékelő készletét) használja újra, hogy szintről szintre megvizsgálja, megoldják-e ezek a technikák a felhasználói memória visszakeresésének pontossági és ütközési problémáit.
 
 > **3-9. kísérlet ★★: Felhasználói memória építése Ágens RAG segítségével**
 >
@@ -679,19 +657,13 @@ Egy arc megjelenését vagy egy ember hangját nehéz szavakkal pontosan leírni
 
 ## Fejezet összefoglaló
 
-Ez a fejezet az AI Ágens perzisztens memóriarendszerét építette fel két léptékben: a felhasználói memóriát az egyén számára, és a megosztott tudásbázist mindenki számára.
+Ez a fejezet két léptékre bontotta a tartós tudást: az egyént kiszolgáló felhasználói memóriára és a mindenkit kiszolgáló közös tudásbázisra. Az előbbi életciklusa: releváns emlékek beolvasása → jelöltek kinyerése a háttérben → forrás és szabályzat ellenőrzése → frissítés; és az igényektől függően választhatunk Simple Notes, JSON Cards vagy végrehajtható állapot között.
 
-A könyv egészének szerkezete felől nézve ez a fejezet az 1. fejezet felfedezési hurkának **javaslat** szakaszát építi: egy bizonyítékot minimális, ellenőrizhető, visszafordítható módosítássá alakít – nem azt ítéli meg, hogy a rendszer egésze jobb lett-e.
+A könyv szerkezete felől nézve ez a fejezet az 1. fejezet felfedezési körének **javaslati** szakaszát építi meg: egyetlen bizonyítékot alakít minimális, auditálható és visszavonható változtatássá, anélkül hogy azt ítélné meg, javult-e a rendszer egésze.
 
-A "felhasználói memória" terén négy progresszív stratégiát tártunk fel, az atomi tényektől (Egyszerű jegyzetek) a kontextualizált tudásmenedzsmentig (Haladó JSON kártyák), feltárva az információreprezentáció alapvető feszültségét az egyszerűség és a kifejezőerő között. Az olyan keretrendszerek, mint a Mem0 és a Memobase, mérnöki memóriakezelést biztosítanak, és az adatvédelem biztonságban tartja az érzékeny információkat.
+A tudásbázis fő futószalagja: darabolás → sűrű/ritka visszakeresés → fúzió → újrarangsorolás → generálás, amelyet recall@k-hoz hasonló mutatókkal veszünk át. A RAPTOR, a GraphRAG, az OpenViking, a kontextusérzékeny visszakeresés és az ügynöki RAG rendre a tudás szervezését, darabolását, illetve a visszakeresés vezérlését változtatja meg; a gyakorlatban érdemes strukturált áttekintést tartani a kontextusban, a nyers részleteket pedig igény szerint visszahívni.
 
-A "tudásszerzés" terén az alapvető technológiai verem: a dokumentumdarabolás határozza meg a visszakeresési egységeket, a sűrű beágyazások a szemantikát, a ritka beágyazások a kulcsszavakat fogják meg, az eredményfúzió egyesíti a jelölteket egyetlen készletbe, a neurális újrarangsorolás finomítja a végső sorrendet, és az olyan mérőszámok, mint a recall@k, mérik a visszakeresés minőségét.
-
-A "tudás megértéséhez" túlléptünk a lapos dokumentumdaraboláson: a RAPTOR hierarchikus összefoglalókból álló fája és a GraphRAG entitás-relációs hálózata struktúrát ad a tudásnak; a Kontextuális visszakeresés a darabolás által okozott szemantikai veszteséget a gyökerénél javítja ki; és az Ágens RAG a passzív "visszakeresés-generálás" csővezetéket az Ágens által vezetett aktív, iteratív feltárássá alakítja. Ugyanezek a technikák vonatkoznak a felhasználói memóriára is, végül egy "kétrétegű memória architektúrában" találkozva: a Haladó JSON kártyák a kontextusban rezidensként az "áttekintést", a Kontextuális visszakeresés igény szerint a "részleteket" biztosítja. A két réteg egymásra rakva élesen javítja a szekciókon átívelő visszakeresés pontosságát és a konfliktusfeloldást – és ez az, ami valóban támogatja a "proaktív szolgáltatást", a fejezet eleji háromszintű keretrendszer legfelső szintjét.
-
-A **tudásfrissítés** két eltérő ritmust igényel: a növekményes frissítés gyorsan befogadja az új bizonyítékot, a rendszeres átszervezés pedig a teljes tudást és az eredeti adatokat újravizsgálva duplikációt szüntet meg, elavult elemeket von ki, összevon, átrendezi a szerkezetet, ellenőrzi a kihagyásokat és pontosítja az alkalmazási köröket. Akár Markdown, akár Python képviseli a tudást, mindkét útvonalon egy Proposer Agent nyújtja be a nyers bizonyítékra épülő diffet, egy másik modellcsaládból származó Reviewer Agent pedig önállóan ellenőrzi azt; csak jóváhagyás után olvasztható be a PR és építhetők újra a származtatott indexek.
-
-Ez a fejezet és az előző egyaránt a "kontextus" problémával foglalkozik – az egyik egyetlen szekción belül, a másik több szekción keresztül. A következő fejezet az "eszközökre" tér át: hogyan lépnek kapcsolatba az Ágensek a külvilággal eszközökön keresztül, beleértve az eszköztervezést és az MCP interoperabilitási szabványt. Az eseményvezérelt futtatókörnyezetet a 6. fejezet tárgyalja.
+Az írás nem hagyhatja ki a forrás, az idő, az ütközés és az adatvédelem ellenőrzését. Az inkrementális frissítés beszívja az új bizonyítékot, az időszakos konszolidáció pedig visszatér a nyers adatokhoz, hogy deduplikáljon, összevonjon és újraépítse az indexet; a függőben lévő diff csak független átnézés után kerül ki. Az előző fejezet egyetlen feladaton belüli kontextust kezelt, ez a fejezet a feladatokon átívelő deklaratív tudást. A 9. fejezet ugyanezt az infrastruktúrát alkalmazza a viselkedési tapasztalatra: milyen feltételek mellett mit érdemes tenni.
 
 ## Gondolatébresztő kérdések
 

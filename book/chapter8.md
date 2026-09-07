@@ -107,7 +107,7 @@ $$
 
 这一区分解释了两者的典型特点：SFT 擅长覆盖多种已知写法，RL 擅长从候选行为中寻找高奖励策略。至于最终是保持多样性还是收缩到少数模式，则取决于示范分布、奖励函数、KL 方向与系数、熵正则和采样温度。
 
-**后训练还会塑造模型何时行动。** 以 Coding 模型为例，GPT 系列与 Claude 系列经常表现出不同的默认行动阈值：前者可能先读更多仓库信息再修改，后者可能用较少文件完成定位、先实现再借测试反馈修正。这不是把模型拟人化成“谨慎”或“有直觉”，而是参数中的策略在估计：多读一个文件的预期价值，是否还高于提交当前补丁并验证的预期价值。若 SFT 示范反复包含广泛调查后才编辑的轨迹，模型就会模仿较高的行动阈值；若 RL 的过程或结果奖励持续认可快速定位、尽早进入可验证循环，概率质量就会向较早行动的轨迹集中。第七章实验 7-8 在完全相同的中性 Coding Harness 中换模，确实测到这种差异随模型变化，说明 Harness 无需强制流程，模型自身也会携带稳定的工具使用策略。Harness 可以调节它，但行为的主要来源可以位于后训练后的模型参数中。由于厂商并不公开完整数据与奖励配方，这个实验能证明的是模型侧的行为差异，不能据此断言某一种具体的私有算法造成了它。
+**后训练还会塑造模型何时行动。** 以 Coding 模型为例，GPT 系列与 Claude 系列经常表现出不同的默认行动阈值：前者可能先读更多仓库信息再修改，后者可能用较少文件完成定位、先实现再借测试反馈修正。这不是把模型拟人化成“谨慎”或“有直觉”，而是参数中的策略在估计：多读一个文件的预期价值，是否还高于提交当前补丁并验证的预期价值。若 SFT 示范反复包含广泛调查后才编辑的轨迹，模型就会模仿较高的行动阈值；若 RL 的过程或结果奖励持续认可快速定位、尽早进入可验证循环，概率质量就会向较早行动的轨迹集中。第七章实验 7-9 在完全相同的中性 Coding Harness 中换模，确实测到这种差异随模型变化，说明 Harness 无需强制流程，模型自身也会携带稳定的工具使用策略。Harness 可以调节它，但行为的主要来源可以位于后训练后的模型参数中。由于厂商并不公开完整数据与奖励配方，这个实验能证明的是模型侧的行为差异，不能据此断言某一种具体的私有算法造成了它。
 
 **在线反馈给了模型探索示范之外策略的机会。** 固定数据集上的 SFT 使用示范提供的直接训练信号，但仍可组合预训练知识，对示范中没有的输入进行泛化。在线 RL 则让模型按当前策略生成回答、接收环境反馈，从而直接评估示范之外的候选行为。这并不自动保证更高上限：结果取决于基础模型、示范覆盖、奖励忠实度、探索和优化稳定性。在线/离线与更严格的在轨/离轨（on-policy / off-policy）将在奖励与蒸馏部分用到。这里先看在线反馈提供的三个机会：
 
@@ -860,12 +860,6 @@ Mid-training、SFT 和 RL 不是三种可互换的“微调力度”，而是分
 [^ch8-32]: Zheng, Chujie et al., “Stabilizing Reinforcement Learning with LLMs: Formulation and Practices”, 2025. arXiv:2512.01374. https://arxiv.org/abs/2512.01374
 [^ch8-33]: Zhong, Tianle et al., “Diagnosing Training Inference Mismatch in LLM Reinforcement Learning”, 2026. arXiv:2605.14220. https://arxiv.org/abs/2605.14220
 [^ch8-34]: He, Horace and Thinking Machines Lab, “Defeating Nondeterminism in LLM Inference”, 2025. https://thinkingmachines.ai/blog/defeating-nondeterminism-in-llm-inference/
-[^ch8-35]: Gao, Tianyu et al., “How to Train Long-Context Language Models (Effectively)”, ACL, 2025. https://aclanthology.org/2025.acl-long.366/
-[^ch8-36]: Xiong, Wenhan et al., “Effective Long-Context Scaling of Foundation Models”, NAACL, 2024. https://aclanthology.org/2024.naacl-long.260/
-[^ch8-37]: Hsieh, Cheng-Ping et al., “RULER: What’s the Real Context Size of Your Long-Context Language Models?”, COLM, 2024. https://arxiv.org/abs/2404.06654
-[^ch8-38]: Bai, Yushi et al., “LongBench: A Bilingual, Multitask Benchmark for Long Context Understanding”, ACL, 2024. https://aclanthology.org/2024.acl-long.172/；Bai, Yushi et al., “LongBench v2: Towards Deeper Understanding and Reasoning on Realistic Long-context Multitasks”, ACL, 2025. https://aclanthology.org/2025.acl-long.183/
-[^ch8-39]: Li, Jia et al., “Benchmarking Long-Context Language Models on Long Code Understanding”, ACL, 2025. https://aclanthology.org/2025.acl-long.1324/
-[^ch8-40]: Zheng, Zihan et al., “PlanningArena: A Modular Benchmark for Multidimensional Evaluation of Planning and Tool Learning”, ACL, 2025. https://aclanthology.org/2025.acl-long.1499/
 
 ## 思考题
 

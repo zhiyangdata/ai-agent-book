@@ -1,9 +1,9 @@
 # Agentes de IA en Profundidad: Principios de Diseño y Práctica de Ingeniería
 
-[![PDF](https://img.shields.io/badge/PDF-descargar-success.svg)](#-libro-electrónico) [![Leer en línea](https://img.shields.io/badge/🌐_Leer_en_línea-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue.svg)](../../LICENSE) [![Idiomas](https://img.shields.io/badge/traducciones-14%20idiomas-informational.svg)](#-libro-electrónico)
+[![PDF](https://img.shields.io/badge/PDF-descargar-success.svg)](#-libro-electrónico) [![Leer en línea](https://img.shields.io/badge/🌐_Leer_en_línea-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![Licencia](https://img.shields.io/badge/licencia-Apache--2.0-blue.svg)](../../LICENSE) [![Idiomas](https://img.shields.io/badge/traducciones-15%20idiomas-informational.svg)](#-libro-electrónico)
 [![Tendencias en GitHub](https://img.shields.io/badge/GitHub%20Trending-Proyecto%20del%20Día-orange?logo=github)](https://github.com/trending)
 
-**[中文](../../README.md) · [English](../en/README.md) · Español ← actual · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)**
+**[中文](../../README.md) · [English](../en/README.md) · Español ← actual · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)**
 
 > 📥 **[Descargar PDF / EPUB](#-libro-electrónico)** (recomendado) — las ediciones en PDF / EPUB ofrecen la mejor experiencia de lectura; también puedes [leer en línea](https://bojieli.github.io/ai-agent-book/) (conmutador de idiomas, árbol de capítulos desplegable, búsqueda de texto completo, recompilado automáticamente en cada push a main).
 
@@ -13,7 +13,7 @@
 >
 > Si estás leyendo un PDF antiguo, te recomendamos [descargar el PDF más reciente](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-es.pdf). La nueva edición también incorpora numerosas correcciones y ajustes de contenido; utiliza siempre la versión más reciente.
 
-| 📚 **10 capítulos** de texto, desde lo básico hasta producción | 📂 **95 experimentos** complementarios, incluidos proyectos locales y rutas de reproducción externas | 🌐 **14 idiomas**: CN / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE |
+| 📚 **10 capítulos** de texto, desde lo básico hasta producción | 📂 **95 experimentos** complementarios, incluidos proyectos locales y rutas de reproducción externas | 🌐 **15 idiomas**: CN / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE / PT-BR |
 | :---: | :---: | :---: |
 
 ## 📖 Libro electrónico
@@ -61,7 +61,7 @@ El libro se desarrolla en torno a la fórmula central **Agente = LLM + Contexto 
 | 3 | 📚 **Memoria de Usuario y Bases de Conocimiento** | Memoria de usuario entre sesiones + conocimiento externo: memoria de usuario, RAG, índices estructurados, grafos de conocimiento | [Leer](../../book-es/chapter3.es.md) | [12](../../chapter3/README.es.md) |
 | 4 | 🛠️ **Herramientas** | Las herramientas son las manos del Agente: protocolo MCP, herramientas de percepción/ejecución/colaboración, Agentes asíncronos orientados a eventos, descubrimiento activo de herramientas | [Leer](../../book-es/chapter4.es.md) | [8](../../chapter4/README.es.md) |
 | 5 | 💻 **Coding Agent y Generación de Código** | El código es una "herramienta para crear nuevas herramientas"; panorama completo de un Coding Agent de grado de producción | [Leer](../../book-es/chapter5.es.md) | [13](../../chapter5/README.es.md) |
-| 6 | 🎙️ **Interacción: la expansión de los espacios de observación y de acción** | Ampliar los espacios de observación y acción del Agente en modalidad y tiempo: sistemas asíncronos y dirigidos por eventos, voz, Computer Use y robótica | [Leer](../../book-es/chapter6.es.md) | [13](../../chapter6/README.es.md) |
+| 6 | 🎙️ **Interacción: la expansión de los espacios de observación y de acción** | Ampliar los espacios de observación y acción del Agente en modalidad y tiempo: sistemas asíncronos y dirigidos por eventos, voz, Computer Use y robótica | [Leer](../../book-es/chapter6.es.md) | [14](../../chapter6/README.es.md) |
 | 7 | 🎯 **Evaluación de Agentes** | Convertir el rendimiento en señales comparables: entornos, métricas, significación estadística y selección guiada por evaluación | [Leer](../../book-es/chapter7.es.md) | [13](../../chapter7/README.es.md) |
 | 8 | 🧠 **Post-entrenamiento de Modelos** | Tres etapas—preentrenamiento, SFT y RL: cuándo elegir SFT o RL, internalización de llamadas a herramientas y eficiencia de muestra | [Leer](../../book-es/chapter8.es.md) | [19](../../chapter8/README.es.md) |
 | 9 | 🔄 **La Evolución Continua del Agente** | Obtener señales de aprendizaje de las trayectorias de ejecución y actualizar conocimientos, instrucciones, programas y parámetros | [Leer](../../book-es/chapter9.es.md) | [9](../../chapter9/README.es.md) |
@@ -81,14 +81,14 @@ Se recomienda solicitar claves de API en varias plataformas para facilitar el ap
 | **Zhipu GLM** | <https://open.bigmodel.cn/> | GLM-4.6 etc., gran capacidad en chino, rentable | China continental |
 | **Siliconflow** | <https://siliconflow.cn/> | Diversos modelos de código abierto (DeepSeek, Qwen, etc.), acceso rápido desde China continental | China continental |
 | **DeepSeek** | <https://platform.deepseek.com/> | API oficial de DeepSeek | Global + China continental |
-| **Krill AI** | [www.krill-ai.net](https://www.krill-ai.net/register?invite=Q8D3L35725) | Acceso integral a los principales modelos globales y de China (OpenAI, Claude, Gemini, Grok, Kimi, GLM, DeepSeek, Qwen, Minimax) | Global + China continental |
+| **Krill AI** | [www.krill-code.com](https://www.krill-code.com/register?invite=Q8D3L35725) | Acceso integral a los principales modelos globales y de China (OpenAI, Claude, Gemini, Grok, Kimi, GLM, DeepSeek, Qwen, Minimax) | Global + China continental |
 | **OpenRouter** | <https://openrouter.ai/> | Acceso integral a los principales modelos globales y de China (GPT, Claude, Gemini, Kimi, GLM, DeepSeek, Qwen, etc.) | Global |
 
 ## 💎 Patrocinadores
 
 ¡Gracias a **Krill AI** por patrocinar este proyecto! Krill proporciona un servicio de retransmisión de API oficial, estable y ultrarrápido para GPT / Claude / Gemini y muchos modelos chinos, con personalización de nivel empresarial, facturación y soporte técnico dedicado de 7×16h, además de una conexión WebSocket adaptada exclusivamente para un tiempo hasta el primer token extremadamente rápido.
 
-Krill ofrece una oferta especial para los lectores de este libro: regístrate mediante [este enlace](https://www.krill-ai.net/register?invite=Q8D3L35725) e ingresa el código de promoción "ai-agent-book" al recargar para obtener un 23% de descuento en tu primer plan Codex.
+Krill ofrece una oferta especial para los lectores de este libro: regístrate mediante [este enlace](https://www.krill-code.com/register?invite=Q8D3L35725) e ingresa el código de promoción "ai-agent-book" al recargar para obtener un 23% de descuento en tu primer plan Codex.
 
 > 🧪 El estado de ejecución de los experimentos, sus evidencias y los criterios pendientes se registran por separado en [`EXPERIMENT_STATUS.md`](../EXPERIMENT_STATUS.md); clonar o instalar el código fuente no demuestra que un experimento esté completo.
 

@@ -1,9 +1,9 @@
 # فهم وكلاء الذكاء الاصطناعي بعمق: مبادئ التصميم والممارسة الهندسية
 
-[![PDF](https://img.shields.io/badge/PDF-تنزيل-success.svg)](#-الكتاب-الإلكتروني) [![القراءة عبر الإنترنت](https://img.shields.io/badge/🌐_قراءة_عبر_الإنترنت-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![النجوم](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![الترخيص](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![اللغات](https://img.shields.io/badge/الترجمات-14%20لغة-informational.svg)](#-الكتاب-الإلكتروني)
+[![PDF](https://img.shields.io/badge/PDF-تنزيل-success.svg)](#-الكتاب-الإلكتروني) [![القراءة عبر الإنترنت](https://img.shields.io/badge/🌐_قراءة_عبر_الإنترنت-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![النجوم](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![الترخيص](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![اللغات](https://img.shields.io/badge/الترجمات-15%20لغة-informational.svg)](#-الكتاب-الإلكتروني)
 [![Trending GitHub Project of the Day](https://img.shields.io/badge/GitHub%20Trending-Project%20of%20the%20Day-orange?logo=github)](https://github.com/trending)
 
-**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · العربية ← الحالية · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)**
+**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · العربية ← الحالية · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)**
 
 > **ملاحظة حول الترجمة:** هذه ترجمة عربية كاملة، خضعت لمراجعة تحريرية وتقنية شملت سلامة المعنى، وطبيعية الأسلوب، واتساق المصطلحات، وبنية النص والرسوم.
 >
@@ -15,7 +15,7 @@
 >
 > إذا كنت تقرأ نسخة PDF قديمة، فننصحك بـ[تنزيل أحدث نسخة PDF](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-ar.pdf). تتضمن الطبعة الجديدة أيضًا تصحيحات وتعديلات عديدة في المحتوى، لذا يُرجى اعتماد أحدث نسخة.
 
-| 📚 **10 فصول** من الأساسيات إلى الإنتاج | 📂 **93** مشروعًا مصاحبًا (أكثر من 70 مستقلاً) | 🌐 **14 لغة**: CN / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE |
+| 📚 **10 فصول** من الأساسيات إلى الإنتاج | 📂 **93** مشروعًا مصاحبًا (أكثر من 70 مستقلاً) | 🌐 **15 لغة**: CN / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE / PT-BR |
 | :---: | :---: | :---: |
 
 ## 📖 الكتاب الإلكتروني
@@ -63,7 +63,7 @@
 | 3 | 📚 **ذاكرة المستخدم وقواعد المعرفة** | ذاكرة المستخدم عبر الجلسات + المعرفة الخارجية: ذاكرة المستخدم، RAG، الفهارس المنظمة، الرسوم البيانية المعرفية | [اقرأ](../../book-ar/chapter3.ar.md) | [12](../../chapter3/README.ar.md) |
 | 4 | 🛠️ **الأدوات** | الأدوات هي أيدي الوكيل: بروتوكول MCP، وأدوات الإدراك/التنفيذ/التعاون، والوكلاء غير المتزامنين القائمين على الأحداث، والاكتشاف الاستباقي للأدوات | [اقرأ](../../book-ar/chapter4.ar.md) | [8](../../chapter4/README.ar.md) |
 | 5 | 💻 **وكيل البرمجة وتوليد الشفرة** | الشفرة «أداة تنشئ أدوات جديدة»؛ من وكيل البرمجة الأساسي إلى منظومة جاهزة للإنتاج | [اقرأ](../../book-ar/chapter5.ar.md) | [13](../../chapter5/README.ar.md) |
-| 6 | 🎙️ **التفاعل: توسيع فضاء الملاحظة وفضاء الفعل** | توسيع فضاءَي الملاحظة والفعل عبر الوسائط والزمن: الأنظمة غير المتزامنة والموجهة بالأحداث، والصوت، واستخدام الحاسوب، والروبوتات | [اقرأ](../../book-ar/chapter6.ar.md) | [13](../../chapter6/README.ar.md) |
+| 6 | 🎙️ **التفاعل: توسيع فضاء الملاحظة وفضاء الفعل** | توسيع فضاءَي الملاحظة والفعل عبر الوسائط والزمن: الأنظمة غير المتزامنة والموجهة بالأحداث، والصوت، واستخدام الحاسوب، والروبوتات | [اقرأ](../../book-ar/chapter6.ar.md) | [14](../../chapter6/README.ar.md) |
 | 7 | 🎯 **تقييم الوكلاء** | تحويل الأداء إلى إشارات قابلة للمقارنة: البيئات، والمقاييس، والأهمية الإحصائية، والاختيار القائم على التقييم | [اقرأ](../../book-ar/chapter7.ar.md) | [13](../../chapter7/README.ar.md) |
 | 8 | 🧠 **مرحلة ما بعد تدريب النموذج** | ثلاث مراحل—التدريب المسبق وSFT وRL: متى نختار SFT أو RL، وكيف يستبطن النموذج استدعاء الأدوات، وكيف نحسن كفاءة العينات | [اقرأ](../../book-ar/chapter8.ar.md) | [19](../../chapter8/README.ar.md) |
 | 9 | 🔄 **التطور المستمر للوكلاء** | استخراج إشارات التعلم من مسارات التنفيذ، وتحديث المعرفة والتعليمات والبرامج والمعلمات | [اقرأ](../../book-ar/chapter9.ar.md) | [9](../../chapter9/README.ar.md) |
@@ -83,14 +83,14 @@
 | **Zhipu GLM** | <https://open.bigmodel.cn/> | نماذج GLM، ومنها GLM-4.6، قوية في الصينية ومنافسة من حيث الكلفة | البر الرئيسي للصين |
 | **SiliconFlow** | <https://siliconflow.cn/> | مجموعة واسعة من النماذج المفتوحة، مثل DeepSeek وQwen، مع وصول سريع من الصين | البر الرئيسي للصين |
 | **DeepSeek** | <https://platform.deepseek.com/> | واجهة DeepSeek الرسمية | عالمي + البر الرئيسي للصين |
-| **Krill AI** | [www.krill-ai.net](https://www.krill-ai.net/register?invite=Q8D3L35725) | وصول موحد إلى نماذج عالمية وصينية، منها OpenAI وClaude وGemini وKimi وGLM وDeepSeek وQwen | عالمي + البر الرئيسي للصين |
+| **Krill AI** | [www.krill-code.com](https://www.krill-code.com/register?invite=Q8D3L35725) | وصول موحد إلى نماذج عالمية وصينية، منها OpenAI وClaude وGemini وKimi وGLM وDeepSeek وQwen | عالمي + البر الرئيسي للصين |
 | **OpenRouter** | <https://openrouter.ai/> | وصول موحد إلى عدد كبير من النماذج العالمية والمفتوحة | عالمي |
 
 ## 💎 الرعاة
 
 شكرًا لـ **Krill AI** على رعاية المشروع. توفر المنصة بوابة API مستقرة وسريعة لنماذج GPT وClaude وGemini وعدد من النماذج الصينية، إلى جانب خيارات للمؤسسات والفوترة والدعم الفني واتصال WebSocket محسّن لخفض زمن وصول الرمز الأول.
 
-تقدم Krill عرضًا لقراء الكتاب: سجّل عبر [هذا الرابط](https://www.krill-ai.net/register?invite=Q8D3L35725)، ثم أدخل الرمز الترويجي `ai-agent-book` عند إضافة الرصيد للحصول على خصم 23% على أول خطة Codex.
+تقدم Krill عرضًا لقراء الكتاب: سجّل عبر [هذا الرابط](https://www.krill-code.com/register?invite=Q8D3L35725)، ثم أدخل الرمز الترويجي `ai-agent-book` عند إضافة الرصيد للحصول على خصم 23% على أول خطة Codex.
 
 > 🧪 تُسجَّل حالة تنفيذ التجارب والأدلة والبوابات المتبقية بصورة منفصلة في [`EXPERIMENT_STATUS.md`](../EXPERIMENT_STATUS.md)؛ ولا يُعد استنساخ الشفرة أو تثبيتها دليلاً على اكتمال التجربة.
 

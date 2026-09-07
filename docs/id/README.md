@@ -1,9 +1,9 @@
 # Memahami AI Agent secara Mendalam: Prinsip Desain dan Praktik Rekayasa
 
-[![PDF](https://img.shields.io/badge/PDF-unduh-success.svg)](#-buku-elektronik) [![Baca daring](https://img.shields.io/badge/🌐_Baca_daring-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/terjemahan-14%20bahasa-informational.svg)](#-buku-elektronik)
+[![PDF](https://img.shields.io/badge/PDF-unduh-success.svg)](#-buku-elektronik) [![Baca daring](https://img.shields.io/badge/🌐_Baca_daring-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/terjemahan-15%20bahasa-informational.svg)](#-buku-elektronik)
 [![Trending GitHub Project of the Day](https://img.shields.io/badge/GitHub%20Trending-Project%20of%20the%20Day-orange?logo=github)](https://github.com/trending)
 
-**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · Bahasa Indonesia ← saat ini · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)**
+**[中文](../../README.md) · [English](../en/README.md) · [Español](../es/README.md) · Bahasa Indonesia ← saat ini · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)**
 
 > 📥 **[Unduh PDF / EPUB](#-buku-elektronik)** (direkomendasikan) — edisi PDF dan EPUB memberikan pengalaman membaca terbaik. Anda juga dapat [membaca secara daring](https://bojieli.github.io/ai-agent-book/) dengan pemilih bahasa, navigasi bab, dan pencarian teks lengkap.
 
@@ -13,7 +13,7 @@
 >
 > Jika Anda membaca PDF lama, sebaiknya [unduh PDF terbaru](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-id.pdf). Edisi baru juga memuat banyak koreksi dan penyesuaian isi; gunakan versi terbaru sebagai acuan.
 
-| 📚 **10 bab** dari dasar hingga produksi | 📂 **104 proyek** pendamping | 🌐 **14 bahasa**: ZH / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE |
+| 📚 **10 bab** dari dasar hingga produksi | 📂 **104 proyek** pendamping | 🌐 **15 bahasa**: ZH / EN / ES / ID / AR / zh-TW / RU / TA / VI / JA / TR / KO / HU / HE / PT-BR |
 | :---: | :---: | :---: |
 
 ## 📖 Buku Elektronik
@@ -56,7 +56,7 @@ Sumber naskah Bahasa Indonesia berada di [`book-id/`](../../book-id/). Edisi ini
 | 3 | 📚 **Memori Pengguna dan Basis Pengetahuan** | Memori lintas sesi, RAG, indeks terstruktur, dan graf pengetahuan | [Baca](../../book-id/chapter3.md) | [12](../../chapter3/README.id.md) |
 | 4 | 🛠️ **Alat** | MCP, alat persepsi/eksekusi/kolaborasi, Agent asinkron berbasis peristiwa | [Baca](../../book-id/chapter4.md) | [8](../../chapter4/README.id.md) |
 | 5 | 💻 **Coding Agent dan Pembuatan Kode** | Kode sebagai alat yang dapat membuat alat baru; implementasi Coding Agent tingkat produksi | [Baca](../../book-id/chapter5.md) | [13](../../chapter5/README.id.md) |
-| 6 | 🎙️ **Interaksi: Perluasan Ruang Observasi dan Ruang Aksi** | Memperluas ruang observasi dan aksi Agent dalam modalitas dan waktu: sistem asinkron dan berbasis peristiwa, suara, Computer Use, dan robotika | [Baca](../../book-id/chapter6.md) | [13](../../chapter6/README.id.md) |
+| 6 | 🎙️ **Interaksi: Perluasan Ruang Observasi dan Ruang Aksi** | Memperluas ruang observasi dan aksi Agent dalam modalitas dan waktu: sistem asinkron dan berbasis peristiwa, suara, Computer Use, dan robotika | [Baca](../../book-id/chapter6.md) | [14](../../chapter6/README.id.md) |
 | 7 | 🎯 **Mengevaluasi Agent** | Mengubah kinerja menjadi sinyal yang dapat dibandingkan: lingkungan, metrik, signifikansi statistik, dan pemilihan berbasis evaluasi | [Baca](../../book-id/chapter7.md) | [13](../../chapter7/README.id.md) |
 | 8 | 🧠 **Pascapelatihan Model** | Tiga tahap—prapelatihan, SFT, dan RL: kapan memilih SFT atau RL, internalisasi pemanggilan alat, dan efisiensi sampel | [Baca](../../book-id/chapter8.md) | [19](../../chapter8/README.id.md) |
 | 9 | 🔄 **Evolusi Kontinual pada Agent** | Mengambil sinyal pembelajaran dari jejak eksekusi dan memperbarui pengetahuan, instruksi, program, serta parameter | [Baca](../../book-id/chapter9.md) | [9](../../chapter9/README.id.md) |

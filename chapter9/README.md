@@ -17,7 +17,7 @@
 | 编号 | 项目 | 类型 | 一句话说明 |
 | :--: | --- | :--: | --- |
 | 9-1 | [trajectory-verifier](trajectory-verifier/) | ✅ | 实验 9-1：28 条真实客服调用、8 次 Judge 调用与 8 条专家标注样本已通过验收；[证据](trajectory-verifier/validation/real_20260729T165247Z/evidence.json)同时记录关键违规稳定性主张未复现 |
-| 9-2 | [gaia-experience](gaia-experience/) | ✅ | 实验 9-2：真实 GAIA 三组轨迹与知识文档对照已验收；[证据](gaia-experience/validation/real_20260729T164012Z/evidence.json)记录知识文档组仅 25%、两控制组均 50% 的负结果 |
+| 9-2 | [tau2-escalation-experience](tau2-escalation-experience/) | ✅ | 实验 9-2：τ²-bench telecom 上由模型从 19 条失败轨迹提炼转接与工具使用规则；迁移集 114 条通过率 12.3% → 19.3%，零回归；[证据](tau2-escalation-experience/validation/evidence.json)保留提炼回执、三臂策略哈希与行为指标 |
 | 9-3 | [prompt-auto-optimization](prompt-auto-optimization/) | ✅ | 实验 9-3：真实任务 Agent、LLM Judge 与 Coding Agent 跑完初始/自动/人工三组完整保留集和边界集；原始回执与发布门槛已保存 |
 | 9-4 | 正文对照实验 | 🚧 | 从用户反馈中进化“需求澄清 + Spec 确认”Skill；正文给出三臂 A/B 设计、指标和发布门槛，配套实现待补充 |
 | 9-5 | [browser-use-rpa](browser-use-rpa/) | ✅ | 实验 9-5：真实 ARK Agent + Chromium 在可重置本地消息站完成探索、独立验证、参数化回放、假成功对照与页面变化失效 |
@@ -26,13 +26,7 @@
 | 9-8 | [hermes-self-evolution](hermes-self-evolution/) | 📖 | 实验 9-8：把整本书和源码交给 Hermes；它读完后选择一项改进，亲手修改自己，并把每次 Reviewer 的退回变成下一轮学习，直到通过 |
 | 9-9 | [self-evolution-eval](self-evolution-eval/) | ✅ | 实验 9-9：static、append-only、evolving 三臂 × 3 seeds × 14 任务共 126 次真实调用；[证据](self-evolution-eval/validation/latest.json)保留迁移、规则替换、保持与配对统计 |
 
-除仍处于设计阶段的实验 9-4 外，其余带项目链接的实验都保留无需 API Key 的离线入口和单元测试用于预检；表中 ✅ 来自各目录保存的真实模型、真实轨迹或真实浏览器规范证据，不由离线机制演示代替。历史数值或定性主张未复现时，证据按负结果如实记录。
-
-证据完整性边界：9-6、9-9 的 canonical evidence 与 `latest.json` 都有独立
-SHA-256 sidecar，当前复算一致；9-5 对三个关键浏览器产物保存并核对了 hash。
-9-1、9-2、9-3 的 `latest.json` 虽与各自真实 run 的 `evidence.json` 字节一致，
-但没有顶层 evidence/source hash manifest，因此可审计强度低于 9-6、9-9，
-不能把提交时存在的 JSON 等同于运行时源码已被固定。
+带项目链接的实验都保留无需 API Key 的离线入口和单元测试用于预检。
 
 ## 补充案例
 

